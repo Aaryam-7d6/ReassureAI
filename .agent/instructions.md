@@ -12,7 +12,8 @@
 3. Read .agent/errors.md
 4. Read .agent/work.md
 5. Read relevant .agent/codebase/*.md
-6. ONLY THEN — write code
+6. Read Makefile, package.json and run-fendandbend.txt because it will help you to run both frontend and backend wiht one command and output appear in the same terminal, colour-coded, use that.
+7. ONLY THEN — write code
 ```
 
 ---
