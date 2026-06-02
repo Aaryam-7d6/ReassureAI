@@ -19,7 +19,7 @@
 
 ## Phase 1 — Frontend
 
-- [ ] **TASK-F01** — Project scaffold
+- [x] **TASK-F01** — Project scaffold
   - `npm create vite@latest frontend -- --template react`
   - Install: `tailwindcss framer-motion axios react-router-dom`
   - Install: `react-markdown remark-gfm`
