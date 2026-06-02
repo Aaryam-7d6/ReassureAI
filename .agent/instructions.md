@@ -12,7 +12,7 @@
 3. Read .agent/errors.md
 4. Read .agent/work.md
 5. Read relevant .agent/codebase/*.md
-6. Read Makefile, package.json and run-fendandbend.txt because it will help you to run both frontend and backend wiht one command and output appear in the same terminal, colour-coded, use that.
+6. Read Makefile, package.json and command-for-run-backend-and-frontend-together.md because it will help you to run both frontend and backend wiht one command and output appear in the same terminal, colour-coded, use that.
 7. ONLY THEN — write code
 ```
 
@@ -392,6 +392,36 @@ After completing a task and verifying it works:
 Do NOT commit to main. Always push to dev branch.
 Do NOT commit if tests are failing.
 Do NOT commit .env, credentials.json, or token.json — verify with git status first.
+
+After completing a task and verifying it works locally:
+
+```bash
+# 1. Check nothing sensitive is staged
+git status
+# .env must NOT appear — if it does, stop and fix .gitignore first
+
+# 2. Stage all changes
+git add -A
+
+# 3. Commit with correct format
+git commit -m "type(scope): description"
+# Examples:
+# feat(frontend): scaffold React Vite Tailwind — TASK-F01
+# feat(safety): add semantic gate LLM analysis — TASK-004
+# fix(auth): correct bcrypt rounds — TASK-003
+
+# 4. Push to dev branch
+git push origin dev
+```
+
+Rules:
+
+- ALWAYS push to dev — never push to main
+- NEVER commit if tests are failing
+- NEVER commit .env, credentials.json, token.json, or \*.index files
+- If push fails because dev doesn't exist yet:
+  git push -u origin dev
+- Do NOT open PRs — Aarya handles dev → main merges on GitHub
 
 ---
 
