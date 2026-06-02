@@ -412,3 +412,40 @@ Do NOT commit .env, credentials.json, or token.json — verify with git status f
 ✗ Swallow exceptions silently
 ✗ Production optimization before local prototype works
 ```
+
+---
+
+## 12. Living Documentation — Keep .agent Files Updated
+
+The .agent/ files are NOT write-once documents. They must stay accurate.
+
+Update `.agent/codebase/why.md` when:
+
+- You switch a library (e.g., FAISS → Qdrant, PyPDF2 → pdfplumber)
+- You change an architectural approach
+- A technology doesn't work and you use an alternative
+- You discover a significant advantage or disadvantage not listed
+
+Update `.agent/codebase/backend.md` when:
+
+- Any new file is created in backend/
+- Any route is added or changed
+- Any new dependency is installed
+
+Update `.agent/codebase/frontend.md` when:
+
+- Any new component or hook is created
+- Any new page is added
+- Any API connection is wired
+
+Update `.agent/decisions.md` when:
+
+- Any architectural decision changes
+- A DEC entry becomes outdated
+
+Update `.agent/progress.md` after every completed task.
+Update `.agent/work.md` — check off completed tasks immediately.
+Update `.agent/errors.md` after fixing any bug.
+
+Rule: If you changed something significant and did NOT update
+the relevant .agent file — the task is NOT complete.
