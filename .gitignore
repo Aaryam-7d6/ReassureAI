@@ -1,2 +1,27 @@
 .env
+# Environment
+backend/.env
+.env
+*.env
 
+# Python
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/knowledge_base/faiss.index
+
+# Google Drive credentials
+backend/credentials.json
+backend/token.json
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db

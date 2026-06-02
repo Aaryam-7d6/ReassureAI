@@ -380,6 +380,18 @@ pytest tests/ -v
 git status | grep .env  # must be empty
 ```
 
+Git — Auto-commit After Each Completed Task
+
+After completing a task and verifying it works:
+
+1. `git add -A`
+2. `git commit -m "type(scope): description"` (follow commit format from Section 6)
+3. `git push origin dev`
+
+Do NOT commit to main. Always push to dev branch.
+Do NOT commit if tests are failing.
+Do NOT commit .env, credentials.json, or token.json — verify with git status first.
+
 ---
 
 ## 11. What NOT To Do

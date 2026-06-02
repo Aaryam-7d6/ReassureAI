@@ -1,0 +1,14 @@
+{
+  "name": "reassureai",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\" \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && source venv/bin/activate && uvicorn main:app --reload --port 8000",
+    "frontend": "cd frontend && npm run dev",
+    "install:all": "cd frontend && npm install",
+    "seed": "cd backend && source venv/bin/activate && python scripts/seed.py"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

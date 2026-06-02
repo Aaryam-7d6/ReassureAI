@@ -184,29 +184,37 @@ async def run_mental_health(query: str, user: User, db) -> dict:
 
 ## Dependencies
 
+Don't use version aka pinned version like `fastapi >= 0.111.0` or `fastapi == 0.111.1` because pinned versions cause conflicts as packages update.
+
 ```
-fastapi>=0.111.0
-uvicorn[standard]>=0.29.0
-pydantic>=2.0.0
-pydantic-settings>=2.0.0
-motor>=3.4.0
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+motor
 python-jose[cryptography]
-bcrypt>=4.1.0
+bcrypt
 python-multipart
-httpx>=0.27.0
-slowapi>=0.1.9
-bleach>=6.1.0
-langchain>=0.3.0
-faiss-cpu>=1.8.0
-rank-bm25>=0.2.2
-sentence-transformers>=3.0.0
-qdrant-client>=1.9.0
-PyPDF2>=3.0.0
-pytesseract>=0.3.10
-Pillow>=10.0.0
-google-api-python-client>=2.0.0
+httpx
+slowapi
+bleach
+langchain
+langchain-community
+faiss-cpu
+rank-bm25
+sentence-transformers
+qdrant-client
+PyPDF2
+pytesseract
+Pillow
+google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
+python-dotenv
+pytest
+pytest-asyncio
+black
+ruff
 ```
 
 ---

@@ -77,6 +77,42 @@ frontend/
 
 ---
 
+## Instructions for package.json
+
+Don't use version aka pinned versions because pinned versions cause conflicts as packages update.
+
+```
+{
+  "name": "reassureai-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0",
+    "axios": "^1.0.0",
+    "framer-motion": "^11.0.0",
+    "react-markdown": "^9.0.0",
+    "remark-gfm": "^4.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^5.0.0",
+    "tailwindcss": "^3.0.0",
+    "autoprefixer": "^10.0.0",
+    "postcss": "^8.0.0"
+  }
+}
+```
+
+Using `^` means "this version or higher compatible version" — gives flexibility without breaking changes.
+
+---
+
 ## Key Component Implementations
 
 ### ChatInput.jsx — Multiline + Enter to send

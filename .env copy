@@ -1,0 +1,83 @@
+# ─── MongoDB (Windows host → WSL2) ───────────────────────────────────────────
+
+# Get your Windows IP: run this in WSL2 terminal:
+
+# cat /etc/resolv.conf | grep nameserver | awk '{print $2}'
+
+# If you enabled mirrored networking (Windows 11): use 127.0.0.1
+
+MONGODB_URI=mongodb://127.0.0.1:27017/reassureai
+
+# ─── JWT ─────────────────────────────────────────────────────────────────────
+
+# Generate a random secret — run this in terminal:
+
+# python3 -c "import secrets; print(secrets.token_hex(32))"
+
+JWT_SECRET=paste_your_generated_secret_here
+
+# i use 64 bytes (512 bits) for the secret, which is more than enough for HS256. You can use a shorter one if you want, but don't go below 32 bytes (256 bits) for security reasons.
+
+# i generated it with following command : `openssl rand -hex 64`
+
+JWT_ALGORITHM=HS256
+JWT_ACCESS_EXPIRE_MINUTES=15
+JWT_REFRESH_EXPIRE_DAYS=7
+
+# ─── Ollama (Windows host → WSL2) ────────────────────────────────────────────
+
+# Same IP as MongoDB above
+
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+
+# ─── HuggingFace ──────────────────
+
+HUGGINGFACE_API_KEY=
+
+# ─── Groq fallback ────────────────
+
+GROQ_API_KEY=
+
+# ─── Qdrant Cloud ─────────────────
+
+QDRANT_URL=
+QDRANT_API_KEY=
+
+# ─── Google Drive ─────────────────
+
+GOOGLE_DRIVE_CREDENTIALS=credentials.json
+GOOGLE_DRIVE_FOLDER_ID=
+
+# ─── n8n Guardian Alert ───────────
+
+N8N_WEBHOOK_URL=
+
+# ─── Frontend URL ───────────────────────────────────────
+
+FRONTEND_URL=http://localhost:5173
+
+# ─── Backend URL (for CORS whitelist) ───────────────────────────────────────
+
+BACKEND_URL=http://localhost:8000
+
+# ─── Environment ─────────────────────────────────────────────────────────────
+
+ENVIRONMENT=development
+
+#---- endpoints for reference (not used in code, just for quick access) ----
+
+# MongoDB 127.0.0.1:27017
+
+# Ollama 127.0.0.1:11434
+
+# FastAPI backend 127.0.0.1:8000
+
+# React frontend 127.0.0.1:5173
+
+# n8n (later) 127.0.0.1:5678
+
+# Qdrant local (later) 127.0.0.1:6333
+
+#
+
+#----
