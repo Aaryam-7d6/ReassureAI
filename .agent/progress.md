@@ -8,7 +8,7 @@
 ## Overall Status
 
 ```
-Phase 1 — Frontend UI         ░░░░░░░░░░░░░░░░░░░░    0%
+Phase 1 — Frontend UI         ████████████████████    100%
 Phase 2 — Backend Foundation  ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 3 — Safety (SEC1)       ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 4 — Three-Chain Pipeline░░░░░░░░░░░░░░░░░░░░    0%
@@ -21,13 +21,13 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 
 ## Completed ✓
 
-Nothing yet. Project started from scratch.
+- Frontend UI — scaffold, Home page, Auth pages (TASK-F01, TASK-F02, TASK-F03) — May 2026
 
 ---
 
 ## In Progress 🔄
 
-Nothing. Start with **TASK-F01** from work.md.
+- Nothing currently in progress. Next: Backend foundation (TASK-001)
 
 ---
 

@@ -27,13 +27,13 @@
   - Set up Vite proxy → `http://localhost:8000`
   - Verify: `npm run dev` at `http://localhost:5173`
 
-- [ ] **TASK-F02** — Home page
+- [x] **TASK-F02** — Home page
   - 5 feature cards: Mental Health, Report Simplifier,
     Ayurvedic Guidance, Crisis Support, 24/7 Chat
   - Navbar: Sign In / Sign Up buttons
   - Responsive Tailwind layout
 
-- [ ] **TASK-F03** — Auth pages
+- [x] **TASK-F03** — Auth pages
   - Tabbed: Sign In + Sign Up
   - Sign Up fields: full name, email, guardian email, password, confirm password
   - Client-side validation: show which password rule is failing (specific message)
