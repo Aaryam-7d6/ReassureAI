@@ -41,10 +41,6 @@ One paragraph. Problem + solution + who it's for.
 ## Getting Started
 [setup instructions when ready]
 
-## Research
-Based on a survey of 55 research papers. 
-IEEE paper in preparation.
-
 ## Team
 - Aarya R. Thakar (Lead)
 - Ansh B. Patel
