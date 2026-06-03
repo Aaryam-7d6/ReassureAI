@@ -30,7 +30,7 @@ One paragraph. Problem + solution + who it's for.
 | Layer | Technology |
 |---|---|
 | Frontend | React.js |
-| Backend | Python / Flask |
+| Backend | Python / FastAPI |
 | Biomedical LLM | OpenBioLLM-70B |
 | Ayurvedic LLM | AyurParam |
 | General LLM | Mistral |
