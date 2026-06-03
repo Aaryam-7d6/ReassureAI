@@ -6,10 +6,7 @@
 
 ## Status: Not started. Start with TASK-F01.
 
-
 ## Stack
-
-
 
 ## Folder Structure
 
@@ -66,7 +63,6 @@ frontend/
         └── validators.js         # client-side email + password checks
 ```
 
-
 ## Instructions for package.json
 
 Don't use version aka pinned versions because pinned versions cause conflicts as packages update.
@@ -100,7 +96,6 @@ Don't use version aka pinned versions because pinned versions cause conflicts as
 ```
 
 Using `^` means "this version or higher compatible version" — gives flexibility without breaking changes.
-
 
 ## Key Component Implementations
 
@@ -279,7 +274,6 @@ export function useAutoScroll(dependency) {
 }
 ```
 
-
 ## API Integration Status
 
 | Component     | Endpoint                    | Status    |
@@ -292,7 +286,6 @@ export function useAutoScroll(dependency) {
 | Feedback      | POST /api/v1/feedback       | Not wired |
 | Report upload | POST /api/v1/reports/upload | Not wired |
 | Reports list  | GET /api/v1/reports         | Not wired |
-
 
 ## Crisis Response Handling
 
@@ -308,7 +301,6 @@ When backend returns `{ crisis: true }`:
   response.crisis ? <CrisisCard /> : <ChatMessage message={response} />;
 }
 ```
-
 
 ## How Agent Updates This
 
