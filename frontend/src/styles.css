@@ -1,0 +1,4 @@
+:root{font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+.nav{display:flex;gap:12px;padding:12px;background:#f7f7f7}
+.card{padding:16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff}

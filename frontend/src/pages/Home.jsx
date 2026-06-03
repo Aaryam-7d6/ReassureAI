@@ -1,3 +1,20 @@
+import React from 'react'
+
+export default function Home() {
+  return (
+    <div style={{ padding: 24 }}>
+      <h1>ReassureAI — Home</h1>
+      <p>Feature cards: Mental Health, Report Simplifier, Ayurvedic Guidance, Crisis Support, 24/7 Chat</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 16 }}>
+        <div className="card">Mental Health</div>
+        <div className="card">Report Simplifier</div>
+        <div className="card">Ayurvedic Guidance</div>
+        <div className="card">Crisis Support</div>
+        <div className="card">24/7 Chat</div>
+      </div>
+    </div>
+  )
+}
 import React from 'react';
 import FeatureCard from '../components/FeatureCard';
 

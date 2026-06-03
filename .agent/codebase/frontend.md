@@ -6,19 +6,10 @@
 
 ## Status: Not started. Start with TASK-F01.
 
----
 
 ## Stack
 
-- React 18 + Vite
-- Tailwind CSS
-- Framer Motion (animations)
-- react-markdown + remark-gfm (markdown rendering)
-- Axios (HTTP, withCredentials: true always)
-- React Router v6
-- Web Speech API (browser native TTS — no library needed)
 
----
 
 ## Folder Structure
 
@@ -75,7 +66,6 @@ frontend/
         └── validators.js         # client-side email + password checks
 ```
 
----
 
 ## Instructions for package.json
 
@@ -111,7 +101,6 @@ Don't use version aka pinned versions because pinned versions cause conflicts as
 
 Using `^` means "this version or higher compatible version" — gives flexibility without breaking changes.
 
----
 
 ## Key Component Implementations
 
@@ -290,7 +279,6 @@ export function useAutoScroll(dependency) {
 }
 ```
 
----
 
 ## API Integration Status
 
@@ -305,7 +293,6 @@ export function useAutoScroll(dependency) {
 | Report upload | POST /api/v1/reports/upload | Not wired |
 | Reports list  | GET /api/v1/reports         | Not wired |
 
----
 
 ## Crisis Response Handling
 
@@ -322,7 +309,6 @@ When backend returns `{ crisis: true }`:
 }
 ```
 
----
 
 ## How Agent Updates This
 
