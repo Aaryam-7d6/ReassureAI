@@ -56,18 +56,9 @@
   - Date and time stamp on every message (format: "Today at 2:34 PM")
   - **Markdown rendering:** all AI responses rendered via react-markdown + remark-gfm
 
-- [ ] **TASK-F06** — Response action bar (on every AI response)
+- [x] **TASK-F06** — Response action bar (on every AI response)
   - 🔊 **TTS button:** reads response aloud via Web Speech API
-    ```js
-    const speak = (text) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(utterance);
-    };
-    ```
   - 📋 **Copy button:** copies raw text to clipboard
-    ```js
-    navigator.clipboard.writeText(text);
-    ```
   - 🔄 **Regenerate button:** re-sends last user query through pipeline
   - 👍 👎 **Feedback buttons:** like/dislike — calls `POST /api/v1/feedback`
   - Show subtle "Response saved" toast on feedback submission
@@ -377,5 +368,6 @@
 - [x] UI polish: cleaned duplicate pages, Tailwind theme and color guidance — 2026-06-04
 - [x] TASK-F04 — Dashboard — 2026-06-04 (welcome msg, stat counters, quick access cards)
 - [x] TASK-F05 — Chat interface — 2026-06-04 (modern chatbot UX with markdown, multiline input, mode selector, file drop)
+- [x] TASK-F06 — Response action bar — 2026-06-04 (TTS, copy, regenerate, feedback buttons with toast)
 
 <!-- Move tasks here with [x] and date when done -->

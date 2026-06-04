@@ -3,8 +3,15 @@ import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import axios from "axios";
+import { ResponseActionBar } from "../components/ResponseActionBar";
 
-const ChatMessage = ({ message, isUser }) => {
+const ChatMessage = ({
+  message,
+  isUser,
+  onRegenerate,
+  onFeedback,
+  isLoading,
+}) => {
   const getTimestamp = (date) => {
     const now = new Date();
     const messageDate = new Date(date);
@@ -27,22 +34,33 @@ const ChatMessage = ({ message, isUser }) => {
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-6`}>
-      <div
-        className={`max-w-md lg:max-w-xl ${isUser ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"} rounded-2xl px-5 py-3 shadow-md`}
-      >
-        {!isUser && (
-          <div className="prose prose-sm max-w-none text-sm mb-2">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {message.text}
-            </ReactMarkdown>
-          </div>
-        )}
-        {isUser && <p className="text-sm">{message.text}</p>}
+      <div className="max-w-md lg:max-w-xl">
         <div
-          className={`text-xs mt-2 ${isUser ? "text-blue-100" : "text-gray-500"}`}
+          className={`${isUser ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"} rounded-2xl px-5 py-3 shadow-md`}
         >
-          {getTimestamp(message.timestamp)}
+          {!isUser && (
+            <div className="prose prose-sm max-w-none text-sm mb-2">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.text}
+              </ReactMarkdown>
+            </div>
+          )}
+          {isUser && <p className="text-sm">{message.text}</p>}
+          <div
+            className={`text-xs mt-2 ${isUser ? "text-blue-100" : "text-gray-500"}`}
+          >
+            {getTimestamp(message.timestamp)}
+          </div>
         </div>
+        {/* Action bar for AI messages only */}
+        {!isUser && (
+          <ResponseActionBar
+            responseText={message.text}
+            onRegenerate={onRegenerate}
+            onFeedback={onFeedback}
+            disabled={isLoading}
+          />
+        )}
       </div>
     </div>
   );
@@ -269,6 +287,39 @@ export default function Chat() {
     }
   };
 
+  const handleRegenerate = () => {
+    // Find the last user message
+    const lastUserMessage = [...messages].reverse().find((msg) => msg.isUser);
+
+    if (lastUserMessage) {
+      // Remove the last AI response if exists
+      const lastAIIndex = messages.reverse().findIndex((msg) => !msg.isUser);
+      if (lastAIIndex !== -1) {
+        setMessages((prev) => prev.slice(0, prev.length - lastAIIndex - 1));
+      }
+
+      // Resend the last user message
+      handleSendMessage(lastUserMessage.text);
+    }
+  };
+
+  const handleFeedback = async (messageId, feedbackType) => {
+    try {
+      // Mock feedback submission — replace with real API endpoint later
+      await axios.post(
+        "/api/v1/feedback",
+        {
+          message_id: messageId,
+          feedback: feedbackType,
+        },
+        { withCredentials: true },
+      );
+      console.log(`Feedback ${feedbackType} recorded for message ${messageId}`);
+    } catch (error) {
+      console.error("Failed to submit feedback:", error);
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
@@ -291,7 +342,14 @@ export default function Chat() {
         className="flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full"
       >
         {messages.map((msg) => (
-          <ChatMessage key={msg.id} message={msg} isUser={msg.isUser} />
+          <ChatMessage
+            key={msg.id}
+            message={msg}
+            isUser={msg.isUser}
+            onRegenerate={handleRegenerate}
+            onFeedback={(type) => handleFeedback(msg.id, type)}
+            isLoading={isLoading}
+          />
         ))}
 
         {isLoading && (
