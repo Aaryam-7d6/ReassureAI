@@ -34,6 +34,19 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchUserAndStats = async () => {
       try {
+        // Dev fallback: use locally stored DEV_USER when backend not connected
+        if (import.meta.env.DEV) {
+          const dev = localStorage.getItem("DEV_USER");
+          if (dev) {
+            setUser(JSON.parse(dev));
+            setStats({
+              conversations: 12,
+              reportsAnalysed: 3,
+              wellnessTips: 27,
+            });
+            return;
+          }
+        }
         const userRes = await axios.get("/api/v1/auth/me", {
           withCredentials: true,
         });
@@ -127,7 +140,7 @@ export default function Dashboard() {
               title="Crisis Support"
               description="Immediate help and resources"
               icon="❤️"
-              color="bg-gradient-to-br from-coral to-red-600"
+              color="bg-gradient-to-br from-rose-500 to-red-600"
               onClick={() => handleQuickAccess("crisis")}
             />
           </div>

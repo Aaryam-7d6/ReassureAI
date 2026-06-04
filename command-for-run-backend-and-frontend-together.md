@@ -1,8 +1,16 @@
-#  This will run Both frontend and backend output appear in the same terminal, colour-coded.
+# This will run Both frontend and backend output appear in the same terminal, colour-coded.
 
 # Using npm
-npm install   # installs concurrently
-npm run dev   # starts both
+
+npm install # installs concurrently
+npm run dev # starts both
 
 # OR using make (simpler in WSL2)
+
 make dev
+
+---
+
+npm run frontend → Frontend only
+npm run backend → Backend only
+npm run dev → Both together

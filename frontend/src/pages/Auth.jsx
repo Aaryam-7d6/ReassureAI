@@ -297,6 +297,24 @@ const Auth = () => {
                 : "Create Account"}
           </button>
         </form>
+        {/* Dev-only: quick test user login when backend is not connected */}
+        {import.meta.env.DEV && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => {
+                const testUser = {
+                  fullName: "Test User",
+                  email: "test@reassureai.dev",
+                };
+                localStorage.setItem("DEV_USER", JSON.stringify(testUser));
+                navigate("/dashboard");
+              }}
+              className="mt-2 inline-block px-4 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition"
+            >
+              Use test user (dev)
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

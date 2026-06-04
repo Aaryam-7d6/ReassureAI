@@ -16,7 +16,7 @@ export default function Home() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <header className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold text-primary-dark">
+        <h1 className="text-4xl font-extrabold text-slate-900">
           Welcome to ReassureAI
         </h1>
         <p className="text-gray-600 mt-2">
