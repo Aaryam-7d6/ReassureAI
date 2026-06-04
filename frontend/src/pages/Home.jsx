@@ -1,20 +1,3 @@
-import React from 'react'
-
-export default function Home() {
-  return (
-    <div style={{ padding: 24 }}>
-      <h1>ReassureAI — Home</h1>
-      <p>Feature cards: Mental Health, Report Simplifier, Ayurvedic Guidance, Crisis Support, 24/7 Chat</p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 16 }}>
-        <div className="card">Mental Health</div>
-        <div className="card">Report Simplifier</div>
-        <div className="card">Ayurvedic Guidance</div>
-        <div className="card">Crisis Support</div>
-        <div className="card">24/7 Chat</div>
-      </div>
-    </div>
-  )
-}
 import React from 'react';
 import FeatureCard from '../components/FeatureCard';
 
@@ -29,12 +12,16 @@ const features = [
 export default function Home() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8 text-center">Welcome to ReassureAI</h1>
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <header className="mb-8 text-center">
+        <h1 className="text-4xl font-extrabold text-primary-dark">Welcome to ReassureAI</h1>
+        <p className="text-gray-600 mt-2">Safe, friendly AI help for wellbeing and reports</p>
+      </header>
+
+      <section className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {features.map((f, i) => (
           <FeatureCard key={i} title={f.title} description={f.description} />
         ))}
-      </div>
+      </section>
     </div>
   );
 }

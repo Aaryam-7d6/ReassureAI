@@ -371,4 +371,9 @@
 
 ## Completed
 
+- [x] TASK-F01 — Project scaffold — 2026-05 (scaffolded frontend with Vite, Tailwind, react-markdown)
+- [x] TASK-F02 — Home page — 2026-05 (feature cards + responsive layout)
+- [x] TASK-F03 — Auth pages — 2026-05 (Tabbed Sign In / Sign Up with validation)
+- [x] UI polish: cleaned duplicate pages, Tailwind theme and color guidance — 2026-06-04
+
 <!-- Move tasks here with [x] and date when done -->
