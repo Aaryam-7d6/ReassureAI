@@ -45,7 +45,7 @@
   - Three stat counters: Conversations / Reports Analysed / Wellness Tips
   - Quick access cards: AI Health Chat, Report Simplifier, Ayurvedic Guidance, Crisis Support
 
-- [ ] **TASK-F05** — Chat interface (full modern chatbot UX)
+- [x] **TASK-F05** — Chat interface (full modern chatbot UX)
   - Scrollable message list with auto-scroll to latest
   - Floating ↓ arrow button when user has scrolled up → click → smooth scroll to bottom
   - Mode selector dropdown: Mental Health | Physical Health | Ayurveda | Report
@@ -376,5 +376,6 @@
 - [x] TASK-F03 — Auth pages — 2026-05 (Tabbed Sign In / Sign Up with validation)
 - [x] UI polish: cleaned duplicate pages, Tailwind theme and color guidance — 2026-06-04
 - [x] TASK-F04 — Dashboard — 2026-06-04 (welcome msg, stat counters, quick access cards)
+- [x] TASK-F05 — Chat interface — 2026-06-04 (modern chatbot UX with markdown, multiline input, mode selector, file drop)
 
 <!-- Move tasks here with [x] and date when done -->
