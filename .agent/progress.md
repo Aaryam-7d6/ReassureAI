@@ -74,6 +74,8 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 | 2026-06-04 | GitHub Copilot | Dashboard (TASK-F04): welcome message, stat counters (conversations/reports/tips), quick access cards            |
 | 2026-06-04 | GitHub Copilot | Chat interface (TASK-F05): modern chatbot UX, markdown rendering, multiline input, mode selector, file drag-drop |
 | 2026-06-04 | GitHub Copilot | Response action bar (TASK-F06): TTS, copy, regenerate, like/dislike feedback with toast notifications            |
+| 2026-06-04 | GitHub Copilot | Crisis card (TASK-F07): empathetic UI with crisis hotlines, keyword detection, always-visible design             |
+| 2026-06-04 | GitHub Copilot | Report viewer (TASK-F08): report history list, markdown summaries, file metadata display on dashboard            |
 
 ---
 

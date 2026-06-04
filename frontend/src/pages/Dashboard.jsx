@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ReportViewer } from "../components/ReportViewer";
 
 const StatCard = ({ label, value, icon, color }) => (
   <div className={`${color} rounded-xl p-6 text-white shadow-md`}>
@@ -130,6 +131,11 @@ export default function Dashboard() {
               onClick={() => handleQuickAccess("crisis")}
             />
           </div>
+        </section>
+
+        {/* Report Viewer Section */}
+        <section className="mt-12">
+          <ReportViewer />
         </section>
 
         {/* Footer note */}

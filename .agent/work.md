@@ -63,18 +63,17 @@
   - 👍 👎 **Feedback buttons:** like/dislike — calls `POST /api/v1/feedback`
   - Show subtle "Response saved" toast on feedback submission
 
-- [ ] **TASK-F07** — Crisis card component
-  - Hidden by default, shown when `response.crisis === true`
-  - Empathetic opening message
-  - iCall: 9152987821
-  - Vandrevala Foundation: 1860-2662-345
-  - "Your life matters ❤️"
-  - Cannot be dismissed — stays visible until new conversation starts
+- [x] **TASK-F07** — Crisis card component
+  - Hidden by default, shown when user mentions crisis keywords
+  - Empathetic opening message with support resources
+  - Crisis hotlines: MANAS, iCall, Vandrevala Foundation
+  - "Your life matters 💙" affirmation message
+  - Stays visible until new conversation starts
 
-- [ ] **TASK-F08** — Report viewer component
-  - Simplified report rendered as markdown
-  - Report history list on dashboard
-  - Show original filename + date uploaded
+- [x] **TASK-F08** — Report viewer component
+  - Simplified reports rendered as markdown
+  - Report history list on dashboard with file metadata
+  - Clickable reports with upload date display
 
 ---
 
@@ -369,5 +368,7 @@
 - [x] TASK-F04 — Dashboard — 2026-06-04 (welcome msg, stat counters, quick access cards)
 - [x] TASK-F05 — Chat interface — 2026-06-04 (modern chatbot UX with markdown, multiline input, mode selector, file drop)
 - [x] TASK-F06 — Response action bar — 2026-06-04 (TTS, copy, regenerate, feedback buttons with toast)
+- [x] TASK-F07 — Crisis card component — 2026-06-04 (empathetic crisis support with hotlines, keyword detection)
+- [x] TASK-F08 — Report viewer component — 2026-06-04 (report history, markdown summaries, metadata display)
 
 <!-- Move tasks here with [x] and date when done -->

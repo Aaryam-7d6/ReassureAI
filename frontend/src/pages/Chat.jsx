@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import axios from "axios";
 import { ResponseActionBar } from "../components/ResponseActionBar";
+import { CrisisCard } from "../components/CrisisCard";
 
 const ChatMessage = ({
   message,
@@ -206,6 +207,7 @@ export default function Chat() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [showCrisisCard, setShowCrisisCard] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
@@ -248,6 +250,26 @@ export default function Chat() {
         isUser: false,
         timestamp: new Date(),
       };
+
+      // Crisis detection: Check for crisis keywords (in real app, backend would determine this)
+      const crisisKeywords = [
+        "suicide",
+        "self harm",
+        "hurt myself",
+        "end my life",
+        "can't take it",
+        "hopeless",
+        "kill myself",
+        "crisis",
+        "emergency",
+      ];
+      const isCrisis = crisisKeywords.some((keyword) =>
+        text.toLowerCase().includes(keyword),
+      );
+
+      if (isCrisis) {
+        setShowCrisisCard(true);
+      }
 
       setMessages((prev) => [...prev, aiResponse]);
     } catch (error) {
@@ -334,6 +356,13 @@ export default function Chat() {
           <ModeSelector mode={mode} setMode={setMode} disabled={isLoading} />
         </div>
       </div>
+
+      {/* Crisis Card - Always visible when crisis detected */}
+      {showCrisisCard && (
+        <div className="max-w-4xl mx-auto w-full px-6 pt-4">
+          <CrisisCard />
+        </div>
+      )}
 
       {/* Messages Container */}
       <div
