@@ -12,6 +12,7 @@ Recommended friendly, modern, and light color palette for ReassureAI (medical-fr
 - Neutral text: #374151 (dark gray) and #6B7280 (muted gray) for secondary text.
 
 UX notes:
+
 - Use a lot of white / soft backgrounds with generous spacing.
 - Buttons: primary filled with `primary` and subtle shadow; secondary as soft gray outlines.
 - Cards: white background, rounded corners (1rem), subtle shadow, and `calm` tint for highlighted cards.

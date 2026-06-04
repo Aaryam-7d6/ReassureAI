@@ -1,20 +1,27 @@
-import React from 'react';
-import FeatureCard from '../components/FeatureCard';
+import React from "react";
+import FeatureCard from "../components/FeatureCard";
 
 const features = [
-  { title: 'Mental Health', description: 'Chat with AI for mental support' },
-  { title: 'Report Simplifier', description: 'Upload reports, get plain language summary' },
-  { title: 'Ayurvedic Guidance', description: 'Personalized Ayurvedic advice' },
-  { title: 'Crisis Support', description: 'Immediate help resources' },
-  { title: '24/7 Chat', description: 'Always available AI companion' },
+  { title: "Mental Health", description: "Chat with AI for mental support" },
+  {
+    title: "Report Simplifier",
+    description: "Upload reports, get plain language summary",
+  },
+  { title: "Ayurvedic Guidance", description: "Personalized Ayurvedic advice" },
+  { title: "Crisis Support", description: "Immediate help resources" },
+  { title: "24/7 Chat", description: "Always available AI companion" },
 ];
 
 export default function Home() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <header className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold text-primary-dark">Welcome to ReassureAI</h1>
-        <p className="text-gray-600 mt-2">Safe, friendly AI help for wellbeing and reports</p>
+        <h1 className="text-4xl font-extrabold text-primary-dark">
+          Welcome to ReassureAI
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Safe, friendly AI help for wellbeing and reports
+        </p>
       </header>
 
       <section className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
