@@ -40,7 +40,7 @@
   - Email format validation with friendly message
   - Show error inline below each field
 
-- [ ] **TASK-F04** — Dashboard
+- [x] **TASK-F04** — Dashboard
   - Welcome message with username
   - Three stat counters: Conversations / Reports Analysed / Wellness Tips
   - Quick access cards: AI Health Chat, Report Simplifier, Ayurvedic Guidance, Crisis Support
@@ -375,5 +375,6 @@
 - [x] TASK-F02 — Home page — 2026-05 (feature cards + responsive layout)
 - [x] TASK-F03 — Auth pages — 2026-05 (Tabbed Sign In / Sign Up with validation)
 - [x] UI polish: cleaned duplicate pages, Tailwind theme and color guidance — 2026-06-04
+- [x] TASK-F04 — Dashboard — 2026-06-04 (welcome msg, stat counters, quick access cards)
 
 <!-- Move tasks here with [x] and date when done -->

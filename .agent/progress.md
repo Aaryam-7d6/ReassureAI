@@ -8,7 +8,7 @@
 ## Overall Status
 
 ```
-Phase 1 — Frontend UI         ████████████████████    100%
+Phase 1 — Frontend UI         ████████████████████    100%  (TASK-F01..F03 + polish + F04)
 Phase 2 — Backend Foundation  ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 3 — Safety (SEC1)       ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 4 — Three-Chain Pipeline░░░░░░░░░░░░░░░░░░░░    0%
@@ -21,7 +21,7 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 
 ## Completed ✓
 
-- Frontend UI — scaffold, Home page, Auth pages (TASK-F01, TASK-F02, TASK-F03) — May 2026
+- Frontend UI — scaffold, Home page, Auth pages, Dashboard (TASK-F01, TASK-F02, TASK-F03, TASK-F04) — May–June 2026
 
 ---
 
@@ -65,12 +65,13 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 
 ## Session Log
 
-| Date       | Who            | What                                                                                               |
-| ---------- | -------------- | -------------------------------------------------------------------------------------------------- |
-| May 2026   | Aarya          | Fresh start, full .agent system built                                                              |
-| May 2026   | Aarya          | Added semantic LLM gate, 3-chain concurrent, TTS/copy/feedback UX                                  |
-| May 2026   | Aarya          | Added Qdrant, Google Drive, SHA-256 dedup, API failover, wsl_setup.md, why.md                      |
-| 2026-06-04 | GitHub Copilot | Frontend polish: cleaned duplicate pages, added Tailwind theme colors, and frontend color guidance |
+| Date       | Who            | What                                                                                                  |
+| ---------- | -------------- | ----------------------------------------------------------------------------------------------------- |
+| May 2026   | Aarya          | Fresh start, full .agent system built                                                                 |
+| May 2026   | Aarya          | Added semantic LLM gate, 3-chain concurrent, TTS/copy/feedback UX                                     |
+| May 2026   | Aarya          | Added Qdrant, Google Drive, SHA-256 dedup, API failover, wsl_setup.md, why.md                         |
+| 2026-06-04 | GitHub Copilot | Frontend polish: cleaned duplicate pages, added Tailwind theme colors, and frontend color guidance    |
+| 2026-06-04 | GitHub Copilot | Dashboard (TASK-F04): welcome message, stat counters (conversations/reports/tips), quick access cards |
 
 ---
 
