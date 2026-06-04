@@ -343,7 +343,7 @@ GOOGLE_DRIVE_FOLDER_ID=
 Generate JWT secret:
 
 ```bash
-python3 -c "import secrets; print(secrets.token_hex(32))"
+python3 -c "import secrets; print(secrets.token_hex(64))"
 ```
 
 or
@@ -384,7 +384,7 @@ Guardian Email: guardian@reassureai.dev
 
 Updating soon...
 
-<!-->
+<!--
 
 ```
 ReassureAI/
