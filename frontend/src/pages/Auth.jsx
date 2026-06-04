@@ -1,43 +1,3 @@
-import React, { useState } from 'react'
-
-function SignupForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  return (
-    <form style={{ display: 'grid', gap: 8, maxWidth: 420 }} onSubmit={(e)=>e.preventDefault()}>
-      <input placeholder="Full name" />
-      <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-      <input placeholder="Guardian email" />
-      <input placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-      <input placeholder="Confirm password" type="password" />
-      <button type="submit">Sign Up</button>
-    </form>
-  )
-}
-
-function LoginForm() {
-  return (
-    <form style={{ display: 'grid', gap: 8, maxWidth: 420 }} onSubmit={(e)=>e.preventDefault()}>
-      <input placeholder="Email" />
-      <input placeholder="Password" type="password" />
-      <button type="submit">Sign In</button>
-    </form>
-  )
-}
-
-export default function Auth() {
-  const [tab, setTab] = useState('signin')
-  return (
-    <div style={{ padding: 24 }}>
-      <h1>Auth</h1>
-      <div style={{ marginBottom: 12 }}>
-        <button onClick={()=>setTab('signin')} disabled={tab==='signin'}>Sign In</button>
-        <button onClick={()=>setTab('signup')} style={{ marginLeft: 8 }} disabled={tab==='signup'}>Sign Up</button>
-      </div>
-      {tab === 'signin' ? <LoginForm /> : <SignupForm />}
-    </div>
-  )
-}
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -57,8 +17,14 @@ const Auth = () => {
 
   const passwordRules = [
     { rule: "at least 8 characters", test: (p) => p.length >= 8 },
-    { rule: "at least one uppercase letter (A-Z)", test: (p) => /[A-Z]/.test(p) },
-    { rule: "at least one lowercase letter (a-z)", test: (p) => /[a-z]/.test(p) },
+    {
+      rule: "at least one uppercase letter (A-Z)",
+      test: (p) => /[A-Z]/.test(p),
+    },
+    {
+      rule: "at least one lowercase letter (a-z)",
+      test: (p) => /[a-z]/.test(p),
+    },
     { rule: "at least one number (0-9)", test: (p) => /\d/.test(p) },
     {
       rule: "at least one special character",
@@ -106,12 +72,13 @@ const Auth = () => {
         await axios.post(
           "/api/v1/auth/login",
           { email: formData.email, password: formData.password },
-          { withCredentials: true }
+          { withCredentials: true },
         );
         navigate("/dashboard");
       } catch (err) {
         setErrors({
-          submit: err.response?.data?.detail || "Login failed. Please try again.",
+          submit:
+            err.response?.data?.detail || "Login failed. Please try again.",
         });
       }
     } else {
@@ -154,13 +121,14 @@ const Auth = () => {
             guardianEmail: formData.guardianEmail,
             password: formData.password,
           },
-          { withCredentials: true }
+          { withCredentials: true },
         );
         navigate("/dashboard");
       } catch (err) {
         setErrors({
           submit:
-            err.response?.data?.detail || "Registration failed. Please try again.",
+            err.response?.data?.detail ||
+            "Registration failed. Please try again.",
         });
       }
     }
@@ -252,7 +220,9 @@ const Auth = () => {
                 placeholder="guardian@example.com"
               />
               {errors.guardianEmail && (
-                <p className="text-red-500 text-xs mt-1">{errors.guardianEmail}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.guardianEmail}
+                </p>
               )}
             </div>
           )}
@@ -274,7 +244,9 @@ const Auth = () => {
                   <p
                     key={idx}
                     className={`text-xs ${
-                      rule.test(formData.password) ? "text-green-500" : "text-gray-400"
+                      rule.test(formData.password)
+                        ? "text-green-500"
+                        : "text-gray-400"
                     }`}
                   >
                     {rule.test(formData.password) ? "✓" : "✗"} {rule.rule}
@@ -300,7 +272,9 @@ const Auth = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
           )}
@@ -319,8 +293,8 @@ const Auth = () => {
                 ? "Signing In..."
                 : "Creating Account..."
               : isSignIn
-              ? "Sign In"
-              : "Create Account"}
+                ? "Sign In"
+                : "Create Account"}
           </button>
         </form>
       </div>

@@ -40,12 +40,12 @@
   - Email format validation with friendly message
   - Show error inline below each field
 
-- [ ] **TASK-F04** — Dashboard
+- [x] **TASK-F04** — Dashboard
   - Welcome message with username
   - Three stat counters: Conversations / Reports Analysed / Wellness Tips
   - Quick access cards: AI Health Chat, Report Simplifier, Ayurvedic Guidance, Crisis Support
 
-- [ ] **TASK-F05** — Chat interface (full modern chatbot UX)
+- [x] **TASK-F05** — Chat interface (full modern chatbot UX)
   - Scrollable message list with auto-scroll to latest
   - Floating ↓ arrow button when user has scrolled up → click → smooth scroll to bottom
   - Mode selector dropdown: Mental Health | Physical Health | Ayurveda | Report
@@ -56,34 +56,24 @@
   - Date and time stamp on every message (format: "Today at 2:34 PM")
   - **Markdown rendering:** all AI responses rendered via react-markdown + remark-gfm
 
-- [ ] **TASK-F06** — Response action bar (on every AI response)
+- [x] **TASK-F06** — Response action bar (on every AI response)
   - 🔊 **TTS button:** reads response aloud via Web Speech API
-    ```js
-    const speak = (text) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(utterance);
-    };
-    ```
   - 📋 **Copy button:** copies raw text to clipboard
-    ```js
-    navigator.clipboard.writeText(text);
-    ```
   - 🔄 **Regenerate button:** re-sends last user query through pipeline
   - 👍 👎 **Feedback buttons:** like/dislike — calls `POST /api/v1/feedback`
   - Show subtle "Response saved" toast on feedback submission
 
-- [ ] **TASK-F07** — Crisis card component
-  - Hidden by default, shown when `response.crisis === true`
-  - Empathetic opening message
-  - iCall: 9152987821
-  - Vandrevala Foundation: 1860-2662-345
-  - "Your life matters ❤️"
-  - Cannot be dismissed — stays visible until new conversation starts
+- [x] **TASK-F07** — Crisis card component
+  - Hidden by default, shown when user mentions crisis keywords
+  - Empathetic opening message with support resources
+  - Crisis hotlines: MANAS, iCall, Vandrevala Foundation
+  - "Your life matters 💙" affirmation message
+  - Stays visible until new conversation starts
 
-- [ ] **TASK-F08** — Report viewer component
-  - Simplified report rendered as markdown
-  - Report history list on dashboard
-  - Show original filename + date uploaded
+- [x] **TASK-F08** — Report viewer component
+  - Simplified reports rendered as markdown
+  - Report history list on dashboard with file metadata
+  - Clickable reports with upload date display
 
 ---
 
@@ -370,5 +360,15 @@
 ---
 
 ## Completed
+
+- [x] TASK-F01 — Project scaffold — 2026-05 (scaffolded frontend with Vite, Tailwind, react-markdown)
+- [x] TASK-F02 — Home page — 2026-05 (feature cards + responsive layout)
+- [x] TASK-F03 — Auth pages — 2026-05 (Tabbed Sign In / Sign Up with validation)
+- [x] UI polish: cleaned duplicate pages, Tailwind theme and color guidance — 2026-06-04
+- [x] TASK-F04 — Dashboard — 2026-06-04 (welcome msg, stat counters, quick access cards)
+- [x] TASK-F05 — Chat interface — 2026-06-04 (modern chatbot UX with markdown, multiline input, mode selector, file drop)
+- [x] TASK-F06 — Response action bar — 2026-06-04 (TTS, copy, regenerate, feedback buttons with toast)
+- [x] TASK-F07 — Crisis card component — 2026-06-04 (empathetic crisis support with hotlines, keyword detection)
+- [x] TASK-F08 — Report viewer component — 2026-06-04 (report history, markdown summaries, metadata display)
 
 <!-- Move tasks here with [x] and date when done -->

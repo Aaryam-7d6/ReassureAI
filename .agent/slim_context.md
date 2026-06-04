@@ -69,6 +69,7 @@ Mental health: Chain 3 only.
 8. SHA-256 check before processing any uploaded file
 9. LOCAL DEV FIRST — working prototype beats perfect architecture
 10. Never push to main — always push to dev branch
+11. Use best industry-stander practices while writing code, also use industry-stander practices for security, privacy and peformance.
 
 ---
 
