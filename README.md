@@ -438,7 +438,7 @@ ReassureAI/
 | ---------------------- | --------------------------------------- |
 | **Aarya R. Thakar**    | Project Lead, Architecture, AI Pipeline |
 | **Ansh B. Patel**      | Frontend Development                    |
-| **Darshan B. Kyada**   | Models & RAG Pipeline                   |
+| **Darshan B. Kyada**   | Frontend & Backend Development          |
 | **Elvis T. Fernandes** | Backend & Database                      |
 
 <!--**Project Guide:** Prof. Harsh Pateliya -->
