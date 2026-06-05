@@ -1,323 +1,179 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { motion } from 'framer-motion'
+import { useToast } from '../components/Toast'
+import { Heart, Mail, Lock, User, Shield } from 'lucide-react'
 
-const Auth = () => {
-  const [isSignIn, setIsSignIn] = useState(true);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    guardianEmail: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+export default function Auth() {
+  const { login } = useAuth()
+  const { addToast } = useToast()
+  const [isLogin, setIsLogin] = useState(true)
 
-  const passwordRules = [
-    { rule: "at least 8 characters", test: (p) => p.length >= 8 },
-    {
-      rule: "at least one uppercase letter (A-Z)",
-      test: (p) => /[A-Z]/.test(p),
-    },
-    {
-      rule: "at least one lowercase letter (a-z)",
-      test: (p) => /[a-z]/.test(p),
-    },
-    { rule: "at least one number (0-9)", test: (p) => /\d/.test(p) },
-    {
-      rule: "at least one special character",
-      test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p),
-    },
-  ];
-
-  const emailPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
-
-  const validateEmail = (email) => {
-    if (!email) return "Email is required";
-    if (!emailPattern.test(email)) return "Please enter a valid email address";
-    return null;
-  };
-
-  const validatePassword = (password) => {
-    const failedRules = passwordRules
-      .filter((rule) => !rule.test(password))
-      .map((rule) => rule.rule);
-    return failedRules;
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!isLogin) {
+      addToast("Password needs a bit more strength 💪", "error", [
+        "At least one uppercase letter (A–Z)",
+        "At least one special character (!@#$%^&*...)",
+      ])
+      return
     }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setErrors({});
-
-    if (isSignIn) {
-      const emailError = validateEmail(formData.email);
-      if (emailError) {
-        setErrors({ email: emailError });
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        await axios.post(
-          "/api/v1/auth/login",
-          { email: formData.email, password: formData.password },
-          { withCredentials: true },
-        );
-        navigate("/dashboard");
-      } catch (err) {
-        setErrors({
-          submit:
-            err.response?.data?.detail || "Login failed. Please try again.",
-        });
-      }
-    } else {
-      const newErrors = {};
-
-      if (!formData.fullName.trim()) {
-        newErrors.fullName = "Full name is required";
-      }
-
-      const emailError = validateEmail(formData.email);
-      if (emailError) newErrors.email = emailError;
-
-      if (!formData.guardianEmail) {
-        newErrors.guardianEmail = "Guardian email is required";
-      } else if (!emailPattern.test(formData.guardianEmail)) {
-        newErrors.guardianEmail = "Please enter a valid guardian email";
-      }
-
-      const passwordErrors = validatePassword(formData.password);
-      if (passwordErrors.length > 0) {
-        newErrors.password = passwordErrors;
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        await axios.post(
-          "/api/v1/auth/register",
-          {
-            fullName: formData.fullName,
-            email: formData.email,
-            guardianEmail: formData.guardianEmail,
-            password: formData.password,
-          },
-          { withCredentials: true },
-        );
-        navigate("/dashboard");
-      } catch (err) {
-        setErrors({
-          submit:
-            err.response?.data?.detail ||
-            "Registration failed. Please try again.",
-        });
-      }
-    }
-
-    setIsLoading(false);
-  };
+    login({ id: 1, name: 'Demo User', email: 'user@example.com' })
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-800">ReassureAI</h1>
-          <p className="text-gray-500 mt-2">
-            {isSignIn ? "Welcome back! Please sign in." : "Create your account"}
-          </p>
+    <div>
+      {/* Heading */}
+      <div className="mb-7 text-center">
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--brand-border)',
+            boxShadow: '0 4px 14px var(--brand-glow)'
+          }}
+        >
+          <Heart className="w-6 h-6" style={{ color: 'var(--brand)' }} />
         </div>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: '0.25rem', transition: 'color 0.3s' }}>
+          {isLogin ? 'Welcome back' : 'Create your account'}
+        </h1>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', transition: 'color 0.3s' }}>
+          {isLogin ? 'Sign in to continue your wellness journey.' : 'Start your free health companion.'}
+        </p>
+      </div>
 
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setIsSignIn(true)}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
-              isSignIn
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => setIsSignIn(false)}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
-              !isSignIn
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+      {/* Tab toggle */}
+      <div
+        className="flex rounded-xl p-1 mb-6"
+        style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)', transition: 'background 0.3s, border-color 0.3s' }}
+      >
+        {['Sign In', 'Sign Up'].map((label, i) => {
+          const active = (isLogin && i === 0) || (!isLogin && i === 1)
+          return (
+            <button
+              key={label}
+              onClick={() => setIsLogin(i === 0)}
+              id={`tab-${label.toLowerCase().replace(' ', '-')}`}
+              className="flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-150"
+              style={{
+                background: active ? 'var(--bg-elevated)' : 'transparent',
+                color: active ? 'var(--text-primary)' : 'var(--text-muted)',
+                border: active ? '1px solid var(--border)' : '1px solid transparent',
+              }}
+            >
+              {label}
+            </button>
+          )
+        })}
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isSignIn && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
+      {/* Form */}
+      <motion.form
+        key={isLogin ? 'login' : 'register'}
+        initial={{ opacity: 0, x: isLogin ? -8 : 8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.25 }}
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4"
+      >
+        {!isLogin && (
+          <div>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.375rem', display: 'block', transition: 'color 0.3s' }}>
+              Full Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-dim)', transition: 'color 0.3s' }} />
               <input
                 type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your full name"
+                className="input-field"
+                style={{ paddingLeft: '2.25rem' }}
+                placeholder="Rahul Sharma"
+                required={!isLogin}
+                id="input-name"
               />
-              {errors.fullName && (
-                <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
-              )}
             </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="you@example.com"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          {!isSignIn && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Guardian Email
-              </label>
-              <input
-                type="email"
-                name="guardianEmail"
-                value={formData.guardianEmail}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="guardian@example.com"
-              />
-              {errors.guardianEmail && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.guardianEmail}
-                </p>
-              )}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            {!isSignIn && formData.password && (
-              <div className="mt-2 space-y-1">
-                {passwordRules.map((rule, idx) => (
-                  <p
-                    key={idx}
-                    className={`text-xs ${
-                      rule.test(formData.password)
-                        ? "text-green-500"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {rule.test(formData.password) ? "✓" : "✗"} {rule.rule}
-                  </p>
-                ))}
-              </div>
-            )}
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">{errors.password[0]}</p>
-            )}
-          </div>
-
-          {!isSignIn && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
-          )}
-
-          {errors.submit && (
-            <p className="text-red-500 text-sm text-center">{errors.submit}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading
-              ? isSignIn
-                ? "Signing In..."
-                : "Creating Account..."
-              : isSignIn
-                ? "Sign In"
-                : "Create Account"}
-          </button>
-        </form>
-        {/* Dev-only: quick test user login when backend is not connected */}
-        {import.meta.env.DEV && (
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => {
-                const testUser = {
-                  fullName: "Test User",
-                  email: "test@reassureai.dev",
-                };
-                localStorage.setItem("DEV_USER", JSON.stringify(testUser));
-                navigate("/dashboard");
-              }}
-              className="mt-2 inline-block px-4 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition"
-            >
-              Use test user (dev)
-            </button>
           </div>
         )}
-      </div>
-    </div>
-  );
-};
 
-export default Auth;
+        <div>
+          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.375rem', display: 'block', transition: 'color 0.3s' }}>
+            Email address
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-dim)', transition: 'color 0.3s' }} />
+            <input
+              type="email"
+              className="input-field"
+              style={{ paddingLeft: '2.25rem' }}
+              placeholder="you@example.com"
+              required
+              id="input-email"
+            />
+          </div>
+        </div>
+
+        {!isLogin && (
+          <div>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.375rem', display: 'block', transition: 'color 0.3s' }}>
+              Guardian Alert Email
+              <span
+                className="ml-2"
+                style={{ fontSize: '0.625rem', padding: '0.15rem 0.5rem', borderRadius: '9999px', background: 'var(--brand-subtle)', color: 'var(--brand)', border: '1px solid var(--brand-border)', transition: 'all 0.3s' }}
+              >
+                Crisis Safety
+              </span>
+            </label>
+            <div className="relative">
+              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-dim)', transition: 'color 0.3s' }} />
+              <input
+                type="email"
+                className="input-field"
+                style={{ paddingLeft: '2.25rem' }}
+                placeholder="guardian@example.com"
+                required={!isLogin}
+                id="input-guardian"
+              />
+            </div>
+            <p style={{ fontSize: '0.6875rem', color: 'var(--text-dim)', marginTop: '0.375rem', lineHeight: 1.5, transition: 'color 0.3s' }}>
+              Notified only if our crisis detection identifies an emergency.
+            </p>
+          </div>
+        )}
+
+        <div>
+          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.375rem', display: 'block', transition: 'color 0.3s' }}>
+            Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-dim)', transition: 'color 0.3s' }} />
+            <input
+              type="password"
+              className="input-field"
+              style={{ paddingLeft: '2.25rem' }}
+              placeholder="••••••••"
+              required
+              id="input-password"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          id="btn-submit-auth"
+          className="btn-primary w-full mt-1"
+          style={{ padding: '0.75rem', borderRadius: '0.75rem', justifyContent: 'center' }}
+        >
+          {isLogin ? 'Sign In' : 'Create Account'}
+        </button>
+      </motion.form>
+
+      <p style={{ fontSize: '0.6875rem', color: 'var(--text-dim)', textAlign: 'center', marginTop: '1.5rem', lineHeight: 1.6, transition: 'color 0.3s' }}>
+        By continuing you agree to our{' '}
+        <span style={{ color: 'var(--text-muted)', textDecoration: 'underline', cursor: 'pointer', transition: 'color 0.3s' }}>Terms</span>
+        {' '}and{' '}
+        <span style={{ color: 'var(--text-muted)', textDecoration: 'underline', cursor: 'pointer', transition: 'color 0.3s' }}>Privacy Policy</span>
+      </p>
+    </div>
+  )
+}

@@ -1,30 +1,32 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Chat from "./pages/Chat";
+import { Routes, Route } from 'react-router-dom'
+import MainLayout from './layouts/MainLayout.jsx'
+import AuthLayout from './layouts/AuthLayout.jsx'
+import ProtectedRoute from './routes/ProtectedRoute.jsx'
+
+import Home from './pages/Home.jsx'
+import Auth from './pages/Auth.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import Chat from './pages/Chat.jsx'
+import Journal from './pages/Journal.jsx'
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<Auth />} />
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<Home />} />
+        
+        <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat" element={<Chat />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-    </div>
-  );
+          <Route path="/journal" element={<Journal />} />
+        </Route>
+      </Route>
+
+      <Route element={<AuthLayout />}>
+        <Route path="/auth" element={<Auth />} />
+      </Route>
+    </Routes>
+  )
 }
 
-export default App;
+export default App

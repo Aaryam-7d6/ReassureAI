@@ -1,149 +1,123 @@
-import React, { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import React from 'react';
+import { UploadCloud, File, X, CheckCircle } from 'lucide-react';
 
-export const ReportViewer = ({ reports = [] }) => {
-  const [selectedReport, setSelectedReport] = useState(null);
+export default function ReportViewer() {
+  const [file, setFile] = React.useState(null);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [result, setResult] = React.useState(null);
 
-  // Mock reports for demo if none provided
-  const mockReports = [
-    {
-      id: 1,
-      filename: "blood_test_2024.pdf",
-      uploadedAt: "2024-11-15",
-      summary: `## Blood Test Report Summary
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+    }
+  };
 
-**Date:** November 15, 2024
+  const handleUpload = () => {
+    if (!file) return;
+    setIsUploading(true);
 
-### Key Findings:
-- **Hemoglobin:** 13.5 g/dL (Normal)
-- **White Blood Cells:** 7.2 K/uL (Normal)
-- **Platelets:** 250 K/uL (Normal)
-- **Glucose (Fasting):** 95 mg/dL (Normal)
-
-### Recommendations:
-- Maintain regular exercise routine
-- Continue balanced diet with adequate iron intake
-- Schedule follow-up test in 6 months
-
-### Next Steps:
-- Consult with your healthcare provider for personalized guidance
-- Maintain lifestyle changes
-- Report any unusual symptoms immediately`,
-    },
-    {
-      id: 2,
-      filename: "chest_xray_2024.pdf",
-      uploadedAt: "2024-10-22",
-      summary: `## Chest X-Ray Report Summary
-
-**Date:** October 22, 2024
-
-### Key Findings:
-- **Heart Size:** Normal
-- **Lung Fields:** Clear, no infiltrates
-- **Mediastinum:** Normal
-- **Conclusion:** No acute findings
-
-### Interpretation:
-The chest X-ray appears normal with no signs of acute respiratory disease or cardiac abnormalities.
-
-### Recommendations:
-- Continue regular health monitoring
-- Maintain good respiratory health
-- Schedule follow-up if symptoms develop`,
-    },
-  ];
-
-  const displayReports = reports.length > 0 ? reports : mockReports;
+    // Simulate API upload & analysis
+    setTimeout(() => {
+      setIsUploading(false);
+      setResult({
+        title: "Complete Blood Count (CBC)",
+        summary: "Your report indicates normal levels across most markers. However, your hemoglobin is slightly below the optimal range, which might explain any recent fatigue.",
+        details: [
+          "Hemoglobin: 11.5 g/dL (Reference: 12.0 - 15.5 g/dL)",
+          "WBC: 6.2 x 10^9/L (Reference: 4.5 - 11.0 x 10^9/L) - Normal",
+          "Platelets: 250 x 10^9/L (Reference: 150 - 450 x 10^9/L) - Normal"
+        ]
+      });
+    }, 2500);
+  };
 
   return (
-    <div className="w-full">
-      {/* Report History List */}
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
-          📄 Report History
-        </h3>
+    <div className="rounded-2xl p-6 w-full max-w-2xl mx-auto mt-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', transition: 'background 0.3s, border-color 0.3s' }}>
+      <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)', transition: 'color 0.3s' }}>Medical Report Simplifier</h2>
 
-        {displayReports.length === 0 ? (
-          <p className="text-gray-600 text-center py-6">
-            No reports uploaded yet. Upload your first medical report to get
-            started!
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {displayReports.map((report) => (
-              <button
-                key={report.id}
-                onClick={() =>
-                  setSelectedReport(
-                    selectedReport?.id === report.id ? null : report,
-                  )
-                }
-                className={`w-full text-left p-4 rounded-lg border-2 transition ${
-                  selectedReport?.id === report.id
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 bg-gray-50 hover:border-blue-300"
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      📎 {report.filename}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Uploaded:{" "}
-                      {new Date(report.uploadedAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <span className="text-lg">
-                    {selectedReport?.id === report.id ? "▼" : "▶"}
-                  </span>
-                </div>
+      {!result ? (
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+          className="border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer"
+          style={{ borderColor: 'var(--brand-border)', background: 'var(--brand-subtle)' }}
+        >
+          <div className="flex flex-col items-center justify-center gap-3">
+            <UploadCloud className="h-12 w-12" style={{ color: 'var(--brand)' }} />
+            <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Drag & drop your report here</h3>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Supports PDF, PNG, JPG up to 10MB</p>
+
+            <input
+              type="file"
+              id="report-upload"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files[0])}
+              accept=".pdf,.png,.jpg,.jpeg"
+            />
+
+            <label htmlFor="report-upload" className="btn-secondary mt-2 cursor-pointer">
+              Browse Files
+            </label>
+          </div>
+
+          {file && (
+            <div className="mt-6 flex items-center justify-between p-3 rounded-lg shadow-sm" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center gap-3 overflow-hidden">
+                <File className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--text-dim)' }} />
+                <span className="text-sm font-medium truncate" style={{ color: 'var(--text-secondary)' }}>{file.name}</span>
+              </div>
+              <button onClick={() => setFile(null)} className="hover:text-red-500" style={{ color: 'var(--text-dim)' }}>
+                <X className="h-4 w-4" />
               </button>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
 
-      {/* Report Details - Markdown Viewer */}
-      {selectedReport && (
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-lg font-bold text-gray-800">
-              Report: {selectedReport.filename}
-            </h4>
+          {file && (
             <button
-              onClick={() => setSelectedReport(null)}
-              className="text-gray-400 hover:text-gray-600 text-xl"
+              onClick={handleUpload}
+              disabled={isUploading}
+              className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
             >
-              ✕
+              {isUploading ? (
+                <span className="animate-pulse">Analyzing Report...</span>
+              ) : (
+                'Simplify Report'
+              )}
             </button>
+          )}
+        </div>
+      ) : (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-3 mb-4" style={{ color: 'var(--green)' }}>
+            <CheckCircle className="h-6 w-6" style={{ color: 'var(--green)' }} />
+            <h3 className="text-xl font-bold" style={{ color: 'var(--green)' }}>Analysis Complete</h3>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <div className="prose prose-sm max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {selectedReport.summary}
-              </ReactMarkdown>
+          <div className="rounded-xl p-5 shadow-sm space-y-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <div>
+              <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>Document Type</h4>
+              <p style={{ color: 'var(--text-secondary)' }}>{result.title}</p>
+            </div>
+            <div>
+              <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>Plain Language Summary</h4>
+              <p className="leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{result.summary}</p>
+            </div>
+            <div>
+              <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>Key Markers</h4>
+              <ul className="list-disc pl-5 mt-2 space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                {result.details.map((detail, i) => (
+                  <li key={i}>{detail}</li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          {/* Medical Disclaimer */}
-          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-xs text-amber-800">
-              ⚠️ <strong>Medical Disclaimer:</strong> This simplified summary is
-              for informational purposes only. Always consult with your
-              healthcare provider for professional medical advice and
-              interpretation of your reports.
-            </p>
-          </div>
+          <button onClick={() => { setResult(null); setFile(null) }} className="btn-secondary w-full mt-6">
+            Upload Another Report
+          </button>
         </div>
       )}
     </div>
   );
-};
+}
