@@ -1,413 +1,803 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import axios from "axios";
-import { ResponseActionBar } from "../components/ResponseActionBar";
-import { CrisisCard } from "../components/CrisisCard";
+import { useState, useRef, useEffect } from "react";
+import { useChat } from "../context/ChatContext";
+import {
+  Send,
+  Paperclip,
+  AlertTriangle,
+  Mic,
+  Heart,
+  Activity,
+  Leaf,
+  User,
+  Sparkles,
+  Menu,
+  X,
+  Plus,
+  MessageSquare,
+  Trash2,
+  Settings,
+  PanelLeft,
+  HelpCircle,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const ChatMessage = ({
-  message,
-  isUser,
-  onRegenerate,
-  onFeedback,
-  isLoading,
-}) => {
-  const getTimestamp = (date) => {
-    const now = new Date();
-    const messageDate = new Date(date);
-    const today = now.toDateString() === messageDate.toDateString();
+const MODES = [
+  {
+    id: "mental_health",
+    label: "Mental Health",
+    icon: Heart,
+    color: "var(--orange)",
+    bg: "var(--orange-subtle)",
+    activeBorder: "var(--orange)",
+  },
+  {
+    id: "physical_health",
+    label: "Physical Health",
+    icon: Activity,
+    color: "var(--purple)",
+    bg: "var(--purple-subtle)",
+    activeBorder: "var(--purple)",
+  },
+  {
+    id: "ayurveda",
+    label: "Ayurvedic",
+    icon: Leaf,
+    color: "var(--green)",
+    bg: "var(--green-subtle)",
+    activeBorder: "var(--green)",
+  },
+];
 
-    if (today) {
-      return messageDate
-        .toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
-        .replace(/\s/g, " ");
-    }
-    return messageDate.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-6`}>
-      <div className="max-w-md lg:max-w-xl">
-        <div
-          className={`${isUser ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"} rounded-2xl px-5 py-3 shadow-md`}
-        >
-          {!isUser && (
-            <div className="prose prose-sm max-w-none text-sm mb-2">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message.text}
-              </ReactMarkdown>
-            </div>
-          )}
-          {isUser && <p className="text-sm">{message.text}</p>}
-          <div
-            className={`text-xs mt-2 ${isUser ? "text-blue-100" : "text-gray-500"}`}
-          >
-            {getTimestamp(message.timestamp)}
-          </div>
-        </div>
-        {/* Action bar for AI messages only */}
-        {!isUser && (
-          <ResponseActionBar
-            responseText={message.text}
-            onRegenerate={onRegenerate}
-            onFeedback={onFeedback}
-            disabled={isLoading}
-          />
-        )}
-      </div>
-    </div>
-  );
+const SUGGESTED_PROMPTS = {
+  mental_health: [
+    "I've been feeling overwhelmed lately.",
+    "How can I manage my anxiety?",
+    "I'm having trouble sleeping.",
+  ],
+  physical_health: [
+    "Can you help me understand my blood test?",
+    "What are the symptoms of vitamin D deficiency?",
+    "I've been getting frequent headaches.",
+  ],
+  ayurveda: [
+    "How do I find out my dosha?",
+    "What are some natural ways to improve digestion?",
+    "How can I balance excess Vata?",
+  ],
 };
 
-const ChatInput = ({ onSendMessage, disabled, onFileUpload }) => {
-  const [input, setInput] = useState("");
-  const [isDragging, setIsDragging] = useState(false);
-  const textareaRef = useRef(null);
+const MOCK_HISTORY = [
+  { id: 1, title: "Anxiety management", date: "Today", mode: "mental_health" },
+  {
+    id: 2,
+    title: "Blood test results",
+    date: "Yesterday",
+    mode: "physical_health",
+  },
+  {
+    id: 3,
+    title: "Digestion issues",
+    date: "Previous 7 Days",
+    mode: "ayurveda",
+  },
+];
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (input.trim()) {
-        onSendMessage(input);
-        setInput("");
-      }
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      onFileUpload(files[0]);
-    }
-  };
-
-  return (
-    <div className="border-t border-gray-200 bg-white p-4">
-      {isDragging && (
-        <div className="mb-4 p-4 border-2 border-dashed border-blue-500 rounded-lg bg-blue-50 text-center">
-          <p className="text-blue-600 font-medium">Drop your report here</p>
-        </div>
-      )}
-      <div
-        className={`border-2 border-dashed rounded-lg p-4 mb-4 text-center cursor-pointer transition ${
-          isDragging
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-300 hover:border-gray-400"
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <p className="text-gray-600 text-sm">
-          📁 Drag & drop a report (PDF/Image) or click to upload
-        </p>
-      </div>
-
-      <div className="flex gap-3">
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message... (Shift+Enter for new line)"
-          disabled={disabled}
-          rows={3}
-          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-        />
-        <button
-          onClick={() => {
-            if (input.trim()) {
-              onSendMessage(input);
-              setInput("");
-            }
-          }}
-          disabled={disabled || !input.trim()}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium h-full"
-        >
-          Send
-        </button>
-      </div>
-
-      <p className="text-xs text-gray-600 mt-3">
-        ⚠️ <strong>Disclaimer:</strong> ReassureAI can make mistakes.
-        Cross-verify important health information with healthcare professionals.
-      </p>
-    </div>
-  );
+// Framer motion variants for staggered entrance
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
-
-const ModeSelector = ({ mode, setMode, disabled }) => {
-  const modes = [
-    { value: "mental_health", label: "🧠 Mental Health" },
-    { value: "physical_health", label: "💊 Physical Health" },
-    { value: "ayurveda", label: "🌿 Ayurveda" },
-    { value: "report", label: "📄 Report" },
-  ];
-
-  return (
-    <select
-      value={mode}
-      onChange={(e) => setMode(e.target.value)}
-      disabled={disabled}
-      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white font-medium"
-    >
-      {modes.map((m) => (
-        <option key={m.value} value={m.value}>
-          {m.label}
-        </option>
-      ))}
-    </select>
-  );
-};
-
-const ScrollToBottomButton = ({ visible, onClick }) => {
-  if (!visible) return null;
-  return (
-    <button
-      onClick={onClick}
-      className="fixed bottom-32 right-6 bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700 transition animate-bounce"
-      title="Scroll to latest"
-    >
-      ↓
-    </button>
-  );
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 400, damping: 30 },
+  },
 };
 
 export default function Chat() {
-  const location = useLocation();
-  const initialMode = location.state?.mode || "mental_health";
-
-  const [mode, setMode] = useState(initialMode);
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hello! I'm ReassureAI. How can I help you today? Feel free to ask about mental health, physical health, or upload a medical report.",
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showScrollButton, setShowScrollButton] = useState(false);
-  const [showCrisisCard, setShowCrisisCard] = useState(false);
-  const messagesEndRef = useRef(null);
-  const messagesContainerRef = useRef(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    setShowScrollButton(false);
-  };
+  const { messages, setMessages, activeMode, setActiveMode, isCrisis } =
+    useChat();
+  const [input, setInput] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const bottomRef = useRef(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, thinking]);
 
-  const handleScroll = () => {
-    if (messagesContainerRef.current) {
-      const { scrollHeight, scrollTop, clientHeight } =
-        messagesContainerRef.current;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      setShowScrollButton(!isNearBottom);
-    }
-  };
+  const currentMode = MODES.find((m) => m.id === activeMode) || MODES[0];
 
-  const handleSendMessage = async (text) => {
-    const userMessage = {
-      id: messages.length + 1,
-      text,
-      isUser: true,
-      timestamp: new Date(),
-    };
+  const handleSend = (e, customText = null) => {
+    if (e) e.preventDefault();
+    const textToSend = customText !== null ? customText : input;
+    if (!textToSend.trim() || thinking) return;
 
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
+    const userMsg = { id: Date.now(), text: textToSend, sender: "user" };
+    setMessages((prev) => [...prev, userMsg]);
+    if (customText === null) setInput("");
+    setThinking(true);
 
-    try {
-      // Mock API call — replace with real endpoint later
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const aiResponse = {
-        id: messages.length + 2,
-        text: `**Response in ${mode} mode:**\n\nI understand you're asking about "${text.substring(0, 30)}..."\n\nThis is a mock response. Real responses will come from the backend API when integrated.`,
-        isUser: false,
-        timestamp: new Date(),
-      };
-
-      // Crisis detection: Check for crisis keywords (in real app, backend would determine this)
-      const crisisKeywords = [
-        "suicide",
-        "self harm",
-        "hurt myself",
-        "end my life",
-        "can't take it",
-        "hopeless",
-        "kill myself",
-        "crisis",
-        "emergency",
-      ];
-      const isCrisis = crisisKeywords.some((keyword) =>
-        text.toLowerCase().includes(keyword),
-      );
-
-      if (isCrisis) {
-        setShowCrisisCard(true);
-      }
-
-      setMessages((prev) => [...prev, aiResponse]);
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFileUpload = async (file) => {
-    const userMessage = {
-      id: messages.length + 1,
-      text: `📎 Uploaded: ${file.name}`,
-      isUser: true,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
-
-    try {
-      // Mock file processing — replace with real endpoint later
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const aiResponse = {
-        id: messages.length + 2,
-        text: `**Report Summary:**\n\nThank you for uploading "${file.name}". Here's a simplified summary:\n\n- **Key findings:** Placeholder text\n- **Recommendations:** Regular health check-ups\n- **Next steps:** Consult a healthcare professional\n\n*(This is a mock response. Real analysis comes from backend)*`,
-        isUser: false,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, aiResponse]);
-    } catch (error) {
-      console.error("Failed to process file:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegenerate = () => {
-    // Find the last user message
-    const lastUserMessage = [...messages].reverse().find((msg) => msg.isUser);
-
-    if (lastUserMessage) {
-      // Remove the last AI response if exists
-      const lastAIIndex = messages.reverse().findIndex((msg) => !msg.isUser);
-      if (lastAIIndex !== -1) {
-        setMessages((prev) => prev.slice(0, prev.length - lastAIIndex - 1));
-      }
-
-      // Resend the last user message
-      handleSendMessage(lastUserMessage.text);
-    }
-  };
-
-  const handleFeedback = async (messageId, feedbackType) => {
-    try {
-      // Mock feedback submission — replace with real API endpoint later
-      await axios.post(
-        "/api/v1/feedback",
+    setTimeout(() => {
+      setThinking(false);
+      setMessages((prev) => [
+        ...prev,
         {
-          message_id: messageId,
-          feedback: feedbackType,
+          id: Date.now() + 1,
+          text: "I'm here to support you. This is a placeholder response — the full AI backend will be connected shortly.",
+          sender: "ai",
         },
-        { withCredentials: true },
-      );
-      console.log(`Feedback ${feedbackType} recorded for message ${messageId}`);
-    } catch (error) {
-      console.error("Failed to submit feedback:", error);
-    }
+      ]);
+    }, 1400);
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Chat</h1>
-            <p className="text-sm text-gray-600">
-              Mode: {mode.replace(/_/g, " ")}
-            </p>
-          </div>
-          <ModeSelector mode={mode} setMode={setMode} disabled={isLoading} />
-        </div>
-      </div>
+    <div
+      className="flex-1 w-full bg-[var(--bg-base)] transition-colors duration-300 flex overflow-hidden"
+      style={{ height: "calc(100vh - 60px)" }}
+    >
+      <div className="w-full h-full px-4 sm:px-6 lg:px-8">
+        <div className="w-full h-full flex relative">
+          {/* Mobile Overlay Backdrop */}
+          <AnimatePresence>
+            {sidebarOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSidebarOpen(false)}
+                className="fixed inset-0 z-10 md:hidden"
+                style={{
+                  background: "rgba(0,0,0,0.4)",
+                  backdropFilter: "blur(2px)",
+                }}
+              />
+            )}
+          </AnimatePresence>
 
-      {/* Crisis Card - Always visible when crisis detected */}
-      {showCrisisCard && (
-        <div className="max-w-4xl mx-auto w-full px-6 pt-4">
-          <CrisisCard />
-        </div>
-      )}
+          {/* Sidebar */}
+          <AnimatePresence initial={false}>
+            {sidebarOpen && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 280, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="absolute md:relative left-0 md:left-auto top-0 h-full z-20 overflow-hidden flex-shrink-0 shadow-2xl md:shadow-none"
+                style={{
+                  background: "var(--bg-surface)",
+                  borderRight: "1px solid var(--border)",
+                }}
+              >
+                <div className="w-[280px] h-full flex flex-col">
+                  {/* Sidebar Header / Toggle */}
+                  <div className="py-4 flex items-center flex-shrink-0">
+                    <button
+                      onClick={() => setSidebarOpen(false)}
+                      className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                      aria-label="Close sidebar"
+                    >
+                      <PanelLeft
+                        className="w-5 h-5 hidden md:block"
+                        style={{ color: "var(--text-secondary)" }}
+                      />
+                      <X
+                        className="w-5 h-5"
+                        style={{ color: "var(--text-secondary)" }}
+                      />
+                    </button>
+                  </div>
+                  {/* New Chat Action */}
+                  <div className="px-4 mb-6 flex-shrink-0">
+                    <button
+                      className="flex items-center gap-3 px-4 py-3 rounded-full transition-colors shadow-sm group hover:shadow-md"
+                      style={{
+                        background: "var(--bg-elevated)",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      <Plus
+                        className="w-5 h-5"
+                        style={{ color: "var(--text-primary)" }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "0.875rem",
+                          fontWeight: 500,
+                          color: "var(--text-primary)",
+                        }}
+                      >
+                        New chat
+                      </span>
+                    </button>
+                  </div>
+                  {/* History List */}
+                  <div className="px-5 mb-2 flex-shrink-0">
+                    <span
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 500,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      Recent
+                    </span>
+                  </div>
+                  <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-0.5">
+                    {MOCK_HISTORY.map((chat) => {
+                      return (
+                        <button
+                          key={chat.id}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left group hover:bg-black/5 dark:hover:bg-white/5"
+                          style={{ background: "transparent" }}
+                        >
+                          <MessageSquare
+                            className="w-4 h-4 flex-shrink-0"
+                            style={{ color: "var(--text-muted)" }}
+                          />
+                          <div className="flex-1 overflow-hidden">
+                            <p
+                              className="truncate"
+                              style={{
+                                fontSize: "0.875rem",
+                                color: "var(--text-secondary)",
+                              }}
+                            >
+                              {chat.title}
+                            </p>
+                          </div>
+                          <Trash2
+                            className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all"
+                            style={{ color: "var(--text-muted)" }}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Bottom Actions */}
+                  <div className="px-2 pb-2 flex-shrink-0 flex flex-col gap-0.5">
+                    <button
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left group hover:bg-black/5 dark:hover:bg-white/5"
+                      style={{ background: "transparent" }}
+                    >
+                      <HelpCircle
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: "var(--text-muted)" }}
+                      />
+                      <p
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        Help
+                      </p>
+                    </button>
+                    <button
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left group hover:bg-black/5 dark:hover:bg-white/5"
+                      style={{ background: "transparent" }}
+                    >
+                      <Activity
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: "var(--text-muted)" }}
+                      />
+                      <p
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        Activity
+                      </p>
+                    </button>
+                    <button
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left group hover:bg-black/5 dark:hover:bg-white/5"
+                      style={{ background: "transparent" }}
+                    >
+                      <Settings
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: "var(--text-muted)" }}
+                      />
+                      <p
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        Settings
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      {/* Messages Container */}
-      <div
-        ref={messagesContainerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full"
-      >
-        {messages.map((msg) => (
-          <ChatMessage
-            key={msg.id}
-            message={msg}
-            isUser={msg.isUser}
-            onRegenerate={handleRegenerate}
-            onFeedback={(type) => handleFeedback(msg.id, type)}
-            isLoading={isLoading}
-          />
-        ))}
+          <div className="flex-1 flex flex-col min-w-0 h-full relative">
+            {/* Global Sidebar Toggle Button (Far Left) */}
+            {!sidebarOpen && (
+              <div className="absolute top-4 left-0 z-20 hidden md:block">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  aria-label="Open history sidebar"
+                >
+                  <PanelLeft
+                    className="w-5 h-5"
+                    style={{
+                      color: "var(--text-secondary)",
+                      transition: "color 0.3s",
+                    }}
+                  />
+                </button>
+              </div>
+            )}
 
-        {isLoading && (
-          <div className="flex justify-start mb-6">
-            <div className="bg-gray-100 rounded-2xl px-5 py-3 text-gray-600">
-              <div className="flex gap-2">
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></span>
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></span>
+            <div className="flex-1 flex flex-col w-full h-full py-4 gap-4 min-h-0 px-4 md:px-0">
+              {/* Mode Selector */}
+              <div
+                className="flex gap-1.5 p-1.5 rounded-2xl w-fit mx-auto mt-2 mb-1 shadow-sm"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                {MODES.map((mode) => {
+                  const active = activeMode === mode.id;
+                  return (
+                    <button
+                      key={mode.id}
+                      id={`mode-${mode.id}`}
+                      onClick={() => setActiveMode(mode.id)}
+                      className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 outline-none"
+                      style={{
+                        color: active ? mode.color : "var(--text-muted)",
+                      }}
+                    >
+                      {active && (
+                        <motion.div
+                          layoutId="activeMode"
+                          className="absolute inset-0 rounded-xl shadow-sm"
+                          style={{
+                            background: mode.bg,
+                            border: `1px solid ${mode.activeBorder}`,
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 40,
+                          }}
+                        />
+                      )}
+                      <span className="relative z-10 flex items-center gap-2">
+                        <mode.icon className="w-4 h-4" /> {mode.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Crisis Banner */}
+              <AnimatePresence>
+                {isCrisis && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="rounded-xl overflow-hidden"
+                    style={{
+                      background: "var(--orange-subtle)",
+                      border: "1px solid var(--orange-border)",
+                    }}
+                  >
+                    <div className="flex items-start gap-3 p-4">
+                      <AlertTriangle
+                        className="w-4 h-4 flex-shrink-0 mt-0.5"
+                        style={{ color: "var(--orange)" }}
+                      />
+                      <div>
+                        <p
+                          style={{
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            color: "var(--orange)",
+                            marginBottom: "0.25rem",
+                          }}
+                        >
+                          We're concerned about you
+                        </p>
+                        <p
+                          style={{
+                            fontSize: "0.8125rem",
+                            color: "var(--text-secondary)",
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          It sounds like you might be going through something
+                          difficult. Please reach out — iCall helpline:{" "}
+                          <strong style={{ color: "var(--orange)" }}>
+                            9152987821
+                          </strong>
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Chat window */}
+              <div
+                className="flex-1 rounded-3xl overflow-hidden flex flex-col min-h-0 relative shadow-xl"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border)",
+                  transition: "background 0.3s, border-color 0.3s",
+                  boxShadow: "0 10px 40px -10px rgba(0,0,0,0.1)",
+                }}
+              >
+                {/* Chat header */}
+                <div
+                  className="flex items-center gap-3 px-6 py-4 flex-shrink-0 z-10 backdrop-blur-md"
+                  style={{
+                    borderBottom: "1px solid var(--border)",
+                    background:
+                      "color-mix(in srgb, var(--bg-surface) 85%, transparent)",
+                  }}
+                >
+                  {!sidebarOpen && (
+                    <button
+                      onClick={() => setSidebarOpen(true)}
+                      className="p-2 -ml-2 mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                      aria-label="Open history sidebar"
+                    >
+                      <Menu
+                        className="w-5 h-5"
+                        style={{
+                          color: "var(--text-secondary)",
+                          transition: "color 0.3s",
+                        }}
+                      />
+                    </button>
+                  )}
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center shadow-inner"
+                    style={{
+                      background: currentMode.bg,
+                      border: `1px solid ${currentMode.color}`,
+                    }}
+                  >
+                    <currentMode.icon
+                      className="w-4 h-4"
+                      style={{ color: currentMode.color }}
+                    />
+                  </div>
+                  <div>
+                    <p
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      {currentMode.label} Assistant
+                    </p>
+                    <p
+                      style={{ fontSize: "0.625rem", color: currentMode.color }}
+                    >
+                      ● Online
+                    </p>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3 min-h-0">
+                  {messages.length === 0 ? (
+                    <motion.div
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="show"
+                      className="m-auto text-center max-w-xl w-full px-4"
+                    >
+                      <div
+                        className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-lg"
+                        style={{
+                          background: currentMode.color,
+                          border: `1px solid ${currentMode.activeBorder}`,
+                        }}
+                      >
+                        <currentMode.icon className="w-7 h-7 text-white drop-shadow-md" />
+                      </div>
+                      <h3
+                        style={{
+                          fontSize: "1.125rem",
+                          fontWeight: 600,
+                          color: "var(--text-primary)",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        Start a {currentMode.label} conversation
+                      </h3>
+                      <p
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "var(--text-secondary)",
+                          marginBottom: "2.5rem",
+                        }}
+                      >
+                        Your messages are private and secure. How can I help you
+                        today?
+                      </p>
+
+                      <div className="flex flex-col gap-2.5">
+                        {SUGGESTED_PROMPTS[currentMode.id].map((prompt, i) => (
+                          <motion.button
+                            variants={itemVariants}
+                            key={i}
+                            onClick={() => handleSend(null, prompt)}
+                            className="flex items-center gap-3 px-5 py-4 rounded-2xl text-sm text-left transition-all duration-200 shadow-sm group"
+                            style={{
+                              background: "var(--bg-elevated)",
+                              border: "1px solid var(--border)",
+                              color: "var(--text-secondary)",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor =
+                                currentMode.color;
+                              e.currentTarget.style.color =
+                                "var(--text-primary)";
+                              e.currentTarget.style.transform =
+                                "translateY(-2px)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor =
+                                "var(--border)";
+                              e.currentTarget.style.color =
+                                "var(--text-secondary)";
+                              e.currentTarget.style.transform = "translateY(0)";
+                            }}
+                          >
+                            <Sparkles
+                              className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              style={{ color: currentMode.color }}
+                            />
+                            <span className="flex-1">{prompt}</span>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    messages.map((msg) => (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className={`flex w-full ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`flex gap-3 max-w-[85%] ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
+                        >
+                          <div
+                            className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-auto shadow-sm"
+                            style={{
+                              background:
+                                msg.sender === "user"
+                                  ? "var(--bg-elevated)"
+                                  : currentMode.bg,
+                              border: `1px solid ${msg.sender === "user" ? "var(--border)" : currentMode.color}`,
+                            }}
+                          >
+                            {msg.sender === "user" ? (
+                              <User
+                                className="w-4 h-4"
+                                style={{ color: "var(--text-secondary)" }}
+                              />
+                            ) : (
+                              <currentMode.icon
+                                className="w-4 h-4"
+                                style={{ color: currentMode.color }}
+                              />
+                            )}
+                          </div>
+                          <div
+                            className="shadow-sm"
+                            style={{
+                              padding: "0.75rem 1.125rem",
+                              borderRadius:
+                                msg.sender === "user"
+                                  ? "1.25rem 1.25rem 0.25rem 1.25rem"
+                                  : "1.25rem 1.25rem 1.25rem 0.25rem",
+                              background:
+                                msg.sender === "user"
+                                  ? currentMode.bg
+                                  : "var(--bg-elevated)",
+                              border:
+                                msg.sender === "user"
+                                  ? `1px solid ${currentMode.color}`
+                                  : "1px solid var(--border)",
+                              fontSize: "0.9375rem",
+                              color:
+                                msg.sender === "user"
+                                  ? "var(--text-primary)"
+                                  : "var(--text-secondary)",
+                              lineHeight: 1.6,
+                            }}
+                          >
+                            {msg.text}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+
+                  {/* Thinking indicator */}
+                  <AnimatePresence>
+                    {thinking && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="flex w-full justify-start"
+                      >
+                        <div className="flex gap-3 max-w-[85%] flex-row">
+                          <div
+                            className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-auto shadow-sm"
+                            style={{
+                              background: currentMode.bg,
+                              border: `1px solid ${currentMode.color}`,
+                            }}
+                          >
+                            <currentMode.icon
+                              className="w-4 h-4"
+                              style={{ color: currentMode.color }}
+                            />
+                          </div>
+                          <div
+                            className="shadow-sm"
+                            style={{
+                              padding: "0.875rem 1.125rem",
+                              borderRadius: "1.25rem 1.25rem 1.25rem 0.25rem",
+                              background: "var(--bg-elevated)",
+                              border: "1px solid var(--border)",
+                              display: "flex",
+                              gap: 6,
+                              alignItems: "center",
+                            }}
+                          >
+                            {[0, 1, 2].map((i) => (
+                              <span
+                                key={i}
+                                className="animate-breathe"
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  background: currentMode.color,
+                                  display: "inline-block",
+                                  animationDelay: `${i * 0.2}s`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <div ref={bottomRef} />
+                </div>
+
+                {/* Input */}
+                <div
+                  className="p-4 flex-shrink-0 z-10 backdrop-blur-md"
+                  style={{
+                    borderTop: "1px solid var(--border)",
+                    background:
+                      "color-mix(in srgb, var(--bg-surface) 85%, transparent)",
+                  }}
+                >
+                  <form
+                    onSubmit={handleSend}
+                    className="flex items-center gap-2 max-w-4xl mx-auto rounded-2xl p-1.5 transition-all duration-300 shadow-sm focus-within:shadow-md"
+                    style={{
+                      background: "var(--bg-input)",
+                      border: "1px solid var(--border)",
+                    }}
+                    onFocus={(e) => {
+                      if (!thinking)
+                        e.currentTarget.style.borderColor = currentMode.color;
+                    }}
+                    onBlur={(e) => {
+                      if (!thinking)
+                        e.currentTarget.style.borderColor = "var(--border)";
+                    }}
+                  >
+                    <button
+                      type="button"
+                      id="btn-attach"
+                      aria-label="Attach file"
+                      disabled={thinking}
+                      className="p-2.5 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
+                      style={{
+                        color: "var(--text-dim)",
+                        background: "transparent",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!thinking)
+                          e.currentTarget.style.color = "var(--brand)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!thinking)
+                          e.currentTarget.style.color = "var(--text-dim)";
+                      }}
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </button>
+
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder={`Ask about your ${currentMode.label.toLowerCase()}...`}
+                      id="chat-input"
+                      disabled={thinking}
+                      className="flex-1 bg-transparent px-2 py-3 text-[0.9375rem]"
+                      style={{
+                        color: "var(--text-primary)",
+                        outline: "none",
+                        fontFamily: "var(--font-sans)",
+                        opacity: thinking ? 0.6 : 1,
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      id="btn-mic"
+                      aria-label="Use microphone"
+                      disabled={thinking}
+                      className="p-2.5 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
+                      style={{ color: "var(--text-dim)" }}
+                      onMouseEnter={(e) => {
+                        if (!thinking)
+                          e.currentTarget.style.color = "var(--brand)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!thinking)
+                          e.currentTarget.style.color = "var(--text-dim)";
+                      }}
+                    >
+                      <Mic className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="submit"
+                      id="btn-send"
+                      disabled={!input.trim() || thinking}
+                      className="p-3 rounded-xl flex-shrink-0 transition-all duration-300 shadow-sm"
+                      style={{
+                        background:
+                          input.trim() && !thinking
+                            ? currentMode.color
+                            : "var(--bg-elevated)",
+                        color:
+                          input.trim() && !thinking
+                            ? "#fff"
+                            : "var(--text-dim)",
+                        border: `1px solid ${input.trim() && !thinking ? currentMode.activeBorder : "transparent"}`,
+                        cursor:
+                          input.trim() && !thinking ? "pointer" : "not-allowed",
+                      }}
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
-        )}
-
-        <div ref={messagesEndRef} />
+        </div>
       </div>
-
-      {/* Scroll to Bottom Button */}
-      <ScrollToBottomButton
-        visible={showScrollButton}
-        onClick={scrollToBottom}
-      />
-
-      {/* Input Area */}
-      <ChatInput
-        onSendMessage={handleSendMessage}
-        disabled={isLoading}
-        onFileUpload={handleFileUpload}
-      />
     </div>
   );
 }
