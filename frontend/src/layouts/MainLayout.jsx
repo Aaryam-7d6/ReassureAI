@@ -201,7 +201,9 @@ export default function MainLayout() {
 
             {/* Right side */}
             <div className="flex items-center gap-2">
-              <ServerStatus />
+              <div className="hidden sm:block">
+                <ServerStatus />
+              </div>
 
               {/* Theme toggle */}
               <button
