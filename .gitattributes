@@ -1,3 +1,19 @@
 # Handle line endings automatically for all files detected as text 
 # and force them to be normalized to LF when committed to GitHub.
+
 * text=auto
+
+###############################################################################
+# FRONTEND / DEPENDENCY MANAGEMENT
+###############################################################################
+# WHAT IS THIS: Marks the package-lock.json file as an automatically generated asset.
+# WHY WE NEED IT: Every time someone installs or updates an npm package, this file 
+#                 changes by thousands of lines. This completely floods our GitHub 
+#                 Pull Requests (PRs) with noisy code we don't need to manually read.
+# WHAT IT DOES: GitHub will automatically collapse and hide this file's changes 
+#               by default during PR reviews. It keeps our diffs clean so we can 
+#               focus 100% on reviewing our actual React/JavaScript source code.
+
+package-lock.json linguist-generated=true
+yarn.lock linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
