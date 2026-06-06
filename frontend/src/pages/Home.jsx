@@ -614,9 +614,9 @@ export default function Home() {
                     <span
                       className="rounded-full px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.2em]"
                       style={{
-                        background: "rgba(255,255,255,0.06)",
+                        background: "var(--bg-elevated)",
                         color: "var(--text-primary)",
-                        border: "1px solid rgba(255,255,255,0.08)",
+                        border: "1px solid var(--border)",
                       }}
                     >
                       {f.status}
@@ -1063,7 +1063,7 @@ export default function Home() {
           </div>
 
           {/* RIGHT — Created by + License */}
-          <div className="flex flex-col items-end gap-2 text-right">
+          <div className="flex flex-col items-start text-left md:items-end md:text-right gap-2">
             <p
               style={{
                 fontSize: "0.9375rem",
