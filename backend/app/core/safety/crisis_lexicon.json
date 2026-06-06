@@ -1,0 +1,29 @@
+{
+  "_note": "FALLBACK ONLY. Primary = semantic_gate.py LLM call.",
+  "high_risk": [
+    "suicide",
+    "kill myself",
+    "end my life",
+    "want to die",
+    "hurt myself",
+    "self harm",
+    "overdose",
+    "can't go on",
+    "no point living",
+    "better off dead"
+  ],
+  "medium_risk": [
+    "feeling hopeless",
+    "no reason to live",
+    "nobody cares",
+    "everyone would be better without me"
+  ],
+  "emergency_medical": [
+    "chest pain",
+    "can't breathe",
+    "heart attack",
+    "stroke",
+    "unconscious",
+    "severe bleeding"
+  ]
+}
