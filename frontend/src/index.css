@@ -23,12 +23,12 @@
   --border-strong: #252d38;
 
   /* Text */
-  --text-primary: #c8d8e8;
-  --text-secondary: #8b9ab0;
-  --text-muted: #3a4e62;
-  --text-dim: #1e2d3d;
-  --text-input: #c8d8e8;
-  --text-placeholder: #2a3a4a;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --text-input: #f8fafc;
+  --text-placeholder: #475569;
 
   /* Brand accents — same in both themes for consistency */
   --brand: #2dd4bf;
