@@ -28,7 +28,11 @@ const unauthNavLinks = [
   { href: "/#features", label: "Features", icon: Activity },
   { href: "/#workflow", label: "How It Works", icon: Activity },
   { href: "/#team", label: "Team", icon: Activity },
-  { href: "/#contact", label: "Contact", icon: Activity },
+  {
+    href: "mailto:reassureai.support@gmail.com",
+    label: "Contact",
+    icon: Activity,
+  },
 ];
 
 export default function MainLayout() {
@@ -38,6 +42,7 @@ export default function MainLayout() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [teamHover, setTeamHover] = useState(false);
+  const [contactHover, setContactHover] = useState(false);
 
   const teamMembers = [
     {
@@ -125,10 +130,12 @@ export default function MainLayout() {
             </Link>
 
             {/* Desktop links */}
-            <nav className="hidden md:flex items-center justify-center flex-1 gap-8 ml-8">
+            <nav className="hidden lg:flex items-center justify-center flex-1 gap-8 ml-8">
               {(user ? authNavLinks : unauthNavLinks).map(({ href, label }) => {
                 const active = location.pathname === href;
                 const isHashLink = href.includes("#");
+                const isMailLink = href.startsWith("mailto:");
+                const isExternalLink = href.startsWith("http");
                 const isHomeLink = label === "Home";
 
                 // Special handling for Team link with dropdown
@@ -189,6 +196,7 @@ export default function MainLayout() {
                   );
                 }
 
+                const isContactLink = label === "Contact";
                 const linkProps = {
                   key: href,
                   className:
@@ -205,6 +213,53 @@ export default function MainLayout() {
                   },
                 };
 
+                if (isContactLink) {
+                  return (
+                    <div
+                      key={href}
+                      className="relative"
+                      onMouseEnter={() => setContactHover(true)}
+                      onMouseLeave={() => setContactHover(false)}
+                    >
+                      <a
+                        href={href}
+                        className="text-sm font-medium transition-all duration-150 hover:text-opacity-100"
+                        style={linkProps.style}
+                      >
+                        {label}
+                      </a>
+
+                      <AnimatePresence>
+                        {contactHover && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max"
+                            style={{
+                              background: "var(--bg-surface)",
+                              border: "1px solid var(--border-subtle)",
+                              borderRadius: "0.5rem",
+                              padding: "0.75rem 1rem",
+                              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                              zIndex: 40,
+                            }}
+                          >
+                            <a
+                              href={href}
+                              className="block text-sm py-1 hover:text-brand"
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              reassureai.support@gmail.com
+                            </a>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                }
+
                 if (isHomeLink) {
                   return (
                     <Link
@@ -218,8 +273,14 @@ export default function MainLayout() {
                   );
                 }
 
-                return isHashLink ? (
-                  <a href={href} {...linkProps}>
+                return isHashLink || isMailLink || isExternalLink ? (
+                  <a
+                    href={href}
+                    {...linkProps}
+                    {...(isExternalLink
+                      ? { target: "_blank", rel: "noreferrer" }
+                      : {})}
+                  >
                     {label}
                   </a>
                 ) : (
@@ -283,7 +344,7 @@ export default function MainLayout() {
               </button>
 
               {user ? (
-                <div className="hidden md:flex items-center gap-2">
+                <div className="hidden lg:flex items-center gap-2">
                   <button
                     onClick={logout}
                     id="btn-logout"
@@ -301,7 +362,7 @@ export default function MainLayout() {
                 <Link
                   to="/auth"
                   id="btn-signin"
-                  className="btn-primary text-sm"
+                  className="hidden lg:inline-flex btn-primary text-sm"
                   style={{ padding: "0.5rem 1.25rem" }}
                 >
                   Get started
@@ -310,7 +371,7 @@ export default function MainLayout() {
 
               {/* Mobile hamburger */}
               <button
-                className="md:hidden p-1.5 rounded-md transition-colors"
+                className="lg:hidden p-1.5 rounded-md transition-colors"
                 style={{ color: "var(--text-muted)" }}
                 onClick={() => setMobileOpen((v) => !v)}
                 aria-label="Toggle menu"
@@ -342,6 +403,8 @@ export default function MainLayout() {
                 {(user ? authNavLinks : unauthNavLinks).map(
                   ({ href, label, icon: Icon }) => {
                     const isHashLink = href.includes("#");
+                    const isMailLink = href.startsWith("mailto:");
+                    const isExternalLink = href.startsWith("http");
                     const isHomeLink = label === "Home";
                     const commonStyle = {
                       color:
@@ -365,12 +428,15 @@ export default function MainLayout() {
                       );
                     }
 
-                    return isHashLink ? (
+                    return isHashLink || isMailLink || isExternalLink ? (
                       <a
                         key={href}
                         href={href}
                         className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors"
                         style={commonStyle}
+                        {...(isExternalLink
+                          ? { target: "_blank", rel: "noreferrer" }
+                          : {})}
                       >
                         <Icon className="w-4 h-4" />
                         {label}
