@@ -1080,8 +1080,37 @@ export default function Home() {
                 lineHeight: 1.7,
               }}
             >
-              Aarya R. Thakar &bull; Ansh B. Patel &bull; Darshan B. Kyada
-              &bull; Elvis T. Fernandes
+              <a
+                href="https://github.com/Aaryam-7d6"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Aarya R. Thakar
+              </a>
+              &nbsp;&bull;&nbsp;
+              <a
+                href="https://github.com/Ansh-Patel-123"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ansh B. Patel
+              </a>
+              &nbsp;&bull;&nbsp;
+              <a
+                href="https://github.com/DARSHAN081104"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Darshan B. Kyada
+              </a>
+              &nbsp;&bull;&nbsp;
+              <a
+                href="https://github.com/Elvis2724"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Elvis T. Fernandes
+              </a>
             </p>
             <p style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>
               Licensed under MIT &copy; 2026 ReassureAI

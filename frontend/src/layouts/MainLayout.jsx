@@ -40,10 +40,22 @@ export default function MainLayout() {
   const [teamHover, setTeamHover] = useState(false);
 
   const teamMembers = [
-    "Aarya R. Thakar",
-    "Ansh B. Patel",
-    "Darshan B. Kyada",
-    "Elvis T. Fernandes",
+    {
+      name: "Aarya R. Thakar",
+      href: "https://www.linkedin.com/in/aaryamthakar?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+    },
+    {
+      name: "Ansh B. Patel",
+      href: "https://www.linkedin.com/in/ansh-patel-a756162b5?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+    },
+    {
+      name: "Darshan B. Kyada",
+      href: "https://www.linkedin.com/in/darshankyada?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+    },
+    {
+      name: "Elvis T. Fernandes",
+      href: "https://www.linkedin.com/in/elvis-thomas-46631a375?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+    },
   ];
 
   useEffect(() => {
@@ -53,6 +65,11 @@ export default function MainLayout() {
   }, []);
 
   useEffect(() => setMobileOpen(false), [location.pathname]);
+
+  const handleScrollTop = (e) => {
+    // Smoothly scroll to top of page
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div
@@ -75,6 +92,7 @@ export default function MainLayout() {
             <Link
               to="/"
               id="nav-logo"
+              onClick={handleScrollTop}
               className="flex items-center gap-2 group flex-shrink-0"
             >
               <div
@@ -111,6 +129,7 @@ export default function MainLayout() {
               {(user ? authNavLinks : unauthNavLinks).map(({ href, label }) => {
                 const active = location.pathname === href;
                 const isHashLink = href.includes("#");
+                const isHomeLink = label === "Home";
 
                 // Special handling for Team link with dropdown
                 if (label === "Team") {
@@ -151,14 +170,17 @@ export default function MainLayout() {
                               zIndex: 40,
                             }}
                           >
-                            {teamMembers.map((member) => (
-                              <div
-                                key={member}
-                                className="text-sm py-1"
+                            {teamMembers.map(({ name, href }) => (
+                              <a
+                                key={name}
+                                href={href}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block text-sm py-1 hover:text-brand"
                                 style={{ color: "var(--text-primary)" }}
                               >
-                                • {member}
-                              </div>
+                                • {name}
+                              </a>
                             ))}
                           </motion.div>
                         )}
@@ -182,6 +204,19 @@ export default function MainLayout() {
                       e.currentTarget.style.color = "var(--text-muted)";
                   },
                 };
+
+                if (isHomeLink) {
+                  return (
+                    <Link
+                      to="/"
+                      id={`nav-${label.toLowerCase()}`}
+                      onClick={handleScrollTop}
+                      {...linkProps}
+                    >
+                      {label}
+                    </Link>
+                  );
+                }
 
                 return isHashLink ? (
                   <a href={href} {...linkProps}>
@@ -307,12 +342,28 @@ export default function MainLayout() {
                 {(user ? authNavLinks : unauthNavLinks).map(
                   ({ href, label, icon: Icon }) => {
                     const isHashLink = href.includes("#");
+                    const isHomeLink = label === "Home";
                     const commonStyle = {
                       color:
                         location.pathname === href
                           ? "var(--brand)"
                           : "var(--text-muted)",
                     };
+
+                    if (isHomeLink) {
+                      return (
+                        <Link
+                          key={href}
+                          to="/"
+                          onClick={handleScrollTop}
+                          className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors"
+                          style={commonStyle}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {label}
+                        </Link>
+                      );
+                    }
 
                     return isHashLink ? (
                       <a
