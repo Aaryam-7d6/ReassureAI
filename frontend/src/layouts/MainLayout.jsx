@@ -41,27 +41,7 @@ export default function MainLayout() {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [teamHover, setTeamHover] = useState(false);
   const [contactHover, setContactHover] = useState(false);
-
-  const teamMembers = [
-    {
-      name: "Aarya R. Thakar",
-      href: "https://www.linkedin.com/in/aaryamthakar?utm_source=share_via&utm_content=profile&utm_medium=member_android",
-    },
-    {
-      name: "Ansh B. Patel",
-      href: "https://www.linkedin.com/in/ansh-patel-a756162b5?utm_source=share_via&utm_content=profile&utm_medium=member_android",
-    },
-    {
-      name: "Darshan B. Kyada",
-      href: "https://www.linkedin.com/in/darshankyada?utm_source=share_via&utm_content=profile&utm_medium=member_android",
-    },
-    {
-      name: "Elvis T. Fernandes",
-      href: "https://www.linkedin.com/in/elvis-thomas-46631a375?utm_source=share_via&utm_content=profile&utm_medium=member_android",
-    },
-  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -138,63 +118,6 @@ export default function MainLayout() {
                 const isExternalLink = href.startsWith("http");
                 const isHomeLink = label === "Home";
 
-                // Special handling for Team link with dropdown
-                if (label === "Team") {
-                  return (
-                    <div
-                      key={href}
-                      className="relative"
-                      onMouseEnter={() => setTeamHover(true)}
-                      onMouseLeave={() => setTeamHover(false)}
-                    >
-                      <a
-                        href={href}
-                        className="text-sm font-medium transition-all duration-150 hover:text-opacity-100"
-                        style={{
-                          color: teamHover
-                            ? "var(--brand)"
-                            : "var(--text-muted)",
-                        }}
-                      >
-                        {label}
-                      </a>
-
-                      {/* Team dropdown */}
-                      <AnimatePresence>
-                        {teamHover && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max"
-                            style={{
-                              background: "var(--bg-surface)",
-                              border: "1px solid var(--border-subtle)",
-                              borderRadius: "0.5rem",
-                              padding: "0.75rem 1rem",
-                              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-                              zIndex: 40,
-                            }}
-                          >
-                            {teamMembers.map(({ name, href }) => (
-                              <a
-                                key={name}
-                                href={href}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="block text-sm py-1 hover:text-brand"
-                                style={{ color: "var(--text-primary)" }}
-                              >
-                                • {name}
-                              </a>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                }
 
                 const isContactLink = label === "Contact";
                 const linkProps = {
