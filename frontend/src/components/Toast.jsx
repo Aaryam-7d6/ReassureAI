@@ -1,22 +1,22 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { createContext, useContext, useState, useCallback } from "react";
+import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info', details = null) => {
+  const addToast = useCallback((message, type = "info", details = null) => {
     const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type, details }]);
+    setToasts((prev) => [...prev, { id, message, type, details }]);
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
+      setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 5000);
   }, []);
 
   const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   return (
@@ -24,11 +24,11 @@ export function ToastProvider({ children }) {
       {children}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
         <AnimatePresence>
-          {toasts.map(toast => (
-            <Toast 
-              key={toast.id} 
-              toast={toast} 
-              onClose={() => removeToast(toast.id)} 
+          {toasts.map((toast) => (
+            <Toast
+              key={toast.id}
+              toast={toast}
+              onClose={() => removeToast(toast.id)}
             />
           ))}
         </AnimatePresence>
@@ -41,15 +41,15 @@ export const useToast = () => useContext(ToastContext);
 
 function Toast({ toast, onClose }) {
   const icons = {
-    success: <CheckCircle className="text-green-500 h-5 w-5" />,
-    error: <AlertCircle className="text-red-500 h-5 w-5" />,
-    info: <Info className="text-blue-500 h-5 w-5" />
+    success: <CheckCircle className="text-current h-5 w-5" />,
+    error: <AlertCircle className="text-current h-5 w-5" />,
+    info: <Info className="text-current h-5 w-5" />,
   };
 
-  const bgColors = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800'
+  const toastClasses = {
+    success: "toast-glass toast-success",
+    error: "toast-glass toast-error",
+    info: "toast-glass toast-info",
   };
 
   return (
@@ -57,7 +57,7 @@ function Toast({ toast, onClose }) {
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-      className={`p-4 rounded-xl shadow-lg border pointer-events-auto flex gap-3 max-w-sm ${bgColors[toast.type]}`}
+      className={`p-4 rounded-[1rem] border pointer-events-auto flex gap-3 max-w-sm ${toastClasses[toast.type]}`}
     >
       <div className="mt-0.5 flex-shrink-0">{icons[toast.type]}</div>
       <div className="flex-1">
@@ -70,7 +70,10 @@ function Toast({ toast, onClose }) {
           </ul>
         )}
       </div>
-      <button onClick={onClose} className="opacity-50 hover:opacity-100 flex-shrink-0 focus:outline-none">
+      <button
+        onClick={onClose}
+        className="opacity-50 hover:opacity-100 flex-shrink-0 focus:outline-none"
+      >
         <X className="h-4 w-4" />
       </button>
     </motion.div>

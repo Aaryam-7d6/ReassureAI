@@ -23,12 +23,12 @@
   --border-strong: #252d38;
 
   /* Text */
-  --text-primary: #c8d8e8;
-  --text-secondary: #8b9ab0;
-  --text-muted: #3a4e62;
-  --text-dim: #1e2d3d;
-  --text-input: #c8d8e8;
-  --text-placeholder: #2a3a4a;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --text-input: #f8fafc;
+  --text-placeholder: #475569;
 
   /* Brand accents — same in both themes for consistency */
   --brand: #2dd4bf;
@@ -300,6 +300,60 @@
     backdrop-filter: blur(16px);
     border: 1px solid var(--border);
     border-radius: 1rem;
+  }
+
+  .toast-glass {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 255, 200, 0.12),
+      rgba(16, 24, 40, 0.75)
+    );
+    border: 1px solid rgba(0, 255, 200, 0.18);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.4),
+      0 0 25px rgba(0, 255, 200, 0.12);
+    color: #ffffff;
+  }
+
+  .toast-success {
+    background: rgba(0, 255, 170, 0.08);
+    border-color: rgba(0, 255, 170, 0.25);
+    color: #a7f3d0;
+  }
+
+  .toast-error {
+    background: rgba(255, 80, 80, 0.08);
+    border-color: rgba(255, 80, 80, 0.25);
+    color: #fecaca;
+  }
+
+  .toast-info {
+    background: rgba(96, 165, 250, 0.08);
+    border-color: rgba(96, 165, 250, 0.25);
+    color: #bfdbfe;
+  }
+
+  [data-theme="light"] .toast-glass {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(16, 24, 40, 0.08);
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.2),
+      0 0 25px rgba(0, 255, 200, 0.06);
+    color: #0f172a;
+  }
+
+  [data-theme="light"] .toast-success {
+    color: #0f766e;
+  }
+
+  [data-theme="light"] .toast-error {
+    color: #b91c1c;
+  }
+
+  [data-theme="light"] .toast-info {
+    color: #1d4ed8;
   }
 
   /* ── Badge ── */
