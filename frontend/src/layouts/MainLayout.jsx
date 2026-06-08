@@ -71,8 +71,8 @@ export default function MainLayout() {
           transition: "background 0.3s, border-color 0.3s",
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-[60px]">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="relative flex items-center justify-between h-[60px]">
             {/* Logo */}
             <Link
               to="/"
@@ -110,14 +110,13 @@ export default function MainLayout() {
             </Link>
 
             {/* Desktop links */}
-            <nav className="hidden lg:flex items-center justify-center flex-1 gap-8 ml-8">
+            <nav className="hidden lg:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-8">
               {(user ? authNavLinks : unauthNavLinks).map(({ href, label }) => {
                 const active = location.pathname === href;
                 const isHashLink = href.includes("#");
                 const isMailLink = href.startsWith("mailto:");
                 const isExternalLink = href.startsWith("http");
                 const isHomeLink = label === "Home";
-
 
                 const isContactLink = label === "Contact";
                 const linkProps = {

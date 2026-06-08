@@ -1294,7 +1294,7 @@ export default function Home() {
         }}
         className="py-8 px-4"
       >
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start justify-between gap-8">
+        <div className="w-full mx-auto flex flex-col md:flex-row items-start justify-between gap-8">
           {/* LEFT — Logo + Disclaimer */}
           <div className="flex flex-col gap-3" style={{ maxWidth: "380px" }}>
             <div className="flex items-center gap-2.5">
