@@ -11,7 +11,7 @@ Hybrid AI healthcare assistant integrating OpenBioLLM (modern biomedicine) and A
 
 _Bridging Modern Biomedicine with Ancient Ayurvedic Wisdom_
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-teal.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://reactjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-latest-009688.svg)](https://fastapi.tiangolo.com)
@@ -34,6 +34,7 @@ _Bridging Modern Biomedicine with Ancient Ayurvedic Wisdom_
 - [System Architecture](#-system-architecture)
 - [System Architecture Node Explanations](#system-architecture-node-explanations)
 - [Tech Stack](#-tech-stack)
+- [Models on HuggingFace](#-models-on-huggingface)
 - [Getting Started](#-getting-started)
 - [Demo Login](#-demo-login)
 - [Project Structure](#-project-structure)
@@ -251,7 +252,7 @@ Disigen Node (dispatcher)
 | python-jose  | JWT authentication   |
 | httpx        | Async HTTP client    |
 
-### AI Models
+<!--### AI Models
 
 | Chain    | Model                    | Role                                      |
 | -------- | ------------------------ | ----------------------------------------- |
@@ -259,6 +260,16 @@ Disigen Node (dispatcher)
 | Chain 2  | AyurParam (Aayupahar 3B) | Ayurvedic traditional reasoning           |
 | Chain 3  | Mistral-7B               | QIL, semantic gate, fusion, mental health |
 | Embedder | all-MiniLM-L6-v2         | RAG document embedding                    |
+-->
+
+### AI Models
+
+| Chain | Model | Role |
+|---|---|---|
+| Chain 1 | OpenBioLLM-70B | Biomedical clinical reasoning |
+| Chain 2 | [AyurParam GGUF 3B](https://huggingface.co/A-Aryam/AyurParam-GGUF) | Ayurvedic reasoning |
+| Chain 3 | Mistral-7B | QIL, semantic gate, fusion, mental health |
+| Embedder | all-MiniLM-L6-v2 | RAG document embedding |
 
 ### Infrastructure
 
@@ -284,6 +295,14 @@ Disigen Node (dispatcher)
 | Database       | MongoDB          |
 | Automation     | n8n              |
 -->
+
+---
+
+## 🤗 Models on HuggingFace
+
+| Model | Description | Downloads |
+|---|---|---|
+| [AyurParam-GGUF](https://huggingface.co/A-Aryam/AyurParam-GGUF) | GGUF conversions (F16 + Q4_K_M) of bharatgenai/AyurParam for local inference via Ollama | ![Downloads](https://img.shields.io/badge/dynamic/json?url=https://huggingface.co/api/models/A-Aryam/AyurParam-GGUF&query=downloads&label=downloads&color=teal) |
 
 ---
 
@@ -356,8 +375,9 @@ Pull required Ollama models:
 
 ```bash
 ollama pull mistral
-ollama pull aayupahar
+ollama run hf.co/A-Aryam/AyurParam-GGUF:Q4_K_M
 ```
+<!-- ollama pull aayupahar -->
 
 Updating soon...
 
@@ -471,11 +491,16 @@ If you are experiencing a mental health crisis, please contact:
 
 ---
 
+<!-- © 2025 Aarya R. Thakar, Ansh B. Patel, Darshan B. Kyada, Elvis T. Fernandes -->
+
 ## 📄 License
 
-MIT License — see [LICENSE](LICENSE) for details.
+Licensed under the **Apache License 2.0** — see [LICENSE](LICENSE) for full terms.
 
 © 2025 Aarya R. Thakar, Ansh B. Patel, Darshan B. Kyada, Elvis T. Fernandes
+
+This license is consistent with [AyurParam](https://huggingface.co/bharatgenai/AyurParam) 
+(bharatgenai/AyurParam) which this project integrates, also licensed under Apache 2.0.
 
 ---
 
