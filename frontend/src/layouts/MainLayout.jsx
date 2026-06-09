@@ -75,7 +75,12 @@ export default function MainLayout() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => setMobileOpen(false), [location.pathname]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
 
   // Close account menu when clicking outside
   useEffect(() => {
