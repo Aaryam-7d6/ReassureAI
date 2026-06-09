@@ -79,7 +79,7 @@ const teamData = [
   {
     name: "Aarya R. Thakar",
     role: "Originator & Project Lead · System Architecture · AI Pipeline · Research",
-    initials: "AT",
+    initials: "ART",
     linkedin: "https://www.linkedin.com/in/aaryamthakar/",
     github: "https://github.com/Aaryam-7d6",
     gradient: "linear-gradient(135deg, var(--brand), var(--brand-hover))",
@@ -87,7 +87,7 @@ const teamData = [
   {
     name: "Ansh B. Patel",
     role: "Frontend & Backend Development",
-    initials: "AP",
+    initials: "ABP",
     linkedin: "https://www.linkedin.com/in/ansh-patel-a756162b5/",
     github: "https://github.com/Ansh-Patel-123",
     gradient: "linear-gradient(135deg, var(--purple), #6366f1)",
@@ -95,7 +95,7 @@ const teamData = [
   {
     name: "Darshan B. Kyada",
     role: "Frontend & Backend Development",
-    initials: "DK",
+    initials: "DBK",
     linkedin: "https://www.linkedin.com/in/darshankyada/",
     github: "https://github.com/DARSHAN081104",
     gradient: "linear-gradient(135deg, var(--green), #16a34a)",
@@ -103,7 +103,7 @@ const teamData = [
   {
     name: "Elvis T. Fernandes",
     role: "Database",
-    initials: "EF",
+    initials: "ETF",
     linkedin: "https://www.linkedin.com/in/elvis-thomas-46631a375/",
     github: "https://github.com/Elvis2724",
     gradient: "linear-gradient(135deg, var(--orange), #ea580c)",

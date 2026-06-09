@@ -10,14 +10,6 @@ import {
   Leaf,
   User,
   Sparkles,
-  Menu,
-  X,
-  Plus,
-  MessageSquare,
-  Trash2,
-  Settings,
-  PanelLeft,
-  HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -101,7 +93,6 @@ export default function Chat() {
     useChat();
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -140,201 +131,7 @@ export default function Chat() {
     >
       <div className="w-full h-full px-4 sm:px-6 lg:px-8">
         <div className="w-full h-full flex relative">
-          {/* Mobile Overlay Backdrop */}
-          <AnimatePresence>
-            {sidebarOpen && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setSidebarOpen(false)}
-                className="fixed inset-0 z-10 md:hidden"
-                style={{
-                  background: "rgba(0,0,0,0.4)",
-                  backdropFilter: "blur(2px)",
-                }}
-              />
-            )}
-          </AnimatePresence>
-
-          {/* Sidebar */}
-          <AnimatePresence initial={false}>
-            {sidebarOpen && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 280, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="absolute md:relative left-0 md:left-auto top-0 h-full z-20 overflow-hidden flex-shrink-0 shadow-2xl md:shadow-none"
-                style={{
-                  background: "var(--bg-surface)",
-                  borderRight: "1px solid var(--border)",
-                }}
-              >
-                <div className="w-[280px] h-full flex flex-col">
-                  {/* Sidebar Header / Toggle */}
-                  <div className="py-4 flex items-center flex-shrink-0">
-                    <button
-                      onClick={() => setSidebarOpen(false)}
-                      className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                      aria-label="Close sidebar"
-                    >
-                      <PanelLeft
-                        className="w-5 h-5 hidden md:block"
-                        style={{ color: "var(--text-secondary)" }}
-                      />
-                      <X
-                        className="w-5 h-5"
-                        style={{ color: "var(--text-secondary)" }}
-                      />
-                    </button>
-                  </div>
-                  {/* New Chat Action */}
-                  <div className="px-4 mb-6 flex-shrink-0">
-                    <button
-                      className="flex items-center gap-3 px-4 py-3 rounded-full transition-colors shadow-sm group hover:shadow-md"
-                      style={{
-                        background: "var(--bg-elevated)",
-                        border: "1px solid var(--border)",
-                      }}
-                    >
-                      <Plus
-                        className="w-5 h-5"
-                        style={{ color: "var(--text-primary)" }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "0.875rem",
-                          fontWeight: 500,
-                          color: "var(--text-primary)",
-                        }}
-                      >
-                        New chat
-                      </span>
-                    </button>
-                  </div>
-                  {/* History List */}
-                  <div className="px-5 mb-2 flex-shrink-0">
-                    <span
-                      style={{
-                        fontSize: "0.875rem",
-                        fontWeight: 500,
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      Recent
-                    </span>
-                  </div>
-                  <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-0.5">
-                    {MOCK_HISTORY.map((chat) => {
-                      return (
-                        <button
-                          key={chat.id}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left group hover:bg-black/5 dark:hover:bg-white/5"
-                          style={{ background: "transparent" }}
-                        >
-                          <MessageSquare
-                            className="w-4 h-4 flex-shrink-0"
-                            style={{ color: "var(--text-muted)" }}
-                          />
-                          <div className="flex-1 overflow-hidden">
-                            <p
-                              className="truncate"
-                              style={{
-                                fontSize: "0.875rem",
-                                color: "var(--text-secondary)",
-                              }}
-                            >
-                              {chat.title}
-                            </p>
-                          </div>
-                          <Trash2
-                            className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all"
-                            style={{ color: "var(--text-muted)" }}
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Bottom Actions */}
-                  <div className="px-2 pb-2 flex-shrink-0 flex flex-col gap-0.5">
-                    <button
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left group hover:bg-black/5 dark:hover:bg-white/5"
-                      style={{ background: "transparent" }}
-                    >
-                      <HelpCircle
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: "var(--text-muted)" }}
-                      />
-                      <p
-                        style={{
-                          fontSize: "0.875rem",
-                          color: "var(--text-secondary)",
-                        }}
-                      >
-                        Help
-                      </p>
-                    </button>
-                    <button
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left group hover:bg-black/5 dark:hover:bg-white/5"
-                      style={{ background: "transparent" }}
-                    >
-                      <Activity
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: "var(--text-muted)" }}
-                      />
-                      <p
-                        style={{
-                          fontSize: "0.875rem",
-                          color: "var(--text-secondary)",
-                        }}
-                      >
-                        Activity
-                      </p>
-                    </button>
-                    <button
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left group hover:bg-black/5 dark:hover:bg-white/5"
-                      style={{ background: "transparent" }}
-                    >
-                      <Settings
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: "var(--text-muted)" }}
-                      />
-                      <p
-                        style={{
-                          fontSize: "0.875rem",
-                          color: "var(--text-secondary)",
-                        }}
-                      >
-                        Settings
-                      </p>
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           <div className="flex-1 flex flex-col min-w-0 h-full relative">
-            {/* Global Sidebar Toggle Button (Far Left) */}
-            {!sidebarOpen && (
-              <div className="absolute top-4 left-0 z-20 hidden md:block">
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                  aria-label="Open history sidebar"
-                >
-                  <PanelLeft
-                    className="w-5 h-5"
-                    style={{
-                      color: "var(--text-secondary)",
-                      transition: "color 0.3s",
-                    }}
-                  />
-                </button>
-              </div>
-            )}
-
             <div className="flex-1 flex flex-col w-full h-full py-4 gap-4 min-h-0 px-4 md:px-0">
               {/* Mode Selector */}
               <div
@@ -437,7 +234,6 @@ export default function Chat() {
                   boxShadow: "0 10px 40px -10px rgba(0,0,0,0.1)",
                 }}
               >
-                {/* Chat header */}
                 <div
                   className="flex items-center gap-3 px-6 py-4 flex-shrink-0 z-10 backdrop-blur-md"
                   style={{
@@ -446,21 +242,6 @@ export default function Chat() {
                       "color-mix(in srgb, var(--bg-surface) 85%, transparent)",
                   }}
                 >
-                  {!sidebarOpen && (
-                    <button
-                      onClick={() => setSidebarOpen(true)}
-                      className="p-2 -ml-2 mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                      aria-label="Open history sidebar"
-                    >
-                      <Menu
-                        className="w-5 h-5"
-                        style={{
-                          color: "var(--text-secondary)",
-                          transition: "color 0.3s",
-                        }}
-                      />
-                    </button>
-                  )}
                   <div
                     className="w-9 h-9 rounded-full flex items-center justify-center shadow-inner"
                     style={{
