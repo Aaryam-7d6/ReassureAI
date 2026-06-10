@@ -48,7 +48,6 @@ const unauthNavLinks = [
 const MOCK_HISTORY = [
   { id: 1, title: "Anxiety management", date: "Today", mode: "mental_health" },
   { id: 2, title: "Blood test results", date: "Yesterday", mode: "physical_health" },
-  { id: 3, title: "Digestion issues", date: "Previous 7 Days", mode: "ayurveda" },
 ];
 
 export default function MainLayout() {
@@ -141,7 +140,7 @@ export default function MainLayout() {
 
               {/* Logo */}
               <Link
-                to="/"
+                to={user ? "/dashboard" : "/"}
                 id="nav-logo"
                 onClick={handleScrollTop}
                 className="flex items-center gap-2 group"
@@ -507,7 +506,35 @@ export default function MainLayout() {
             }}
           >
             {/* Sidebar Header */}
-            <div className="px-3 py-4 flex items-center flex-shrink-0">
+            <div className="px-4 py-4 flex items-center justify-between flex-shrink-0">
+              {/* Logo */}
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{
+                    background: "transparent",
+                    boxShadow: isDark
+                      ? "0 0 12px var(--brand-glow)"
+                      : "0 2px 8px rgba(13, 148, 136, 0.2)",
+                    border: "1px solid var(--brand-border)",
+                  }}
+                >
+                  <Activity
+                    className="w-4 h-4"
+                    style={{ color: "var(--brand)" }}
+                    strokeWidth={2.5}
+                  />
+                </div>
+                <span
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    color: "var(--text-primary)",
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                </span>
+              </div>
               <button
                 onClick={() => setSidebarOpen(false)}
                 className="p-2 rounded-lg transition-colors"
@@ -516,7 +543,7 @@ export default function MainLayout() {
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 aria-label="Close sidebar"
               >
-                <PanelLeft className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 

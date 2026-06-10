@@ -7,7 +7,6 @@ import {
   Mic,
   Heart,
   Activity,
-  Leaf,
   User,
   Sparkles,
 } from "lucide-react";
@@ -30,14 +29,6 @@ const MODES = [
     bg: "var(--purple-subtle)",
     activeBorder: "var(--purple)",
   },
-  {
-    id: "ayurveda",
-    label: "Ayurvedic",
-    icon: Leaf,
-    color: "var(--green)",
-    bg: "var(--green-subtle)",
-    activeBorder: "var(--green)",
-  },
 ];
 
 const SUGGESTED_PROMPTS = {
@@ -51,11 +42,6 @@ const SUGGESTED_PROMPTS = {
     "What are the symptoms of vitamin D deficiency?",
     "I've been getting frequent headaches.",
   ],
-  ayurveda: [
-    "How do I find out my dosha?",
-    "What are some natural ways to improve digestion?",
-    "How can I balance excess Vata?",
-  ],
 };
 
 const MOCK_HISTORY = [
@@ -65,12 +51,6 @@ const MOCK_HISTORY = [
     title: "Blood test results",
     date: "Yesterday",
     mode: "physical_health",
-  },
-  {
-    id: 3,
-    title: "Digestion issues",
-    date: "Previous 7 Days",
-    mode: "ayurveda",
   },
 ];
 
