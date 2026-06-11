@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { useChat } from "../context/ChatContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -24,14 +25,16 @@ import {
   Settings,
   User,
   UserPlus,
+  Heart,
 } from "lucide-react";
 import ServerStatus from "../components/ServerStatus";
 
-const authNavLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/chat", label: "Chat", icon: MessageSquare },
-  { href: "/journal", label: "Journal", icon: BookOpen },
+const CHAT_MODES = [
+  { id: "mental_health", label: "Mental Health", icon: Heart, color: "var(--orange)", bg: "var(--orange-subtle)", border: "var(--orange)" },
+  { id: "physical_health", label: "Physical Health", icon: Activity, color: "var(--purple)", bg: "var(--purple-subtle)", border: "var(--purple)" },
 ];
+
+const authNavLinks = [];
 
 const unauthNavLinks = [
   { href: "/#home", label: "Home", icon: Activity },
@@ -53,6 +56,7 @@ const MOCK_HISTORY = [
 export default function MainLayout() {
   const { user, logout } = useAuth();
   const { theme, themeMode, setThemeMode, toggleTheme, isDark } = useTheme();
+  const { activeMode, setActiveMode } = useChat();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -175,113 +179,116 @@ export default function MainLayout() {
               </Link>
             </div>
 
-            {/* Desktop links */}
+            {/* Desktop nav: mode switcher on chat, links otherwise */}
             <nav className="hidden lg:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-8">
-              {(user ? authNavLinks : unauthNavLinks).map(({ href, label }) => {
-                const active = location.pathname === href;
-                const isHashLink = href.includes("#");
-                const isMailLink = href.startsWith("mailto:");
-                const isExternalLink = href.startsWith("http");
-                const isHomeLink = label === "Home";
-
-                const isContactLink = label === "Contact";
-                const linkProps = {
-                  key: href,
-                  className:
-                    "text-sm font-medium transition-all duration-150 hover:text-opacity-100",
-                  style: {
-                    color: active ? "var(--brand)" : "var(--text-muted)",
-                  },
-                  onMouseEnter: (e) => {
-                    if (!active) e.currentTarget.style.color = "var(--brand)";
-                  },
-                  onMouseLeave: (e) => {
-                    if (!active)
-                      e.currentTarget.style.color = "var(--text-muted)";
-                  },
-                };
-
-                if (isContactLink) {
-                  return (
-                    <div
-                      key={href}
-                      className="relative"
-                      onMouseEnter={() => setContactHover(true)}
-                      onMouseLeave={() => setContactHover(false)}
-                    >
-                      <a
-                        href={href}
-                        className="text-sm font-medium transition-all duration-150 hover:text-opacity-100"
-                        style={linkProps.style}
+              {user && isOnChatPage ? (
+                <div
+                  className="flex gap-1 p-1 rounded-2xl shadow-sm"
+                  style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}
+                >
+                  {CHAT_MODES.map((mode) => {
+                    const active = activeMode === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        id={`nav-mode-${mode.id}`}
+                        onClick={() => setActiveMode(mode.id)}
+                        className="relative flex items-center gap-2 px-4 py-1.5 rounded-xl text-sm font-medium transition-colors duration-200 outline-none"
+                        style={{ color: active ? mode.color : "var(--text-muted)" }}
                       >
-                        {label}
-                      </a>
-
-                      <AnimatePresence>
-                        {contactHover && (
+                        {active && (
                           <motion.div
-                            initial={{ opacity: 0, y: -8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max"
-                            style={{
-                              background: "var(--bg-surface)",
-                              border: "1px solid var(--border-subtle)",
-                              borderRadius: "0.5rem",
-                              padding: "0.75rem 1rem",
-                              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-                              zIndex: 40,
-                            }}
-                          >
-                            <a
-                              href={href}
-                              className="block text-sm py-1 hover:text-brand"
-                              style={{ color: "var(--text-primary)" }}
-                            >
-                              reassureai.support@gmail.com
-                            </a>
-                          </motion.div>
+                            layoutId="navActiveMode"
+                            className="absolute inset-0 rounded-xl"
+                            style={{ background: mode.bg, border: `1px solid ${mode.border}` }}
+                            transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                          />
                         )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                }
+                        <span className="relative z-10 flex items-center gap-1.5">
+                          <mode.icon className="w-3.5 h-3.5" />
+                          {mode.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : !user ? (
+                unauthNavLinks.map(({ href, label }) => {
+                  const isHashLink = href.includes("#");
+                  const isMailLink = href.startsWith("mailto:");
+                  const isExternalLink = href.startsWith("http");
+                  const isHomeLink = label === "Home";
+                  const isContactLink = label === "Contact";
+                  const active = location.pathname === href;
 
-                if (isHomeLink) {
-                  return (
-                    <Link
-                      to="/"
-                      id={`nav-${label.toLowerCase()}`}
-                      onClick={handleScrollTop}
-                      {...linkProps}
-                    >
+                  const linkStyle = {
+                    color: active ? "var(--brand)" : "var(--text-muted)",
+                  };
+                  const linkClass = "text-sm font-medium transition-all duration-150";
+                  const hoverHandlers = {
+                    onMouseEnter: (e) => { if (!active) e.currentTarget.style.color = "var(--brand)"; },
+                    onMouseLeave: (e) => { if (!active) e.currentTarget.style.color = "var(--text-muted)"; },
+                  };
+
+                  if (isContactLink) {
+                    return (
+                      <div
+                        key={href}
+                        className="relative"
+                        onMouseEnter={() => setContactHover(true)}
+                        onMouseLeave={() => setContactHover(false)}
+                      >
+                        <a href={href} className={linkClass} style={linkStyle}>
+                          {label}
+                        </a>
+                        <AnimatePresence>
+                          {contactHover && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max"
+                              style={{
+                                background: "var(--bg-surface)",
+                                border: "1px solid var(--border-subtle)",
+                                borderRadius: "0.5rem",
+                                padding: "0.75rem 1rem",
+                                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                                zIndex: 40,
+                              }}
+                            >
+                              <a href={href} className="block text-sm py-1" style={{ color: "var(--text-primary)" }}>
+                                reassureai.support@gmail.com
+                              </a>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  }
+
+                  if (isHomeLink) {
+                    return (
+                      <Link key={href} to="/" id="nav-home" onClick={handleScrollTop} className={linkClass} style={linkStyle} {...hoverHandlers}>
+                        {label}
+                      </Link>
+                    );
+                  }
+
+                  return isHashLink || isMailLink || isExternalLink ? (
+                    <a key={href} href={href} className={linkClass} style={linkStyle} {...hoverHandlers} {...(isExternalLink ? { target: "_blank", rel: "noreferrer" } : {})}>
+                      {label}
+                    </a>
+                  ) : (
+                    <Link key={href} to={href} id={`nav-${label.toLowerCase()}`} className={linkClass} style={linkStyle} {...hoverHandlers}>
                       {label}
                     </Link>
                   );
-                }
-
-                return isHashLink || isMailLink || isExternalLink ? (
-                  <a
-                    href={href}
-                    {...linkProps}
-                    {...(isExternalLink
-                      ? { target: "_blank", rel: "noreferrer" }
-                      : {})}
-                  >
-                    {label}
-                  </a>
-                ) : (
-                  <Link
-                    to={href}
-                    id={`nav-${label.toLowerCase()}`}
-                    {...linkProps}
-                  >
-                    {label}
-                  </Link>
-                );
-              })}
+                })
+              ) : null}
             </nav>
+
 
             {/* Right side */}
             <div className="flex items-center gap-2">

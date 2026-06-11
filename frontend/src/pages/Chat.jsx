@@ -7,7 +7,6 @@ import {
   Mic,
   Heart,
   Activity,
-  User,
   Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,50 +43,39 @@ const SUGGESTED_PROMPTS = {
   ],
 };
 
-const MOCK_HISTORY = [
-  { id: 1, title: "Anxiety management", date: "Today", mode: "mental_health" },
-  {
-    id: 2,
-    title: "Blood test results",
-    date: "Yesterday",
-    mode: "physical_health",
-  },
-];
-
-// Framer motion variants for staggered entrance
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
 const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 400, damping: 30 },
-  },
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 30 } },
 };
 
 export default function Chat() {
-  const { messages, setMessages, activeMode, setActiveMode, isCrisis } =
-    useChat();
+  const { messages, setMessages, activeMode, isCrisis } = useChat();
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const bottomRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const currentMode = MODES.find((m) => m.id === activeMode) || MODES[0];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, thinking]);
 
-  const currentMode = MODES.find((m) => m.id === activeMode) || MODES[0];
+  // Clear chat history when the conversation mode changes
+  useEffect(() => {
+    setMessages([]);
+  }, [activeMode]);
 
   const handleSend = (e, customText = null) => {
     if (e) e.preventDefault();
     const textToSend = customText !== null ? customText : input;
     if (!textToSend.trim() || thinking) return;
 
-    const userMsg = { id: Date.now(), text: textToSend, sender: "user" };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [...prev, { id: Date.now(), text: textToSend, sender: "user" }]);
     if (customText === null) setInput("");
     setThinking(true);
 
@@ -106,458 +94,256 @@ export default function Chat() {
 
   return (
     <div
-      className="flex-1 w-full bg-[var(--bg-base)] transition-colors duration-300 flex overflow-hidden"
-      style={{ height: "calc(100vh - 60px)" }}
+      className="flex-1 flex flex-col"
+      style={{ height: "calc(100vh - 60px)", background: "var(--bg-base)" }}
     >
-      <div className="w-full h-full px-4 sm:px-6 lg:px-8">
-        <div className="w-full h-full flex relative">
-          <div className="flex-1 flex flex-col min-w-0 h-full relative">
-            <div className="flex-1 flex flex-col w-full h-full py-4 gap-4 min-h-0 px-4 md:px-0">
-              {/* Mode Selector */}
-              <div
-                className="flex gap-1.5 p-1.5 rounded-2xl w-fit mx-auto mt-2 mb-1 shadow-sm"
-                style={{
-                  background: "var(--bg-surface)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                {MODES.map((mode) => {
-                  const active = activeMode === mode.id;
-                  return (
-                    <button
-                      key={mode.id}
-                      id={`mode-${mode.id}`}
-                      onClick={() => setActiveMode(mode.id)}
-                      className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 outline-none"
-                      style={{
-                        color: active ? mode.color : "var(--text-muted)",
-                      }}
-                    >
-                      {active && (
-                        <motion.div
-                          layoutId="activeMode"
-                          className="absolute inset-0 rounded-xl shadow-sm"
-                          style={{
-                            background: mode.bg,
-                            border: `1px solid ${mode.activeBorder}`,
-                          }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 500,
-                            damping: 40,
-                          }}
-                        />
-                      )}
-                      <span className="relative z-10 flex items-center gap-2">
-                        <mode.icon className="w-4 h-4" /> {mode.label}
-                      </span>
-                    </button>
-                  );
-                })}
+      {/* Crisis Banner */}
+      <AnimatePresence>
+        {isCrisis && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden flex-shrink-0"
+          >
+            <div
+              className="mx-auto max-w-3xl px-4 py-3 mt-3 rounded-xl flex items-start gap-3"
+              style={{ background: "var(--orange-subtle)", border: "1px solid var(--orange-border)" }}
+            >
+              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--orange)" }} />
+              <div>
+                <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--orange)" }}>
+                  We're concerned about you
+                </p>
+                <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                  Please reach out — iCall helpline:{" "}
+                  <strong style={{ color: "var(--orange)" }}>9152987821</strong>
+                </p>
               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              {/* Crisis Banner */}
-              <AnimatePresence>
-                {isCrisis && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="rounded-xl overflow-hidden"
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          {messages.length === 0 ? (
+            /* ── Empty state ── */
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="flex flex-col items-center justify-center min-h-[55vh] text-center"
+            >
+              <motion.div
+                variants={itemVariants}
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                style={{ background: currentMode.color }}
+              >
+                <currentMode.icon className="w-8 h-8 text-white" />
+              </motion.div>
+
+              <motion.h2
+                variants={itemVariants}
+                style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.5rem" }}
+              >
+                How can I help you today?
+              </motion.h2>
+
+              <motion.p
+                variants={itemVariants}
+                style={{ fontSize: "0.9375rem", color: "var(--text-muted)", marginBottom: "2.5rem" }}
+              >
+                Ask me anything about your {currentMode.label.toLowerCase()}.
+              </motion.p>
+
+              {/* Suggested prompts */}
+              <motion.div variants={itemVariants} className="grid gap-2 w-full max-w-lg">
+                {SUGGESTED_PROMPTS[currentMode.id].map((prompt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSend(null, prompt)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all duration-200 group"
                     style={{
-                      background: "var(--orange-subtle)",
-                      border: "1px solid var(--orange-border)",
+                      background: "var(--bg-surface)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text-secondary)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = currentMode.color;
+                      e.currentTarget.style.color = "var(--text-primary)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "var(--border)";
+                      e.currentTarget.style.color = "var(--text-secondary)";
                     }}
                   >
-                    <div className="flex items-start gap-3 p-4">
-                      <AlertTriangle
-                        className="w-4 h-4 flex-shrink-0 mt-0.5"
-                        style={{ color: "var(--orange)" }}
-                      />
-                      <div>
-                        <p
+                    <Sparkles
+                      className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ color: currentMode.color }}
+                    />
+                    <span>{prompt}</span>
+                  </button>
+                ))}
+              </motion.div>
+            </motion.div>
+          ) : (
+            /* ── Messages ── */
+            <div className="flex flex-col gap-6 pb-4">
+              {messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex gap-3 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  {msg.sender === "ai" && (
+                    <div
+                      className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-1"
+                      style={{ background: currentMode.bg, border: `1px solid ${currentMode.color}` }}
+                    >
+                      <currentMode.icon className="w-4 h-4" style={{ color: currentMode.color }} />
+                    </div>
+                  )}
+
+                  <div
+                    className="max-w-[75%]"
+                    style={{
+                      padding: "0.625rem 1rem",
+                      borderRadius: msg.sender === "user" ? "1.25rem 1.25rem 0.25rem 1.25rem" : "0.25rem 1.25rem 1.25rem 1.25rem",
+                      background: msg.sender === "user" ? currentMode.bg : "transparent",
+                      border: msg.sender === "user" ? `1px solid ${currentMode.color}30` : "none",
+                      fontSize: "0.9375rem",
+                      color: "var(--text-primary)",
+                      lineHeight: 1.65,
+                    }}
+                  >
+                    {msg.text}
+                  </div>
+                </motion.div>
+              ))}
+
+              {/* Thinking dots */}
+              <AnimatePresence>
+                {thinking && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex gap-3 justify-start"
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-1"
+                      style={{ background: currentMode.bg, border: `1px solid ${currentMode.color}` }}
+                    >
+                      <currentMode.icon className="w-4 h-4" style={{ color: currentMode.color }} />
+                    </div>
+                    <div
+                      className="flex items-center gap-1.5 px-4 py-3 rounded-2xl"
+                      style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}
+                    >
+                      {[0, 1, 2].map((i) => (
+                        <span
+                          key={i}
+                          className="animate-breathe"
                           style={{
-                            fontSize: "0.875rem",
-                            fontWeight: 600,
-                            color: "var(--orange)",
-                            marginBottom: "0.25rem",
+                            width: 6, height: 6,
+                            borderRadius: "50%",
+                            background: currentMode.color,
+                            display: "inline-block",
+                            animationDelay: `${i * 0.2}s`,
                           }}
-                        >
-                          We're concerned about you
-                        </p>
-                        <p
-                          style={{
-                            fontSize: "0.8125rem",
-                            color: "var(--text-secondary)",
-                            lineHeight: 1.6,
-                          }}
-                        >
-                          It sounds like you might be going through something
-                          difficult. Please reach out — iCall helpline:{" "}
-                          <strong style={{ color: "var(--orange)" }}>
-                            9152987821
-                          </strong>
-                        </p>
-                      </div>
+                        />
+                      ))}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Chat window */}
-              <div
-                className="flex-1 rounded-3xl overflow-hidden flex flex-col min-h-0 relative shadow-xl"
-                style={{
-                  background: "var(--bg-surface)",
-                  border: "1px solid var(--border)",
-                  transition: "background 0.3s, border-color 0.3s",
-                  boxShadow: "0 10px 40px -10px rgba(0,0,0,0.1)",
-                }}
-              >
-                <div
-                  className="flex items-center gap-3 px-6 py-4 flex-shrink-0 z-10 backdrop-blur-md"
-                  style={{
-                    borderBottom: "1px solid var(--border)",
-                    background:
-                      "color-mix(in srgb, var(--bg-surface) 85%, transparent)",
-                  }}
-                >
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center shadow-inner"
-                    style={{
-                      background: currentMode.bg,
-                      border: `1px solid ${currentMode.color}`,
-                    }}
-                  >
-                    <currentMode.icon
-                      className="w-4 h-4"
-                      style={{ color: currentMode.color }}
-                    />
-                  </div>
-                  <div>
-                    <p
-                      style={{
-                        fontSize: "0.875rem",
-                        fontWeight: 600,
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      {currentMode.label} Assistant
-                    </p>
-                    <p
-                      style={{ fontSize: "0.625rem", color: currentMode.color }}
-                    >
-                      ● Online
-                    </p>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3 min-h-0">
-                  {messages.length === 0 ? (
-                    <motion.div
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="show"
-                      className="m-auto text-center max-w-xl w-full px-4"
-                    >
-                      <div
-                        className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-lg"
-                        style={{
-                          background: currentMode.color,
-                          border: `1px solid ${currentMode.activeBorder}`,
-                        }}
-                      >
-                        <currentMode.icon className="w-7 h-7 text-white drop-shadow-md" />
-                      </div>
-                      <h3
-                        style={{
-                          fontSize: "1.125rem",
-                          fontWeight: 600,
-                          color: "var(--text-primary)",
-                          marginBottom: "0.5rem",
-                        }}
-                      >
-                        Start a {currentMode.label} conversation
-                      </h3>
-                      <p
-                        style={{
-                          fontSize: "0.875rem",
-                          color: "var(--text-secondary)",
-                          marginBottom: "2.5rem",
-                        }}
-                      >
-                        Your messages are private and secure. How can I help you
-                        today?
-                      </p>
-
-                      <div className="flex flex-col gap-2.5">
-                        {SUGGESTED_PROMPTS[currentMode.id].map((prompt, i) => (
-                          <motion.button
-                            variants={itemVariants}
-                            key={i}
-                            onClick={() => handleSend(null, prompt)}
-                            className="flex items-center gap-3 px-5 py-4 rounded-2xl text-sm text-left transition-all duration-200 shadow-sm group"
-                            style={{
-                              background: "var(--bg-elevated)",
-                              border: "1px solid var(--border)",
-                              color: "var(--text-secondary)",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor =
-                                currentMode.color;
-                              e.currentTarget.style.color =
-                                "var(--text-primary)";
-                              e.currentTarget.style.transform =
-                                "translateY(-2px)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor =
-                                "var(--border)";
-                              e.currentTarget.style.color =
-                                "var(--text-secondary)";
-                              e.currentTarget.style.transform = "translateY(0)";
-                            }}
-                          >
-                            <Sparkles
-                              className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                              style={{ color: currentMode.color }}
-                            />
-                            <span className="flex-1">{prompt}</span>
-                          </motion.button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  ) : (
-                    messages.map((msg) => (
-                      <motion.div
-                        key={msg.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className={`flex w-full ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`flex gap-3 max-w-[85%] ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
-                        >
-                          <div
-                            className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-auto shadow-sm"
-                            style={{
-                              background:
-                                msg.sender === "user"
-                                  ? "var(--bg-elevated)"
-                                  : currentMode.bg,
-                              border: `1px solid ${msg.sender === "user" ? "var(--border)" : currentMode.color}`,
-                            }}
-                          >
-                            {msg.sender === "user" ? (
-                              <User
-                                className="w-4 h-4"
-                                style={{ color: "var(--text-secondary)" }}
-                              />
-                            ) : (
-                              <currentMode.icon
-                                className="w-4 h-4"
-                                style={{ color: currentMode.color }}
-                              />
-                            )}
-                          </div>
-                          <div
-                            className="shadow-sm"
-                            style={{
-                              padding: "0.75rem 1.125rem",
-                              borderRadius:
-                                msg.sender === "user"
-                                  ? "1.25rem 1.25rem 0.25rem 1.25rem"
-                                  : "1.25rem 1.25rem 1.25rem 0.25rem",
-                              background:
-                                msg.sender === "user"
-                                  ? currentMode.bg
-                                  : "var(--bg-elevated)",
-                              border:
-                                msg.sender === "user"
-                                  ? `1px solid ${currentMode.color}`
-                                  : "1px solid var(--border)",
-                              fontSize: "0.9375rem",
-                              color:
-                                msg.sender === "user"
-                                  ? "var(--text-primary)"
-                                  : "var(--text-secondary)",
-                              lineHeight: 1.6,
-                            }}
-                          >
-                            {msg.text}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-
-                  {/* Thinking indicator */}
-                  <AnimatePresence>
-                    {thinking && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="flex w-full justify-start"
-                      >
-                        <div className="flex gap-3 max-w-[85%] flex-row">
-                          <div
-                            className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-auto shadow-sm"
-                            style={{
-                              background: currentMode.bg,
-                              border: `1px solid ${currentMode.color}`,
-                            }}
-                          >
-                            <currentMode.icon
-                              className="w-4 h-4"
-                              style={{ color: currentMode.color }}
-                            />
-                          </div>
-                          <div
-                            className="shadow-sm"
-                            style={{
-                              padding: "0.875rem 1.125rem",
-                              borderRadius: "1.25rem 1.25rem 1.25rem 0.25rem",
-                              background: "var(--bg-elevated)",
-                              border: "1px solid var(--border)",
-                              display: "flex",
-                              gap: 6,
-                              alignItems: "center",
-                            }}
-                          >
-                            {[0, 1, 2].map((i) => (
-                              <span
-                                key={i}
-                                className="animate-breathe"
-                                style={{
-                                  width: 6,
-                                  height: 6,
-                                  borderRadius: "50%",
-                                  background: currentMode.color,
-                                  display: "inline-block",
-                                  animationDelay: `${i * 0.2}s`,
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  <div ref={bottomRef} />
-                </div>
-
-                {/* Input */}
-                <div
-                  className="p-4 flex-shrink-0 z-10 backdrop-blur-md"
-                  style={{
-                    borderTop: "1px solid var(--border)",
-                    background:
-                      "color-mix(in srgb, var(--bg-surface) 85%, transparent)",
-                  }}
-                >
-                  <form
-                    onSubmit={handleSend}
-                    className="flex items-center gap-2 max-w-4xl mx-auto rounded-2xl p-1.5 transition-all duration-300 shadow-sm focus-within:shadow-md"
-                    style={{
-                      background: "var(--bg-input)",
-                      border: "1px solid var(--border)",
-                    }}
-                    onFocus={(e) => {
-                      if (!thinking)
-                        e.currentTarget.style.borderColor = currentMode.color;
-                    }}
-                    onBlur={(e) => {
-                      if (!thinking)
-                        e.currentTarget.style.borderColor = "var(--border)";
-                    }}
-                  >
-                    <button
-                      type="button"
-                      id="btn-attach"
-                      aria-label="Attach file"
-                      disabled={thinking}
-                      className="p-2.5 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
-                      style={{
-                        color: "var(--text-dim)",
-                        background: "transparent",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!thinking)
-                          e.currentTarget.style.color = "var(--brand)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!thinking)
-                          e.currentTarget.style.color = "var(--text-dim)";
-                      }}
-                    >
-                      <Paperclip className="w-4 h-4" />
-                    </button>
-
-                    <input
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder={`Ask about your ${currentMode.label.toLowerCase()}...`}
-                      id="chat-input"
-                      disabled={thinking}
-                      className="flex-1 bg-transparent px-2 py-3 text-[0.9375rem]"
-                      style={{
-                        color: "var(--text-primary)",
-                        outline: "none",
-                        fontFamily: "var(--font-sans)",
-                        opacity: thinking ? 0.6 : 1,
-                      }}
-                    />
-
-                    <button
-                      type="button"
-                      id="btn-mic"
-                      aria-label="Use microphone"
-                      disabled={thinking}
-                      className="p-2.5 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5"
-                      style={{ color: "var(--text-dim)" }}
-                      onMouseEnter={(e) => {
-                        if (!thinking)
-                          e.currentTarget.style.color = "var(--brand)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!thinking)
-                          e.currentTarget.style.color = "var(--text-dim)";
-                      }}
-                    >
-                      <Mic className="w-4 h-4" />
-                    </button>
-
-                    <button
-                      type="submit"
-                      id="btn-send"
-                      disabled={!input.trim() || thinking}
-                      className="p-3 rounded-xl flex-shrink-0 transition-all duration-300 shadow-sm"
-                      style={{
-                        background:
-                          input.trim() && !thinking
-                            ? currentMode.color
-                            : "var(--bg-elevated)",
-                        color:
-                          input.trim() && !thinking
-                            ? "#fff"
-                            : "var(--text-dim)",
-                        border: `1px solid ${input.trim() && !thinking ? currentMode.activeBorder : "transparent"}`,
-                        cursor:
-                          input.trim() && !thinking ? "pointer" : "not-allowed",
-                      }}
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </form>
-                </div>
-              </div>
+              <div ref={bottomRef} />
             </div>
-          </div>
+          )}
         </div>
+      </div>
+
+      {/* ── Floating input bar ── */}
+      <div className="flex-shrink-0 px-4 pb-5 pt-2 sticky bottom-0 z-10" style={{ background: "var(--bg-base)" }}>
+        <form
+          onSubmit={handleSend}
+          className="max-w-3xl mx-auto flex items-center gap-2 rounded-2xl px-2 py-1.5 transition-all duration-200"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border)",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+          }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = currentMode.color; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
+        >
+          {/* Attach */}
+          <button
+            type="button"
+            id="btn-attach"
+            aria-label="Attach file"
+            disabled={thinking}
+            className="p-2 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-40"
+            style={{ color: "var(--text-muted)", background: "transparent" }}
+            onMouseEnter={(e) => { if (!thinking) e.currentTarget.style.color = currentMode.color; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+          >
+            <Paperclip className="w-4 h-4" />
+          </button>
+
+          {/* Text input */}
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={`Message ${currentMode.label} assistant…`}
+            id="chat-input"
+            disabled={thinking}
+            className="flex-1 bg-transparent px-1 py-2.5 text-[0.9375rem] outline-none"
+            style={{
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-sans)",
+              opacity: thinking ? 0.6 : 1,
+            }}
+          />
+
+          {/* Mic */}
+          <button
+            type="button"
+            id="btn-mic"
+            aria-label="Use microphone"
+            disabled={thinking}
+            className="p-2 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-40"
+            style={{ color: "var(--text-muted)", background: "transparent" }}
+            onMouseEnter={(e) => { if (!thinking) e.currentTarget.style.color = currentMode.color; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+          >
+            <Mic className="w-4 h-4" />
+          </button>
+
+          {/* Send */}
+          <button
+            type="submit"
+            id="btn-send"
+            disabled={!input.trim() || thinking}
+            className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: input.trim() && !thinking ? currentMode.color : "var(--bg-elevated)",
+              color: input.trim() && !thinking ? "#fff" : "var(--text-muted)",
+            }}
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </form>
+
+        <p className="text-center mt-2" style={{ fontSize: "0.6875rem", color: "var(--text-dim)" }}>
+          ReassureAI can make mistakes. Verify important information.
+        </p>
       </div>
     </div>
   );
