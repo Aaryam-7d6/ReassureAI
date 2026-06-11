@@ -14,7 +14,7 @@ export default function Navbar() {
         try {
           setUser(JSON.parse(dev));
           return;
-        } catch {}
+        } catch { }
       }
     }
 
