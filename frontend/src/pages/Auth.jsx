@@ -4,6 +4,26 @@ import { motion } from "framer-motion";
 import { useToast } from "../components/Toast";
 import { Heart, Mail, Lock, User, Shield } from "lucide-react";
 
+const validatePassword = (password) => {
+  const errors = [];
+  if (password.length < 8) {
+    errors.push("At least 8 characters long");
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push("At least one uppercase letter (A–Z)");
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push("At least one lowercase letter (a–z)");
+  }
+  if (!/[0-9]/.test(password)) {
+    errors.push("At least one number (0–9)");
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push("At least one special character (!@#$%^&*...)");
+  }
+  return errors;
+};
+
 export default function Auth() {
   const { login } = useAuth();
   const { addToast } = useToast();
@@ -12,13 +32,16 @@ export default function Auth() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isLogin) {
-      addToast("Password needs a bit more strength 💪", "error", [
-        "At least one uppercase letter (A–Z)",
-        "At least one special character (!@#$%^&*...)",
-      ]);
-      return;
+      const password = document.getElementById("input-password")?.value || "";
+      const passwordErrors = validatePassword(password);
+      if (passwordErrors.length > 0) {
+        addToast("Password needs a bit more strength", "error", passwordErrors);
+        return;
+      }
     }
-    login({ id: 1, name: "Demo User", email: "user@example.com" });
+    const email = document.getElementById("input-email")?.value || "user@example.com";
+    const name = document.getElementById("input-name")?.value || "Demo User";
+    login({ id: 1, name, email });
   };
 
   return (
