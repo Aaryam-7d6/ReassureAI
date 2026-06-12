@@ -111,8 +111,8 @@ export default function MainLayout() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "var(--bg-base)", transition: "background 0.3s" }}
+      className={`min-h-screen flex flex-col transition-all duration-300 ease-in-out ${sidebarOpen ? "md:pl-[280px]" : "pl-0"}`}
+      style={{ background: "var(--bg-base)" }}
     >
       {/* ── Navbar ── */}
       <header
@@ -132,7 +132,7 @@ export default function MainLayout() {
               {user && isOnChatPage && (
                 <button
                   onClick={() => setSidebarOpen((v) => !v)}
-                  className="p-2 rounded-lg transition-colors"
+                  className={`p-2 rounded-lg transition-colors ${sidebarOpen ? "hidden" : "block"}`}
                   style={{ color: "var(--text-muted)" }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-subtle)"; e.currentTarget.style.color = "var(--brand)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
@@ -150,7 +150,7 @@ export default function MainLayout() {
                 className="flex items-center gap-2 group"
               >
                 <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
+                  className={`w-8 h-8 rounded-xl items-center justify-center transition-all duration-300 group-hover:scale-105 ${sidebarOpen && isOnChatPage ? "hidden" : "flex"}`}
                   style={{
                     background: "transparent",
                     boxShadow: isDark
@@ -489,7 +489,7 @@ export default function MainLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-40 md:hidden"
             style={{
               background: "rgba(0,0,0,0.4)",
               backdropFilter: "blur(2px)",
@@ -517,17 +517,17 @@ export default function MainLayout() {
               {/* Logo */}
               <div className="flex items-center gap-2">
                 <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center"
                   style={{
                     background: "transparent",
                     boxShadow: isDark
-                      ? "0 0 12px var(--brand-glow)"
-                      : "0 2px 8px rgba(13, 148, 136, 0.2)",
+                      ? "0 0 16px var(--brand-glow)"
+                      : "0 4px 12px rgba(13, 148, 136, 0.25)",
                     border: "1px solid var(--brand-border)",
                   }}
                 >
                   <Activity
-                    className="w-4 h-4"
+                    className="w-5 h-5 drop-shadow-md"
                     style={{ color: "var(--brand)" }}
                     strokeWidth={2.5}
                   />
@@ -542,15 +542,17 @@ export default function MainLayout() {
                 >
                 </span>
               </div>
+
+              {/* Sidebar toggle inside sidebar */}
               <button
                 onClick={() => setSidebarOpen(false)}
                 className="p-2 rounded-lg transition-colors"
-                style={{ color: "var(--text-secondary)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-elevated)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                style={{ color: "var(--text-muted)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-subtle)"; e.currentTarget.style.color = "var(--brand)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
                 aria-label="Close sidebar"
               >
-                <X className="w-5 h-5" />
+                <PanelLeft className="w-5 h-5" />
               </button>
             </div>
 
