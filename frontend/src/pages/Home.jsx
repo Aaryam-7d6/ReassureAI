@@ -1390,7 +1390,7 @@ export default function Home() {
               </a>
             </p>
             <p style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>
-              Licensed under MIT &copy; 2026 ReassureAI
+              Licensed under Apache 2.0 &copy; 2026 ReassureAI
             </p>
           </div>
         </div>
