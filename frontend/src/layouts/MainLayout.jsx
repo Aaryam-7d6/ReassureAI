@@ -26,6 +26,7 @@ import {
   User,
   UserPlus,
   Heart,
+  SquarePen,
 } from "lucide-react";
 import ServerStatus from "../components/ServerStatus";
 
@@ -56,11 +57,27 @@ const MOCK_HISTORY = [
 export default function MainLayout() {
   const { user, logout } = useAuth();
   const { theme, themeMode, setThemeMode, toggleTheme, isDark } = useTheme();
-  const { activeMode, setActiveMode } = useChat();
+  const { activeMode, setActiveMode, setMessages, setIsCrisis } = useChat();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [contactHover, setContactHover] = useState(false);
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setIsCrisis(false);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const searchInputRef = useRef(null);
+  const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
+
+  const handleSearchClick = () => {
+    setShouldFocusSearch(true);
+    setSidebarOpen(true);
+  };
 
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -111,7 +128,12 @@ export default function MainLayout() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col transition-all duration-300 ease-in-out ${sidebarOpen ? "md:pl-[280px]" : "pl-0"}`}
+      className={`min-h-screen flex flex-col transition-all duration-300 ease-in-out ${user && isOnChatPage
+          ? sidebarOpen
+            ? "md:pl-[280px]"
+            : "md:pl-[68px]"
+          : "pl-0"
+        }`}
       style={{ background: "var(--bg-base)" }}
     >
       {/* ── Navbar ── */}
@@ -132,7 +154,7 @@ export default function MainLayout() {
               {user && isOnChatPage && (
                 <button
                   onClick={() => setSidebarOpen((v) => !v)}
-                  className={`p-2 rounded-lg transition-colors ${sidebarOpen ? "hidden" : "block"}`}
+                  className={`p-2 rounded-lg transition-colors ${sidebarOpen ? "hidden" : "block md:hidden"}`}
                   style={{ color: "var(--text-muted)" }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-subtle)"; e.currentTarget.style.color = "var(--brand)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
@@ -498,340 +520,619 @@ export default function MainLayout() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ x: -300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -300, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-0 left-0 h-full z-50 w-[280px] flex flex-col"
-            style={{
-              background: "var(--bg-surface)",
-              borderRight: "1px solid var(--border)",
-              boxShadow: "4px 0 30px rgba(0,0,0,0.15)",
-            }}
-          >
-            {/* Sidebar Header */}
-            <div className="px-4 py-4 flex items-center justify-between flex-shrink-0">
-              {/* Logo */}
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center"
-                  style={{
-                    background: "transparent",
-                    boxShadow: isDark
-                      ? "0 0 16px var(--brand-glow)"
-                      : "0 4px 12px rgba(13, 148, 136, 0.25)",
-                    border: "1px solid var(--brand-border)",
-                  }}
-                >
-                  <Activity
-                    className="w-5 h-5 drop-shadow-md"
-                    style={{ color: "var(--brand)" }}
-                    strokeWidth={2.5}
-                  />
-                </div>
-                <span
-                  style={{
-                    fontSize: "1rem",
-                    fontWeight: 700,
-                    color: "var(--text-primary)",
-                    letterSpacing: "-0.03em",
-                  }}
-                >
-                </span>
-              </div>
-
-              {/* Sidebar toggle inside sidebar */}
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg transition-colors"
-                style={{ color: "var(--text-muted)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-subtle)"; e.currentTarget.style.color = "var(--brand)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
-                aria-label="Close sidebar"
+      {/* ── Sidebar Panel ── */}
+      {user && isOnChatPage && (
+        <div
+          className={`fixed top-0 left-0 h-full z-50 flex flex-col transition-all duration-300 ease-in-out ${sidebarOpen
+              ? "w-[280px] translate-x-0"
+              : "-translate-x-full md:translate-x-0 md:w-[68px]"
+            }`}
+          style={{
+            background: "var(--bg-surface)",
+            borderRight: sidebarOpen ? "1px solid var(--border)" : "1px solid transparent",
+            boxShadow: sidebarOpen ? "4px 0 30px rgba(0,0,0,0.15)" : "none",
+          }}
+        >
+          <AnimatePresence mode="wait">
+            {sidebarOpen ? (
+              /* ── Wide Sidebar Content ── */
+              <motion.div
+                key="wide-sidebar"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-col h-full w-full"
               >
-                <PanelLeft className="w-5 h-5" />
-              </button>
-            </div>
+                {/* Sidebar Header */}
+                <div className="px-4 py-4 flex items-center justify-between flex-shrink-0">
+                  {/* Logo */}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: "transparent",
+                        boxShadow: isDark
+                          ? "0 0 16px var(--brand-glow)"
+                          : "0 4px 12px rgba(13, 148, 136, 0.25)",
+                        border: "1px solid var(--brand-border)",
+                      }}
+                    >
+                      <Activity
+                        className="w-5 h-5 drop-shadow-md"
+                        style={{ color: "var(--brand)" }}
+                        strokeWidth={2.5}
+                      />
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                        color: "var(--text-primary)",
+                        letterSpacing: "-0.03em",
+                      }}
+                    >
+                    </span>
+                  </div>
 
-            {/* New Chat */}
-            <div className="px-4 mb-3 flex-shrink-0">
-              <button
-                className="flex items-center gap-3 px-4 py-3 rounded-full w-full transition-all shadow-sm hover:shadow-md"
-                style={{
-                  background: "var(--bg-elevated)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                <Plus className="w-5 h-5" style={{ color: "var(--text-primary)" }} />
-                <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text-primary)" }}>
-                  New chat
-                </span>
-              </button>
-            </div>
-
-            {/* Search */}
-            <div className="px-4 mb-4 flex-shrink-0">
-              <div
-                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl transition-all"
-                style={{
-                  background: "var(--bg-elevated)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                <Search className="w-4 h-4 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search conversations..."
-                  className="flex-1 bg-transparent text-sm outline-none"
-                  style={{
-                    color: "var(--text-primary)",
-                    fontFamily: "var(--font-sans)",
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Recent Label */}
-            <div className="px-5 mb-2 flex-shrink-0">
-              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Recent
-              </span>
-            </div>
-
-            {/* History */}
-            <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-0.5">
-              {filteredHistory.length === 0 ? (
-                <p className="px-4 py-3 text-center" style={{ fontSize: "0.8125rem", color: "var(--text-muted)" }}>
-                  No conversations found
-                </p>
-              ) : (
-                filteredHistory.map((chat) => (
+                  {/* Sidebar toggle inside sidebar */}
                   <button
-                    key={chat.id}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left group"
+                    onClick={() => setSidebarOpen(false)}
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ color: "var(--text-muted)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-subtle)"; e.currentTarget.style.color = "var(--brand)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
+                    aria-label="Close sidebar"
+                  >
+                    <PanelLeft className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* New Chat */}
+                <div className="px-4 mb-3 flex-shrink-0">
+                  <button
+                    id="btn-new-chat"
+                    onClick={handleNewChat}
+                    className="flex items-center gap-3 px-4 py-3 rounded-full w-full transition-all shadow-sm hover:shadow-md"
+                    style={{
+                      background: "var(--bg-elevated)",
+                      border: "1px solid var(--border)",
+                    }}
+                  >
+                    <Plus className="w-5 h-5" style={{ color: "var(--text-primary)" }} />
+                    <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text-primary)" }}>
+                      New chat
+                    </span>
+                  </button>
+                </div>
+
+                {/* Search */}
+                <div className="px-4 mb-4 flex-shrink-0">
+                  <div
+                    className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl transition-all"
+                    style={{
+                      background: "var(--bg-elevated)",
+                      border: "1px solid var(--border)",
+                    }}
+                  >
+                    <Search className="w-4 h-4 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
+                    <input
+                      ref={(el) => {
+                        searchInputRef.current = el;
+                        if (el && shouldFocusSearch) {
+                          el.focus();
+                          setShouldFocusSearch(false);
+                        }
+                      }}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search conversations..."
+                      className="flex-1 bg-transparent text-sm outline-none"
+                      style={{
+                        color: "var(--text-primary)",
+                        fontFamily: "var(--font-sans)",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Recent Label */}
+                <div className="px-5 mb-2 flex-shrink-0">
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Recent
+                  </span>
+                </div>
+
+                {/* History */}
+                <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-0.5">
+                  {filteredHistory.length === 0 ? (
+                    <p className="px-4 py-3 text-center" style={{ fontSize: "0.8125rem", color: "var(--text-muted)" }}>
+                      No conversations found
+                    </p>
+                  ) : (
+                    filteredHistory.map((chat) => (
+                      <button
+                        key={chat.id}
+                        id={`btn-history-chat-${chat.id}`}
+                        onClick={() => {
+                          setActiveMode(chat.mode);
+                          setMessages([]);
+                          setIsCrisis(false);
+                          if (window.innerWidth < 768) {
+                            setSidebarOpen(false);
+                          }
+                        }}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left group"
+                        style={{ background: "transparent" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-elevated)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <MessageSquare className="w-4 h-4 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
+                        <div className="flex-1 overflow-hidden">
+                          <p className="truncate" style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+                            {chat.title}
+                          </p>
+                        </div>
+                        <Trash2
+                          className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all"
+                          style={{ color: "var(--text-muted)" }}
+                        />
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                {/* Account Section */}
+                <div className="flex-shrink-0 relative" ref={accountRef}
+                  style={{ borderTop: "1px solid var(--border)" }}
+                >
+                  <AnimatePresence>
+                    {accountOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute bottom-full left-2 right-2 mb-2 rounded-xl overflow-hidden"
+                        style={{
+                          background: "var(--bg-elevated)",
+                          border: "1px solid var(--border)",
+                          boxShadow: "0 -8px 30px rgba(0,0,0,0.15)",
+                          zIndex: 50,
+                        }}
+                      >
+                        <div className="py-1.5">
+                          {/* Account (expandable) */}
+                          <button
+                            onClick={() => setAccountExpand((v) => !v)}
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <User className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            <span style={{ fontSize: "0.875rem", color: "var(--text-primary)", flex: 1 }}>Account</span>
+                            <motion.div animate={{ rotate: accountExpand ? 90 : 0 }} transition={{ duration: 0.15 }}>
+                              <ChevronRight className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            </motion.div>
+                          </button>
+                          <AnimatePresence>
+                            {accountExpand && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="overflow-hidden"
+                              >
+                                <button
+                                  className="flex items-center gap-3 w-full pl-11 pr-4 py-2 text-left transition-colors"
+                                  style={{ background: "transparent" }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                >
+                                  <UserPlus className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                                  <span style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>Add account</span>
+                                </button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
+
+                          {/* Help */}
+                          <button
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <HelpCircle className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            <span style={{ fontSize: "0.875rem", color: "var(--text-primary)" }}>Help</span>
+                          </button>
+
+                          {/* Settings */}
+                          <button
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <Settings className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            <span style={{ fontSize: "0.875rem", color: "var(--text-primary)" }}>Settings</span>
+                          </button>
+
+                          <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
+
+                          {/* Appearance (expandable) */}
+                          <button
+                            onClick={() => setAppearanceExpand((v) => !v)}
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            {isDark ? (
+                              <Moon className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            ) : (
+                              <Sun className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            )}
+                            <span style={{ fontSize: "0.875rem", color: "var(--text-primary)", flex: 1 }}>Appearance</span>
+                            <motion.div animate={{ rotate: appearanceExpand ? 90 : 0 }} transition={{ duration: 0.15 }}>
+                              <ChevronRight className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            </motion.div>
+                          </button>
+                          <AnimatePresence>
+                            {appearanceExpand && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="overflow-hidden"
+                              >
+                                {[
+                                  { mode: "system", label: "System Default", icon: Monitor },
+                                  { mode: "light", label: "Light Mode", icon: Sun },
+                                  { mode: "dark", label: "Dark Mode", icon: Moon },
+                                ].map(({ mode, label, icon: Icon }) => (
+                                  <button
+                                    key={mode}
+                                    onClick={() => setThemeMode(mode)}
+                                    className="flex items-center gap-3 w-full pl-11 pr-4 py-2 text-left transition-colors"
+                                    style={{ background: "transparent" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                  >
+                                    <Icon className="w-4 h-4" style={{ color: themeMode === mode ? "var(--brand)" : "var(--text-muted)" }} />
+                                    <span style={{
+                                      fontSize: "0.8125rem",
+                                      color: themeMode === mode ? "var(--brand)" : "var(--text-secondary)",
+                                      fontWeight: themeMode === mode ? 600 : 400,
+                                      flex: 1,
+                                    }}>
+                                      {label}
+                                    </span>
+                                    {themeMode === mode && (
+                                      <div
+                                        className="w-2 h-2 rounded-full"
+                                        style={{ background: "var(--brand)" }}
+                                      />
+                                    )}
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
+
+                          {/* Log out */}
+                          <button
+                            onClick={logout}
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <LogOut className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            <span style={{ fontSize: "0.875rem", color: "var(--text-primary)" }}>Log out</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Account trigger */}
+                  <button
+                    onClick={() => {
+                      setAccountOpen((v) => !v);
+                      if (accountOpen) {
+                        setAccountExpand(false);
+                        setAppearanceExpand(false);
+                      }
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 text-left transition-colors"
                     style={{ background: "transparent" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-elevated)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                   >
-                    <MessageSquare className="w-4 h-4 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: "var(--brand)",
+                        color: "#fff",
+                        fontSize: "0.8125rem",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {avatarInitial}
+                    </div>
                     <div className="flex-1 overflow-hidden">
-                      <p className="truncate" style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-                        {chat.title}
+                      <p className="truncate" style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text-primary)" }}>
+                        {displayName}
                       </p>
                     </div>
-                    <Trash2
-                      className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all"
-                      style={{ color: "var(--text-muted)" }}
-                    />
+                    <motion.div animate={{ rotate: accountOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <ChevronDown className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                    </motion.div>
                   </button>
-                ))
-              )}
-            </div>
+                </div>
+              </motion.div>
+            ) : (
+              /* ── Collapsed Sidebar Content ── */
+              <motion.div
+                key="collapsed-sidebar"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-col h-full items-center justify-between py-4 select-none w-full"
+              >
+                {/* Top Section: Toggle & New Chat & Search & Recent */}
+                <div className="flex flex-col items-center gap-6 w-full">
+                  {/* Toggle Button */}
+                  <button
+                    id="btn-sidebar-expand"
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ color: "var(--text-muted)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-subtle)"; e.currentTarget.style.color = "var(--brand)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
+                    aria-label="Expand sidebar"
+                  >
+                    <PanelLeft className="w-5 h-5" />
+                  </button>
 
-            {/* Account Section */}
-            <div className="flex-shrink-0 relative" ref={accountRef}
-              style={{ borderTop: "1px solid var(--border)" }}
-            >
-              <AnimatePresence>
-                {accountOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute bottom-full left-2 right-2 mb-2 rounded-xl overflow-hidden"
+                  {/* New Chat Button */}
+                  <button
+                    id="btn-new-chat-collapsed"
+                    onClick={handleNewChat}
+                    className="p-2.5 rounded-xl transition-all shadow-sm border border-transparent hover:shadow-md"
                     style={{
                       background: "var(--bg-elevated)",
                       border: "1px solid var(--border)",
-                      boxShadow: "0 -8px 30px rgba(0,0,0,0.15)",
-                      zIndex: 50,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--brand)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
+                    aria-label="New chat"
+                  >
+                    <Plus className="w-5 h-5" style={{ color: "var(--text-primary)" }} />
+                  </button>
+
+                  {/* Search Button (expands sidebar) */}
+                  <button
+                    id="btn-search-collapsed"
+                    onClick={handleSearchClick}
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ color: "var(--text-muted)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-elevated)"; e.currentTarget.style.color = "var(--text-primary)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
+                    aria-label="Search"
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
+
+                  {/* Recents Icon Button (expands sidebar) */}
+                  <button
+                    id="btn-recents-collapsed"
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-2 rounded-lg transition-colors relative group"
+                    style={{ color: "var(--text-muted)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-elevated)"; e.currentTarget.style.color = "var(--text-primary)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
+                    aria-label="Recent chats"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Bottom Section: Account */}
+                <div className="w-full flex justify-center relative" ref={accountRef}>
+                  <button
+                    id="btn-account-collapsed"
+                    onClick={() => {
+                      setAccountOpen((v) => !v);
+                      if (accountOpen) {
+                        setAccountExpand(false);
+                        setAppearanceExpand(false);
+                      }
+                    }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 border"
+                    style={{
+                      background: "var(--brand)",
+                      color: "#fff",
+                      fontSize: "0.8125rem",
+                      fontWeight: 700,
+                      borderColor: "var(--brand-border)",
                     }}
                   >
-                    <div className="py-1.5">
-                      {/* Account (expandable) */}
-                      <button
-                        onClick={() => setAccountExpand((v) => !v)}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
-                        style={{ background: "transparent" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                    {avatarInitial}
+                  </button>
+
+                  {/* Collapsed Account Dropdown Menu */}
+                  <AnimatePresence>
+                    {accountOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, x: 8 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, x: 8 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute bottom-0 left-full ml-3 w-[220px] rounded-xl overflow-hidden shadow-xl animate-fade-in"
+                        style={{
+                          background: "var(--bg-elevated)",
+                          border: "1px solid var(--border)",
+                          zIndex: 55,
+                        }}
                       >
-                        <User className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                        <span style={{ fontSize: "0.875rem", color: "var(--text-primary)", flex: 1 }}>Account</span>
-                        <motion.div animate={{ rotate: accountExpand ? 90 : 0 }} transition={{ duration: 0.15 }}>
-                          <ChevronRight className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                        </motion.div>
-                      </button>
-                      <AnimatePresence>
-                        {accountExpand && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="overflow-hidden"
+                        <div className="py-1.5">
+                          {/* Account (expandable) */}
+                          <button
+                            onClick={() => setAccountExpand((v) => !v)}
+                            className="flex items-center gap-3 w-full px-4 py-2 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                           >
-                            <button
-                              className="flex items-center gap-3 w-full pl-11 pr-4 py-2 text-left transition-colors"
-                              style={{ background: "transparent" }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                            >
-                              <UserPlus className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                              <span style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>Add account</span>
-                            </button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
-
-                      {/* Help */}
-                      <button
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
-                        style={{ background: "transparent" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                      >
-                        <HelpCircle className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                        <span style={{ fontSize: "0.875rem", color: "var(--text-primary)" }}>Help</span>
-                      </button>
-
-                      {/* Settings */}
-                      <button
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
-                        style={{ background: "transparent" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                      >
-                        <Settings className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                        <span style={{ fontSize: "0.875rem", color: "var(--text-primary)" }}>Settings</span>
-                      </button>
-
-                      <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
-
-                      {/* Appearance (expandable) */}
-                      <button
-                        onClick={() => setAppearanceExpand((v) => !v)}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
-                        style={{ background: "transparent" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                      >
-                        {isDark ? (
-                          <Moon className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                        ) : (
-                          <Sun className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                        )}
-                        <span style={{ fontSize: "0.875rem", color: "var(--text-primary)", flex: 1 }}>Appearance</span>
-                        <motion.div animate={{ rotate: appearanceExpand ? 90 : 0 }} transition={{ duration: 0.15 }}>
-                          <ChevronRight className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                        </motion.div>
-                      </button>
-                      <AnimatePresence>
-                        {appearanceExpand && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="overflow-hidden"
-                          >
-                            {[
-                              { mode: "system", label: "System Default", icon: Monitor },
-                              { mode: "light", label: "Light Mode", icon: Sun },
-                              { mode: "dark", label: "Dark Mode", icon: Moon },
-                            ].map(({ mode, label, icon: Icon }) => (
-                              <button
-                                key={mode}
-                                onClick={() => setThemeMode(mode)}
-                                className="flex items-center gap-3 w-full pl-11 pr-4 py-2 text-left transition-colors"
-                                style={{ background: "transparent" }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                            <User className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            <span style={{ fontSize: "0.8125rem", color: "var(--text-primary)", flex: 1 }}>Account</span>
+                            <motion.div animate={{ rotate: accountExpand ? 90 : 0 }} transition={{ duration: 0.15 }}>
+                              <ChevronRight className="w-3.5 h-3.5" style={{ color: "var(--text-muted)" }} />
+                            </motion.div>
+                          </button>
+                          <AnimatePresence>
+                            {accountExpand && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="overflow-hidden"
                               >
-                                <Icon className="w-4 h-4" style={{ color: themeMode === mode ? "var(--brand)" : "var(--text-muted)" }} />
-                                <span style={{
-                                  fontSize: "0.8125rem",
-                                  color: themeMode === mode ? "var(--brand)" : "var(--text-secondary)",
-                                  fontWeight: themeMode === mode ? 600 : 400,
-                                  flex: 1,
-                                }}>
-                                  {label}
-                                </span>
-                                {themeMode === mode && (
-                                  <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{ background: "var(--brand)" }}
-                                  />
-                                )}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                                <button
+                                  className="flex items-center gap-3 w-full pl-11 pr-4 py-1.5 text-left transition-colors"
+                                  style={{ background: "transparent" }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                >
+                                  <UserPlus className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                                  <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Add account</span>
+                                </button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
 
-                      <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
+                          <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
 
-                      {/* Log out */}
-                      <button
-                        onClick={logout}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors"
-                        style={{ background: "transparent" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                      >
-                        <LogOut className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                        <span style={{ fontSize: "0.875rem", color: "var(--text-primary)" }}>Log out</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                          {/* Help */}
+                          <button
+                            className="flex items-center gap-3 w-full px-4 py-2 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <HelpCircle className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            <span style={{ fontSize: "0.8125rem", color: "var(--text-primary)" }}>Help</span>
+                          </button>
 
-              {/* Account trigger */}
-              <button
-                onClick={() => {
-                  setAccountOpen((v) => !v);
-                  if (accountOpen) {
-                    setAccountExpand(false);
-                    setAppearanceExpand(false);
-                  }
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3.5 text-left transition-colors"
-                style={{ background: "transparent" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-elevated)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-              >
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: "var(--brand)",
-                    color: "#fff",
-                    fontSize: "0.8125rem",
-                    fontWeight: 700,
-                  }}
-                >
-                  {avatarInitial}
+                          {/* Settings */}
+                          <button
+                            className="flex items-center gap-3 w-full px-4 py-2 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <Settings className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            <span style={{ fontSize: "0.8125rem", color: "var(--text-primary)" }}>Settings</span>
+                          </button>
+
+                          <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
+
+                          {/* Appearance (expandable) */}
+                          <button
+                            onClick={() => setAppearanceExpand((v) => !v)}
+                            className="flex items-center gap-3 w-full px-4 py-2 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            {isDark ? (
+                              <Moon className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            ) : (
+                              <Sun className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            )}
+                            <span style={{ fontSize: "0.8125rem", color: "var(--text-primary)", flex: 1 }}>Appearance</span>
+                            <motion.div animate={{ rotate: appearanceExpand ? 90 : 0 }} transition={{ duration: 0.15 }}>
+                              <ChevronRight className="w-3.5 h-3.5" style={{ color: "var(--text-muted)" }} />
+                            </motion.div>
+                          </button>
+                          <AnimatePresence>
+                            {appearanceExpand && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="overflow-hidden"
+                              >
+                                {[
+                                  { mode: "system", label: "System Default", icon: Monitor },
+                                  { mode: "light", label: "Light Mode", icon: Sun },
+                                  { mode: "dark", label: "Dark Mode", icon: Moon },
+                                ].map(({ mode, label, icon: Icon }) => (
+                                  <button
+                                    key={mode}
+                                    onClick={() => setThemeMode(mode)}
+                                    className="flex items-center gap-3 w-full pl-11 pr-4 py-1.5 text-left transition-colors"
+                                    style={{ background: "transparent" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                  >
+                                    <Icon className="w-4 h-4" style={{ color: themeMode === mode ? "var(--brand)" : "var(--text-muted)" }} />
+                                    <span style={{
+                                      fontSize: "0.75rem",
+                                      color: themeMode === mode ? "var(--brand)" : "var(--text-secondary)",
+                                      fontWeight: themeMode === mode ? 600 : 400,
+                                      flex: 1,
+                                    }}>
+                                      {label}
+                                    </span>
+                                    {themeMode === mode && (
+                                      <div
+                                        className="w-1.5 h-1.5 rounded-full"
+                                        style={{ background: "var(--brand)" }}
+                                      />
+                                    )}
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          <div style={{ height: 1, background: "var(--border)", margin: "4px 12px" }} />
+
+                          {/* Log out */}
+                          <button
+                            onClick={logout}
+                            className="flex items-center gap-3 w-full px-4 py-2 text-left transition-colors"
+                            style={{ background: "transparent" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <LogOut className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+                            <span style={{ fontSize: "0.8125rem", color: "var(--text-primary)" }}>Log out</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <p className="truncate" style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text-primary)" }}>
-                    {displayName}
-                  </p>
-                </div>
-                <motion.div animate={{ rotate: accountOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                  <ChevronDown className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
-                </motion.div>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       <main className="flex-grow flex flex-col">
         <Outlet />

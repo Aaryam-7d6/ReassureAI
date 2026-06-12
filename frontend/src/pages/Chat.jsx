@@ -70,6 +70,13 @@ export default function Chat() {
     setMessages([]);
   }, [activeMode]);
 
+  // Clear input when messages are cleared (e.g. New chat clicked)
+  useEffect(() => {
+    if (messages.length === 0) {
+      setInput("");
+    }
+  }, [messages]);
+
   const handleSend = (e, customText = null) => {
     if (e) e.preventDefault();
     const textToSend = customText !== null ? customText : input;
