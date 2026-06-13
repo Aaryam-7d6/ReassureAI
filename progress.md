@@ -1,6 +1,8 @@
 # Project Progress
 
-## TASK-001: FastAPI App Scaffold
+## TASK-002: MongoDB connection + indexes + seed
+- [x] Create `backend/app/db/connection.py`
+- [x] Create models and seed script
 - [x] Create `backend/main.py` (FastAPI + CORS + Lifespan)
 - [x] Create `backend/config.py` (Pydantic Settings)
 - [x] Create `backend/app/utils/logger.py` (JSON Logging)
