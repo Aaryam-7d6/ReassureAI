@@ -1,0 +1,79 @@
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: reassureai-caddy
+    depends_on:
+      - frontend
+      - backend
+      - n8n
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reassureai-frontend
+    environment:
+      VITE_API_BASE_URL: /api/v1
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reassureai-backend
+    environment:
+      MONGO_URI: mongodb://host.docker.internal:27017/reassureai
+      MONGODB_URI: mongodb://host.docker.internal:27017/reassureai
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      FRONTEND_URL: http://localhost:8080
+      BACKEND_URL: http://localhost:8080
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: reassureai-n8n
+    user: "0:0"
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_PATH: /n8n/
+      N8N_EDITOR_BASE_URL: http://localhost:8080/n8n/
+      WEBHOOK_URL: http://localhost:8080/n8n/
+      N8N_SECURE_COOKIE: "false"
+      GENERIC_TIMEZONE: Etc/UTC
+      TZ: Etc/UTC
+    volumes:
+      - ./data/n8n:/home/node/.n8n
+    ports:
+      - "5678:5678"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  frontend_node_modules:
+  caddy_data:
+  caddy_config:

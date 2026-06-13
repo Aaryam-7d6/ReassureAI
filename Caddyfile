@@ -1,0 +1,27 @@
+{
+	auto_https off
+}
+
+:80 {
+	encode gzip zstd
+
+	@backend_routes {
+		path /api/* /health /docs* /redoc* /openapi.json
+	}
+	handle @backend_routes {
+		reverse_proxy backend:8000
+	}
+
+	redir /n8n /n8n/
+
+	handle_path /n8n/* {
+		reverse_proxy n8n:5678 {
+			header_up X-Forwarded-Prefix /n8n
+			header_up X-Forwarded-Proto http
+		}
+	}
+
+	handle {
+		reverse_proxy frontend:5173
+	}
+}
