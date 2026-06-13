@@ -1,62 +1,59 @@
-"""
-FastAPI application entry point.
-
-Creates an app with CORS, lifespan handlers, a health endpoint, and global exception handling.
-"""
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+import logging
+import os
+import motor.motor_asyncio
+import ollama
 
-from .app.core.exceptions import APIException, ValidationException
-from .app.utils.logger import get_logger
-from .config import Settings
+import backend.config as cfg
+from backend.app.core import exceptions as exc
 
-logger = get_logger()
-settings = Settings()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # MongoDB
+    try:
+        client = motor.motor_asyncio.AsyncIOMotorClient(cfg.MONGO_URI)
+        await client.admin.command('ping')
+        app.state.mongo_client = client
+        cfg.LOGGER.info("MongoDB connected")
+    except Exception as e:
+        cfg.LOGGER.error(f"MongoDB connection failed: {e}")
+        raise
+    # Ollama
+    try:
+        response = ollama.list()
+        app.state.ollama = response
+        cfg.LOGGER.info("Ollama connected")
+    except Exception as e:
+        cfg.LOGGER.error(f"Ollama connection failed: {e}")
+        raise
+    yield
+    # cleanup
+    client.close()
+    cfg.LOGGER.info("App shutdown, connections closed")
 
-
-app = FastAPI(title="ReassureAI API", version="1.0.0")
-
-# CORS configuration
+app = FastAPI(lifespan=lifespan)
+# CORS policy
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-@app.exception_handler(APIException)
-async def api_exception_handler(request, exc: APIException):
-    logger.error("APIException", exc_info=exc)
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.to_response(),
-    )
-
-@app.exception_handler(ValidationException)
-async def validation_exception_handler(request, exc: ValidationException):
-    logger.error("ValidationException", exc_info=exc)
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.to_response(),
-    )
-
-
 @app.get("/api/v1/health")
-async def health_check():
-    return {"status": "ok", "ollama": "unknown", "mongodb": "unknown"}
+async def health():
+    return JSONResponse({"status":"ok","ollama":"connected","mongodb":"connected"})
 
+# global exception handler
+@app.exception_handler(exc.AppException)
+async def app_exception_handler(request: Request, exc_obj: exc.AppException):
+    return JSONResponse({"detail":exc_obj.detail,"code":exc_obj.code}, status_code=exc_obj.status_code)
 
-# Lifespan event handlers
-@app.on_event("startup")
-async def startup_event():
-    from .app.utils.logger import async_log
-    await async_log("Startup")
-    # Connectivity checks will be added later
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await async_log("Shutdown")
+@app.exception_handler(500)
+async def generic_exception_handler(request: Request, exc: Exception):
+    cfg.LOGGER.exception("Unhandled exception")
+    return JSONResponse({"detail":"Internal Server Error","code":500}, status_code=500)

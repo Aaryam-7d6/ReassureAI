@@ -1,20 +1,14 @@
-"""
-Configuration using Pydantic Settings. Exposes environment variables used by the backend.
-"""
-import os
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from backend.app.utils.logger import get_logger
 
 class Settings(BaseSettings):
-    # General
-    API_TITLE: str = Field("ReassureAI API", env="API_TITLE")
-    API_VERSION: str = Field("1.0.0", env="API_VERSION")
-    # MongoDB
-    MONGODB_URI: str = Field("mongodb://localhost:27017", env="MONGODB_URI")
-    # Ollama
-    OLLOMA_URL: str = Field("http://localhost:11434", env="OLLOMA_URL")
-
+    MONGO_URI: str = "mongodb://localhost:27017"
+    OLLAMA_URL: str = "http://localhost:11434"
+    LOG_LEVEL: str = "INFO"
+    CORS_ORIGINS: str = "*"
     class Config:
         env_file = ".env"
-        env_file_encoding = "utf-8"
+        case_sensitive = False
 
-settings = Settings()
+cfg = Settings()
+LOGGER = get_logger("backend")
