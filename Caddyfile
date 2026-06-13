@@ -5,16 +5,20 @@
 :80 {
 	encode gzip zstd
 
-	handle /api/* {
+	@backend_routes {
+		path /api/* /health /docs* /redoc* /openapi.json
+	}
+	handle @backend_routes {
 		reverse_proxy backend:8000
 	}
 
-	handle /health {
-		reverse_proxy backend:8000
-	}
+	redir /n8n /n8n/
 
-	handle /n8n* {
-		reverse_proxy n8n:5678
+	handle_path /n8n/* {
+		reverse_proxy n8n:5678 {
+			header_up X-Forwarded-Prefix /n8n
+			header_up X-Forwarded-Proto http
+		}
 	}
 
 	handle {

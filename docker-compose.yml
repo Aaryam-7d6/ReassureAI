@@ -59,9 +59,10 @@ services:
       N8N_HOST: localhost
       N8N_PORT: 5678
       N8N_PROTOCOL: http
-      N8N_PATH: /n8n
-      N8N_EDITOR_BASE_URL: http://localhost:8080/n8n
-      WEBHOOK_URL: http://localhost:8080/n8n
+      N8N_PATH: /n8n/
+      N8N_EDITOR_BASE_URL: http://localhost:8080/n8n/
+      WEBHOOK_URL: http://localhost:8080/n8n/
+      N8N_SECURE_COOKIE: "false"
       GENERIC_TIMEZONE: Etc/UTC
       TZ: Etc/UTC
     volumes:
