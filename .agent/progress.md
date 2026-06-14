@@ -9,7 +9,7 @@
 
 ```
 Phase 1 — Frontend UI         ████████████████████    100%  (TASK-F01..F03 + polish + F04 + F05..F08)
-Phase 2 — Backend Foundation  ░░░░░░░░░░░░░░░░░░░░    0%
+Phase 2 — Backend Foundation  ████████████████████    100%  (TASK-001, TASK-002, TASK-003)
 Phase 3 — Safety (SEC1)       ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 4 — Three-Chain Pipeline░░░░░░░░░░░░░░░░░░░░    0%
 Phase 5 — File Processing     ░░░░░░░░░░░░░░░░░░░░    0%
@@ -22,12 +22,13 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 ## Completed ✓
 
 - Frontend UI — scaffold, Home page, Auth pages, Dashboard (TASK-F01, TASK-F02, TASK-F03, TASK-F04) — May–June 2026
+- Backend Foundation — FastAPI scaffold, MongoDB + indexes + seed, Auth endpoints (TASK-001, TASK-002, TASK-003) — June 2026
 
 ---
 
 ## In Progress 🔄
 
-- Nothing currently in progress. Next: Backend foundation (TASK-001)
+- Nothing currently in progress. Next: Safety System — SEC1 (TASK-004)
 
 ---
 
@@ -81,6 +82,6 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 
 ## Next Session Starting Point
 
-**Start with TASK-F01** — frontend scaffold.
-Nothing is pre-built. Everything from zero.
+**Start with TASK-004** — Safety System (SEC1): Semantic Understanding Layer + D-Node.
+Backend foundation (TASK-001–003) is complete.
 Read wsl_setup.md before starting backend tasks.

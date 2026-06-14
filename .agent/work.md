@@ -79,7 +79,7 @@
 
 ## Phase 2 — Backend Foundation
 
-- [ ] **TASK-001** — FastAPI app scaffold
+- [x] **TASK-001** — FastAPI app scaffold
   - Create `backend/main.py` — FastAPI + CORS + lifespan
   - Create `backend/config.py` — pydantic-settings (all env vars)
   - Create `backend/app/utils/logger.py` — structured JSON logging
@@ -89,7 +89,7 @@
   - `GET /api/v1/health` → `{"status":"ok","ollama":"connected","mongodb":"connected"}`
   - See `codebase/wsl_setup.md` for Windows host connection
 
-- [ ] **TASK-002** — MongoDB connection + indexes + seed
+- [x] **TASK-002** — MongoDB connection + indexes + seed
   - Create `backend/app/db/connection.py` — Motor AsyncIOMotorClient
   - Create `backend/app/db/models/user.py`
   - Create `backend/app/db/models/conversation.py`
@@ -103,7 +103,7 @@
     ```
   - Write `backend/tests/test_db.py`
 
-- [ ] **TASK-003** — Auth endpoints
+- [x] **TASK-003** — Auth endpoints
   - Create `backend/app/schemas/auth.py`
   - Create `backend/app/utils/validators.py`
     - `validate_password()` — all 5 rules with friendly messages
