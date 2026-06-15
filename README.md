@@ -31,15 +31,14 @@ _Bridging Modern Biomedicine with Ancient Ayurvedic Wisdom_
 
 - [What is ReassureAI](#-what-is-reassureai)
 - [Core Features](#-core-features)
-- [System Architecture](#-system-architecture)
-- [System Architecture Node Explanations](#system-architecture-node-explanations)
-- [Tech Stack](#-tech-stack)
+- [System Architecture](#️-system-architecture)
+- [Tech Stack](#️-tech-stack)
 - [Models on HuggingFace](#-models-on-huggingface)
 - [Getting Started](#-getting-started)
 - [Demo Login](#-demo-login)
 - [Project Structure](#-project-structure)
 - [Team](#-team)
-- [Disclaimer](#-disclaimer)
+- [Disclaimer](#️-disclaimer)
 - [License](#-license)
 
 ---
@@ -95,7 +94,17 @@ ReassureAI addresses all three gaps in one unified system:
 
 ### 🛡️ Dual-stage safety screening
 
-### 🔍 RAG-enhanced accuracy (FAISS + BM25)
+- SEC1 — Pre-inference semantic crisis detection via LLM (not keywords)
+- SEC2 — Post-inference contradiction check, herb-drug conflict detection
+- Medical disclaimer injected in every response
+- Guardian alert system for high-risk situations
+
+### 🔍 RAG-enhanced accuracy
+
+- Hybrid retrieval — FAISS (semantic) + BM25 (keyword) combined
+- Reciprocal Rank Fusion for better result ranking
+- Reduces LLM hallucination by grounding responses in trusted sources
+- Separate knowledge bases for biomedical and Ayurvedic domains
 
 ---
 
@@ -206,9 +215,7 @@ Disigen Node (dispatcher)
 - **SEC1 (Pre-inference):** LLM semantic analysis before any response model runs
 - **SEC2 (Post-inference):** Contradiction check, herb-drug conflicts, disclaimer injection
 
----
-
-## System Architecture Node Explanations
+### System Architecture Node Explanations
 
 | Node                                  | Model / Tech             | Role                                                                 |
 | ------------------------------------- | ------------------------ | -------------------------------------------------------------------- |
@@ -264,12 +271,12 @@ Disigen Node (dispatcher)
 
 ### AI Models
 
-| Chain | Model | Role |
-|---|---|---|
-| Chain 1 | OpenBioLLM-70B | Biomedical clinical reasoning |
-| Chain 2 | [AyurParam GGUF 3B](https://huggingface.co/A-Aryam/AyurParam-GGUF) | Ayurvedic reasoning |
-| Chain 3 | Mistral-7B | QIL, semantic gate, fusion, mental health |
-| Embedder | all-MiniLM-L6-v2 | RAG document embedding |
+| Chain    | Model                                                              | Role                                      |
+| -------- | ------------------------------------------------------------------ | ----------------------------------------- |
+| Chain 1  | OpenBioLLM-70B                                                     | Biomedical clinical reasoning             |
+| Chain 2  | [AyurParam GGUF 3B](https://huggingface.co/A-Aryam/AyurParam-GGUF) | Ayurvedic reasoning                       |
+| Chain 3  | Mistral-7B                                                         | QIL, semantic gate, fusion, mental health |
+| Embedder | all-MiniLM-L6-v2                                                   | RAG document embedding                    |
 
 ### Infrastructure
 
@@ -300,8 +307,8 @@ Disigen Node (dispatcher)
 
 ## 🤗 Models on HuggingFace
 
-| Model | Description | Downloads |
-|---|---|---|
+| Model                                                           | Description                                                                             | Downloads                                                                                                                                                       |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [AyurParam-GGUF](https://huggingface.co/A-Aryam/AyurParam-GGUF) | GGUF conversions (F16 + Q4_K_M) of bharatgenai/AyurParam for local inference via Ollama | ![Downloads](https://img.shields.io/badge/dynamic/json?url=https://huggingface.co/api/models/A-Aryam/AyurParam-GGUF&query=downloads&label=downloads&color=teal) |
 
 ---
@@ -377,6 +384,7 @@ Pull required Ollama models:
 ollama pull mistral
 ollama run hf.co/A-Aryam/AyurParam-GGUF:Q4_K_M
 ```
+
 <!-- ollama pull aayupahar -->
 
 Updating soon...
@@ -453,13 +461,15 @@ ReassureAI/
 ---
 
 ## 👥 Team
+
 <!-- Project Lead, Architecture, AI Pipeline -->
-| Name                   | Role                                    |
-| ---------------------- | --------------------------------------- |
+
+| Name                   | Role                                                                     |
+| ---------------------- | ------------------------------------------------------------------------ |
 | **Aarya R. Thakar**    | Originator & Project Lead · System Architecture · AI Pipeline · Research |
-| **Ansh B. Patel**      | Frontend & Backend Development          |
-| **Darshan B. Kyada**   | Frontend & Backend Development          |
-| **Elvis T. Fernandes** | Database                                |
+| **Ansh B. Patel**      | Frontend & Backend Development                                           |
+| **Darshan B. Kyada**   | Frontend & Backend Development                                           |
+| **Elvis T. Fernandes** | Database                                                                 |
 
 <!--**Project Guide:** Prof. Harsh Pateliya -->
 
@@ -477,7 +487,7 @@ Research Paper is progress...
 
 ## ⚠️ Disclaimer
 
-ReassureAI is an **educational and informational tool only**.
+<!-- ReassureAI is an **educational and informational tool only**.
 
 - It does **not** provide medical diagnosis
 - It does **not** replace licensed healthcare professionals
@@ -488,6 +498,38 @@ If you are experiencing a mental health crisis, please contact:
 
 - **iCall:** 9152987821 (Mon–Sat, 8am–10pm)
 - **Vandrevala Foundation:** 1860-2662-345 (24/7)
+- **MANAS:** 14416 or 1-800-891-4416
+-->
+
+## ⚠️ Disclaimer
+
+> [!WARNING]
+> ReassureAI is a student research project developed as a Final Year B.Tech 
+> project at Parul University. It is experimental and **not** medically approved, 
+> certified, or compliant with HIPAA, DPDP, or any healthcare regulatory framework.
+
+**This tool is for educational and informational purposes only.**
+
+- Does not provide medical diagnosis
+- Does not replace licensed healthcare professionals  
+- Does not prescribe treatments or medications
+- AI responses may be incorrect, incomplete, or outdated
+- Not validated by any government body or medical institution
+- All responses should be verified with a qualified doctor
+
+> Use at your own risk and with full awareness of its limitations.
+> This project explores how AI *can* be applied to healthcare — 
+> it is a proof of concept, not a clinical tool.
+
+---
+
+**If you are experiencing a mental health crisis, please contact:**
+
+| Helpline | Number | Available |
+|---|---|---|
+| iCall | 9152987821 | Mon–Sat, 8am–10pm |
+| Vandrevala Foundation | 1860-2662-345 | 24/7 |
+| MANAS | 14416 or 1800-891-4416 | 24/7 |
 
 ---
 
@@ -499,7 +541,7 @@ Licensed under the **Apache License 2.0** — see [LICENSE](LICENSE) for full te
 
 © 2025 Aarya R. Thakar, Ansh B. Patel, Darshan B. Kyada, Elvis T. Fernandes
 
-This license is consistent with [AyurParam](https://huggingface.co/bharatgenai/AyurParam) 
+This license is consistent with [AyurParam](https://huggingface.co/bharatgenai/AyurParam)
 (bharatgenai/AyurParam) which this project integrates, also licensed under Apache 2.0.
 
 ---
