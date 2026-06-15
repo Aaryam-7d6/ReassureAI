@@ -501,8 +501,6 @@ If you are experiencing a mental health crisis, please contact:
 - **MANAS:** 14416 or 1-800-891-4416
 -->
 
-## ⚠️ Disclaimer
-
 > [!WARNING]
 > ReassureAI is a student research project developed as a Final Year B.Tech 
 > project at Parul University. It is experimental and **not** medically approved, 
