@@ -10,6 +10,8 @@ backend/__pycache__/
 backend/**/__pycache__/
 backend/*.pyc
 backend/knowledge_base/faiss.index
+venv/
+__pycache__/
 
 # Google Drive credentials
 backend/credentials.json
