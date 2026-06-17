@@ -122,7 +122,7 @@
 
 ## Phase 3 — Safety System (SEC1)
 
-- [ ] **TASK-004** — Semantic Understanding Layer + D-Node
+- [x] **TASK-004** — Semantic Understanding Layer + D-Node
 
   **Step 1 — `semantic_gate.py`**
   - Create `backend/app/core/safety/semantic_gate.py`
@@ -206,7 +206,7 @@
   - "I have a headache" → safe
   - SemanticGateUnavailableError → keyword fallback fires
 
-- [ ] **TASK-005** — n8n Rule-Based trigger
+- [x] **TASK-005** — n8n Rule-Based trigger
   - `backend/app/core/safety/rule_based.py`
   - asyncio.create_task() — fire and forget
   - Payload: user_id, guardian_email, crisis_level, timestamp, query_snippet (50 chars)
