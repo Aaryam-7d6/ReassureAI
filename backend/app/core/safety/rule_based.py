@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict
 
-from .dnode import DNodeResult, dnode_process
+from .dnode import DNodeResult, evaluate_message
 from ..utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -32,15 +32,9 @@ async def send_to_n8n(payload: Dict[str, Any]) -> None:
         logger.error("Failed to send crisis payload to n8n: %s", exc)
 
 async def trigger_rule(user_id: str, guardian_email: str, crisis_level: int, timestamp: str, query_snippet: str) -> None:
-    """Evaluate a user query and, if a crisis is detected, trigger the n8n workflow.
-    This runs as a background task; callers should not await the result.
+    """Trigger n8n workflow for a crisis detection.
+    This function should be scheduled with ``asyncio.create_task`` by the caller.
     """
-    # Perform D‑Node analysis (semantic + fallback)
-    result: DNodeResult = dnode_process(query)
-    if not result.is_crisis:
-        logger.debug("No crisis detected for user %s", user_id)
-        return
-
     # Build concise payload
     payload = {
         "user_id": user_id,
@@ -52,13 +46,16 @@ async def trigger_rule(user_id: str, guardian_email: str, crisis_level: int, tim
     # Fire‑and‑forget the webhook
     asyncio.create_task(send_to_n8n(payload))
 
-# Example of how this could be used within an endpoint (not exported)
-async def handle_user_message(user_id: str, guardian_email: str, message: str) -> DNodeResult:
-    """Process a message, trigger rule‑based if needed, and return the analysis result.
-    The caller can use the returned DNodeResult to decide on a response.
+async def process_message(user_id: str, guardian_email: str, message: str) -> DNodeResult:
+    """Analyze a user message and trigger rule‑based workflow if crisis.
+
+    Returns the ``DNodeResult`` which contains crisis detection info.
     """
-    result = dnode_process(message)
+    result: DNodeResult = evaluate_message(message)
     if result.is_crisis:
-        # Schedule the external trigger without blocking the response flow
-        asyncio.create_task(rule_based_trigger(user_id, guardian_email, message))
+        # Prepare data for payload
+        timestamp = datetime.utcnow().isoformat()
+        query_snippet = (message[:47] + "...") if len(message) > 50 else message
+        # Schedule background n8n trigger without awaiting
+        asyncio.create_task(trigger_rule(user_id, guardian_email, result.level, timestamp, query_snippet))
     return result
