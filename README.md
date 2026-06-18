@@ -5,7 +5,10 @@ Hybrid AI healthcare assistant integrating OpenBioLLM (modern biomedicine) and A
 
 <div align="center">
 
-# ⚕️ ReassureAI
+<img width="650" height="400" alt="Reaasure-AI-transperant-dark-theme" src="https://github.com/user-attachments/assets/05ea5917-c02f-4df8-8bd3-7daf552e8110" />
+
+
+# ⚕️ReassureAI
 
 ### A Hybrid AI Healthcare Support System
 
@@ -545,6 +548,9 @@ This license is consistent with [AyurParam](https://huggingface.co/bharatgenai/A
 ---
 
 <div align="center">
+
+<img width="704" height="384" alt="my-logo-for-project" src="https://github.com/user-attachments/assets/66b8c1e0-88a9-4867-9dbb-02a644cb060f" />
+
 
 _Built with ❤️ for 150 million Indians who deserve better healthcare access_
 
