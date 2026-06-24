@@ -31,3 +31,7 @@ Thumbs.db
 #vscode
 .vscode/
 .vscode/*
+
+#aider
+.aider/
+.aider/*
