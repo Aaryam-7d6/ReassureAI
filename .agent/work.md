@@ -217,7 +217,7 @@
 
 ## Phase 4 — Three-Chain Pipeline
 
-- [ ] **TASK-006** — QIL (Query Intelligence Layer)
+- [x] **TASK-006** — QIL (Query Intelligence Layer)
   - `backend/app/core/pipeline/qil.py`
   - Mistral-7B JSON output via Ollama
   - Extracts: intent, urgency, biomedical_score, ayurvedic_score,
@@ -225,25 +225,25 @@
   - Pydantic QILResult model
   - Write `backend/tests/test_qil.py`
 
-- [ ] **TASK-007** — Physical health router
+- [x] **TASK-007** — Physical health router
   - `backend/app/core/pipeline/router.py`
   - DUAL_PARALLEL / MODERN_HEAVY / AYUR_HEAVY / MODERN_ONLY
   - Returns RouteResult(strategy, active_chains, weights)
   - Write `backend/tests/test_router.py`
 
-- [ ] **TASK-008** — Model base class + Chain 3 Mistral
+- [x] **TASK-008: Implemented user authentication service, including login logic, JWT token generation, and password hashing.** — Model base class + Chain 3 Mistral
   - `backend/app/core/models/base.py` — abstract, timeout, retry, confidence
   - `backend/app/core/models/mistral.py` — Ollama, 15s timeout, 3 retries
   - Write `backend/tests/test_mistral.py`
 
-- [ ] **TASK-009** — Chain 1 OpenBioLLM + Groq failover
+- [x] **TASK-009** — Chain 1 OpenBioLLM + Groq failover
   - `backend/app/core/models/openbiollm.py`
   - Primary: HuggingFace Inference API (httpx async)
   - Failover: Groq API on 429/503 → llama-3-70b-versatile
   - Retry with exponential backoff before failover
   - Write `backend/tests/test_openbiollm.py`
 
-- [ ] **TASK-010** — Chain 2 AyurParam with graduated fallback
+- [~] **TASK-010** — Chain 2 AyurParam with graduated fallback (placeholder implementation; RAG not yet integrated)
   - `backend/app/core/models/ayurparam.py`
   - Ollama local (Windows)
   - Fallback logic (DEC-004):

@@ -25,3 +25,7 @@
 		reverse_proxy frontend:5173
 	}
 }
+
+#:5678 {
+#	redir * http://localhost:8080/n8n/{uri} permanent
+#}

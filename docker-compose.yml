@@ -8,6 +8,7 @@ services:
       - n8n
     ports:
       - "8080:80"
+      - "5678:5678"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -65,10 +66,16 @@ services:
       N8N_SECURE_COOKIE: "false"
       GENERIC_TIMEZONE: Etc/UTC
       TZ: Etc/UTC
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_USER_MANAGEMENT_JWT_SECRET: ${N8N_JWT_SECRET}
+
     volumes:
       - ./data/n8n:/home/node/.n8n
-    ports:
-      - "5678:5678"
+
+    # no "ports:" section — only reachable via caddy now
+    #ports:
+      #- "5678:5678"
+
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

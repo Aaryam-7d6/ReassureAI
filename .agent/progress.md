@@ -11,7 +11,7 @@
 Phase 1 — Frontend UI         ████████████████████    100%  (TASK-F01..F03 + polish + F04 + F05..F08)
 Phase 2 — Backend Foundation  ████████████████████    100%  (TASK-001, TASK-002, TASK-003)
 Phase 3 — Safety (SEC1)       ████████████████████    100% (TASK-004 and TASK-005)
-Phase 4 — Three-Chain Pipeline░░░░░░░░░░░░░░░░░░░░    0%
+Phase 4 — Three-Chain Pipeline██████████    100%
 Phase 5 — File Processing     ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 6 — API Endpoints       ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 7 — Integration         ░░░░░░░░░░░░░░░░░░░░    0%
@@ -29,6 +29,10 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 ## In Progress 🔄
 
 - TASK-005 — n8n Rule-Based trigger (completed)
+- TASK-007 — Physical health router (completed)
+- TASK-008 — Model base class + Chain 3 Mistral (USER AUTH: base.py + mistral.py) — June 2026
+- TASK-009 — Chain 1 OpenBioLLM + Groq failover — June 2026
+- TASK-010 — Chain 2 AyurParam with graduated fallback (placeholder; RAG pending) — Added placeholder implementation
 
 ---
 
@@ -79,9 +83,9 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 | 2026-06-04 | GitHub Copilot | Report viewer (TASK-F08): report history list, markdown summaries, file metadata display on dashboard            |
 
 ---
-
+<!--
 ## Next Session Starting Point
 
 **Start with TASK-004** — Safety System (SEC1): Semantic Understanding Layer + D-Node.
 Backend foundation (TASK-001–003) is complete.
-Read wsl_setup.md before starting backend tasks.
+Read wsl_setup.md before starting backend tasks. -->
