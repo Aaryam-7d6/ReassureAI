@@ -243,7 +243,11 @@
   - Retry with exponential backoff before failover
   - Write `backend/tests/test_openbiollm.py`
 
-- [~] **TASK-010** — Chain 2 AyurParam with graduated fallback (placeholder implementation; RAG not yet integrated)
+- [x] **TASK-010** — Chain 2 AyurParam with graduated fallback (completed) — 2026-07-04
+  - Ollama Mistral integration implemented
+  - Graduated fallback logic (DEC-004) fully implemented
+  - Confidence scoring (0.0-1.0) added
+  - Placeholder for RAG integration
   - `backend/app/core/models/ayurparam.py`
   - Ollama local (Windows)
   - Fallback logic (DEC-004):
