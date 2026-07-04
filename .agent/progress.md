@@ -34,6 +34,7 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 - TASK-009 — Chain 1 OpenBioLLM + Groq failover — June 2026
 - TASK-010 — Chain 2 AyurParam with graduated fallback (completed) — 2026-07-04
 - TASK-011 — RAG retrieval only (completed) — 2026-07-04
+- TASK-012 — Concurrent 3-chain execution + Disigen Node (completed) — 2026-07-04
 
 ---
 
@@ -83,6 +84,7 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 | 2026-06-04 | GitHub Copilot | Crisis card (TASK-F07): empathetic UI with crisis hotlines, keyword detection, always-visible design             |
 | 2026-06-04 | GitHub Copilot | Report viewer (TASK-F08): report history list, markdown summaries, file metadata display on dashboard            |
 | 2026-07-04 | Codex          | TASK-011: implemented hybrid dense + keyword/sparse retrieval. Chunking, embedding, and Qdrant upload stay in Google Colab. |
+| 2026-07-04 | Codex          | TASK-012: implemented Disigen orchestration for mental, physical, and report flows with concurrent model-chain execution. |
 
 ---
 <!--

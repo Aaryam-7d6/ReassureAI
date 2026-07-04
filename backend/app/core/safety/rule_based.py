@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any, Dict
 
 from .dnode import DNodeResult, evaluate_message
-from ..utils.logger import get_logger
+from backend.app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

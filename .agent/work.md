@@ -266,7 +266,7 @@
   - Note: document chunking, embedding, sparse vector generation, and upload are done in Google Colab
   - Write `backend/tests/test_rag.py`
 
-- [ ] **TASK-012** — Concurrent 3-chain execution + Disigen Node
+- [x] **TASK-012** — Concurrent 3-chain execution + Disigen Node — 2026-07-04
   - `backend/app/core/pipeline/disigen.py`
   - Mental health: semantic_gate → dnode → Mistral (safe) / rule_based (crisis)
   - Physical health: QIL → router → asyncio.gather(chain1, chain2, chain3) → RAG → fusion
