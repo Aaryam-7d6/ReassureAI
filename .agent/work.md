@@ -258,13 +258,12 @@
   - confidence score (0.0–1.0) in response
   - Write `backend/tests/test_ayurparam.py`
 
-- [ ] **TASK-011** — RAG pipeline (FAISS local → Qdrant Cloud)
-  - `backend/app/core/rag/embedder.py` — sentence-transformers
-  - `backend/app/core/rag/indexer.py` — chunk, embed, build FAISS + BM25 locally
-  - `backend/app/core/rag/retriever.py` — hybrid FAISS + BM25 + RRF
-  - `backend/app/core/rag/qdrant_client.py` — Qdrant Cloud connection
-    (use FAISS if QDRANT_URL not set, for local dev)
-  - Create initial knowledge base text files
+- [x] **TASK-011** — RAG retrieval pipeline (Colab ingestion → Qdrant Cloud) — 2026-07-04
+  - `backend/app/core/rag/embedder.py` — query-time sentence-transformers helper only
+  - `backend/app/core/rag/indexer.py` — documents backend indexing is disabled by design
+  - `backend/app/core/rag/retriever.py` — hybrid dense + exact keyword/sparse retrieval with RRF
+  - `backend/app/core/rag/qdrant_client.py` — Qdrant Cloud query client
+  - Note: document chunking, embedding, sparse vector generation, and upload are done in Google Colab
   - Write `backend/tests/test_rag.py`
 
 - [ ] **TASK-012** — Concurrent 3-chain execution + Disigen Node

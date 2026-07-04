@@ -11,7 +11,7 @@
 Phase 1 — Frontend UI         ████████████████████    100%  (TASK-F01..F03 + polish + F04 + F05..F08)
 Phase 2 — Backend Foundation  ████████████████████    100%  (TASK-001, TASK-002, TASK-003)
 Phase 3 — Safety (SEC1)       ████████████████████    100% (TASK-004 and TASK-005)
-Phase 4 — Three-Chain Pipeline██████████    100%
+Phase 4 — Three-Chain Pipeline████████████  100%
 Phase 5 — File Processing     ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 6 — API Endpoints       ░░░░░░░░░░░░░░░░░░░░    0%
 Phase 7 — Integration         ░░░░░░░░░░░░░░░░░░░░    0%
@@ -33,6 +33,7 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 - TASK-008 — Model base class + Chain 3 Mistral (USER AUTH: base.py + mistral.py) — June 2026
 - TASK-009 — Chain 1 OpenBioLLM + Groq failover — June 2026
 - TASK-010 — Chain 2 AyurParam with graduated fallback (completed) — 2026-07-04
+- TASK-011 — RAG retrieval only (completed) — 2026-07-04
 
 ---
 
@@ -81,6 +82,7 @@ Phase 7 — Integration         ░░░░░░░░░░░░░░░░
 | 2026-06-04 | GitHub Copilot | Response action bar (TASK-F06): TTS, copy, regenerate, like/dislike feedback with toast notifications            |
 | 2026-06-04 | GitHub Copilot | Crisis card (TASK-F07): empathetic UI with crisis hotlines, keyword detection, always-visible design             |
 | 2026-06-04 | GitHub Copilot | Report viewer (TASK-F08): report history list, markdown summaries, file metadata display on dashboard            |
+| 2026-07-04 | Codex          | TASK-011: implemented hybrid dense + keyword/sparse retrieval. Chunking, embedding, and Qdrant upload stay in Google Colab. |
 
 ---
 <!--
