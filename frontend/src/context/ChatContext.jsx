@@ -1,17 +1,29 @@
-import { createContext, useState, useContext } from 'react'
+import { createContext, useState, useContext } from "react";
 
-const ChatContext = createContext(null)
+const ChatContext = createContext(null);
 
 export const ChatProvider = ({ children }) => {
-  const [messages, setMessages] = useState([])
-  const [activeMode, setActiveMode] = useState('mental_health')
-  const [isCrisis, setIsCrisis] = useState(false)
+  const [messages, setMessages] = useState([]);
+  const [activeMode, setActiveMode] = useState("mental_health");
+  const [isCrisis, setIsCrisis] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
 
   return (
-    <ChatContext.Provider value={{ messages, setMessages, activeMode, setActiveMode, isCrisis, setIsCrisis }}>
+    <ChatContext.Provider
+      value={{
+        messages,
+        setMessages,
+        activeMode,
+        setActiveMode,
+        isCrisis,
+        setIsCrisis,
+        conversationId,
+        setConversationId,
+      }}
+    >
       {children}
     </ChatContext.Provider>
-  )
-}
+  );
+};
 
-export const useChat = () => useContext(ChatContext)
+export const useChat = () => useContext(ChatContext);

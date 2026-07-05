@@ -12,10 +12,15 @@ backend/*.pyc
 backend/knowledge_base/faiss.index
 venv/
 __pycache__/
+.pytest_cache/
 
 # Google Drive credentials
 backend/credentials.json
 backend/token.json
+
+# Local uploads and extracted text cache
+data/uploads/
+backend/data/uploads/
 
 # Node
 node_modules/

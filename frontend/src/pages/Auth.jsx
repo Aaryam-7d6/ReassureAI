@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import { useToast } from "../components/Toast";
@@ -25,23 +26,69 @@ const validatePassword = (password) => {
 };
 
 export default function Auth() {
-  const { login } = useAuth();
+  const navigate = useNavigate();
+  const { login, register } = useAuth();
   const { addToast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setFieldErrors({});
+
+    const email = document.getElementById("input-email")?.value?.trim() || "";
+    const password = document.getElementById("input-password")?.value || "";
+    const name = document.getElementById("input-name")?.value?.trim() || "";
+    const guardianEmail =
+      document.getElementById("input-guardian")?.value?.trim() || "";
+
     if (!isLogin) {
-      const password = document.getElementById("input-password")?.value || "";
       const passwordErrors = validatePassword(password);
       if (passwordErrors.length > 0) {
+        setFieldErrors({ password: passwordErrors[0] });
         addToast("Password needs a bit more strength", "error", passwordErrors);
         return;
       }
     }
-    const email = document.getElementById("input-email")?.value || "user@example.com";
-    const name = document.getElementById("input-name")?.value || "Demo User";
-    login({ id: 1, name, email });
+
+    try {
+      if (isLogin) {
+        await login({ email, password });
+        addToast("Signed in successfully", "success");
+      } else {
+        await register({
+          email,
+          password,
+          full_name: name,
+          guardian_email: guardianEmail || undefined,
+        });
+        addToast("Account created successfully", "success");
+      }
+      navigate("/dashboard");
+    } catch (error) {
+      const detail = error.response?.data?.detail;
+      if (typeof detail === "string") {
+        setFieldErrors({ form: detail });
+        addToast(detail, "error");
+      } else if (detail && typeof detail === "object") {
+        const nextErrors = {};
+        Object.entries(detail).forEach(([key, value]) => {
+          nextErrors[key] =
+            typeof value === "string"
+              ? value
+              : Array.isArray(value)
+                ? value.join(" ")
+                : "Please try again";
+        });
+        setFieldErrors(nextErrors);
+        addToast(
+          nextErrors.form || "Please review the highlighted fields.",
+          "error",
+        );
+      } else {
+        addToast("Unable to reach the server right now.", "error");
+      }
+    }
   };
 
   return (
@@ -150,6 +197,11 @@ export default function Auth() {
                 id="input-name"
               />
             </div>
+            {fieldErrors.full_name && (
+              <p className="mt-1 text-xs text-red-500">
+                {fieldErrors.full_name}
+              </p>
+            )}
           </div>
         )}
 
@@ -222,6 +274,11 @@ export default function Auth() {
                 id="input-guardian"
               />
             </div>
+            {fieldErrors.guardian_email && (
+              <p className="mt-1 text-xs text-red-500">
+                {fieldErrors.guardian_email}
+              </p>
+            )}
             <p
               style={{
                 fontSize: "0.6875rem",

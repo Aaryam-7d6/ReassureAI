@@ -205,7 +205,7 @@ Inspired by ChatGPT, Gemini, and Claude:
 - **OCR engine:** pytesseract (for images and handwritten)
 - **PDF extraction:** PyPDF2
 - **File deduplication:** SHA-256 hash on upload — if hash exists in DB, skip re-processing
-- **Storage:** Google Drive API (local dev), cloud storage (production later)
+- **Storage:** Local disk under `UPLOAD_DIR` (local dev), cloud storage (production later)
 - **File size limit:** 10MB per upload
 
 ---
@@ -251,7 +251,7 @@ Inspired by ChatGPT, Gemini, and Claude:
 ### Storage
 
 - **Database:** MongoDB on Windows (accessed from WSL2)
-- **File Storage:** Google Drive API (local dev)
+- **File Storage:** Local disk under `UPLOAD_DIR` (local dev)
 - **Vector DB:** Qdrant Cloud
 
 ### Infrastructure (Local Dev)
@@ -297,7 +297,7 @@ Guardian: guardian@reassureai.dev
 - [ ] RAG (Qdrant + FAISS + BM25)
 - [ ] OCR file processing
 - [ ] File deduplication (SHA-256)
-- [ ] Google Drive file storage
+- [x] Local disk file storage
 - [ ] Query Fusion (SEC2)
 - [ ] RLHF feedback collection endpoint
 - [ ] API failover (HuggingFace → Groq)

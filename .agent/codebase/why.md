@@ -187,21 +187,20 @@ breakdown. Confidence scoring. Fallback to OpenBioLLM if AyurParam is uncertain.
 
 ---
 
-## Why Google Drive for file storage (not S3, not local disk)?
+## Why local disk for file storage (not S3 yet)?
 
-**We chose Google Drive for local dev because:**
+**We chose local disk for local dev because:**
 
-- Free 15GB on personal account
-- Python API (google-api-python-client) is well-documented
-- Already familiar to team
-- Files are accessible from anywhere, shareable if needed
-- Easy to inspect uploads manually
+- No OAuth credentials or Google API setup
+- Works offline during localhost development
+- Simple Docker volume mapping
+- Easy to inspect uploads manually under `UPLOAD_DIR`
 
-**Migration path:** Google Drive → AWS S3 or GCP Storage when going to production.
-The abstraction layer in our code makes this a config change, not a rewrite.
+**Migration path:** local disk → AWS S3 or GCP Storage when going to production.
+The upload metadata model keeps stored paths isolated from report simplification logic.
 
-**What we give up:** Not production-grade. Rate limits on Drive API. Not designed for
-programmatic file storage at scale. Acceptable for a student project demo.
+**What we give up:** Not production-grade across multiple backend instances.
+Acceptable for a student project demo.
 
 ---
 

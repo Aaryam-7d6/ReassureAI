@@ -121,15 +121,13 @@ Always check this pattern — never hard-require Qdrant in local dev.
 
 ---
 
-### Google Drive: credentials.json must be downloaded manually
+### Local uploads: UPLOAD_DIR must be writable
 
-Google Drive API requires OAuth2 credentials from Google Cloud Console.
-The agent cannot create this file. Human (Aarya) must:
+The backend stores uploads on local disk. If uploads fail, verify:
 
-1. Go to console.cloud.google.com
-2. Enable Drive API
-3. Create OAuth2 credentials
-4. Download `credentials.json`
+1. `UPLOAD_DIR` is set in `.env`
+2. The backend process can create `{UPLOAD_DIR}/{user_id}`
+3. Docker Compose mounts `./data/uploads:/data/uploads`
 5. Place in `backend/` (add to .gitignore)
 
 ```

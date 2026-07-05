@@ -1,5 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
+import { chatApi } from "../api/chatApi";
+import { feedbackApi } from "../api/feedbackApi";
+import { useToast } from "../components/Toast";
+import ResponseActionBar from "../components/ResponseActionBar";
 import {
   Send,
   Paperclip,
@@ -49,13 +53,27 @@ const containerVariants = {
 };
 const itemVariants = {
   hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 30 } },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 400, damping: 30 },
+  },
 };
 
 export default function Chat() {
-  const { messages, setMessages, activeMode, isCrisis } = useChat();
+  const {
+    messages,
+    setMessages,
+    activeMode,
+    isCrisis,
+    setIsCrisis,
+    conversationId,
+    setConversationId,
+  } = useChat();
+  const { addToast } = useToast();
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [activeSpeechMessageId, setActiveSpeechMessageId] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -68,7 +86,9 @@ export default function Chat() {
   // Clear chat history when the conversation mode changes
   useEffect(() => {
     setMessages([]);
-  }, [activeMode]);
+    setConversationId(null);
+    setIsCrisis(false);
+  }, [activeMode, setConversationId, setIsCrisis, setMessages]);
 
   // Clear input when messages are cleared (e.g. New chat clicked)
   useEffect(() => {
@@ -77,26 +97,76 @@ export default function Chat() {
     }
   }, [messages]);
 
-  const handleSend = (e, customText = null) => {
+  const handleSend = async (e, customText = null) => {
     if (e) e.preventDefault();
     const textToSend = customText !== null ? customText : input;
     if (!textToSend.trim() || thinking) return;
 
-    setMessages((prev) => [...prev, { id: Date.now(), text: textToSend, sender: "user" }]);
+    const userMessage = { id: Date.now(), text: textToSend, sender: "user" };
+    setMessages((prev) => [...prev, userMessage]);
     if (customText === null) setInput("");
     setThinking(true);
+    setIsCrisis(false);
 
-    setTimeout(() => {
-      setThinking(false);
+    try {
+      const response = await chatApi.sendMessage({
+        query: textToSend,
+        conversation_id: conversationId || undefined,
+      });
+
+      const assistantPayload = response?.data?.message || {};
+      const assistantText =
+        assistantPayload.content ||
+        response?.data?.response ||
+        "I’m here to help.";
+      const assistantMessage = {
+        id: assistantPayload.id
+          ? `assistant-${assistantPayload.id}`
+          : Date.now() + 1,
+        text: assistantText,
+        sender: "ai",
+        messageId: assistantPayload.id,
+        metadata: assistantPayload.metadata || response?.data?.metadata,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      setConversationId(response?.data?.conversation_id || conversationId);
+      setIsCrisis(Boolean(response?.data?.is_crisis));
+    } catch (error) {
+      addToast(
+        error.response?.data?.detail ||
+          "Unable to reach the assistant right now.",
+        "error",
+      );
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
-          text: "I'm here to support you. This is a placeholder response — the full AI backend will be connected shortly.",
+          text: "Sorry, I could not reach the assistant right now. Please try again in a moment.",
           sender: "ai",
         },
       ]);
-    }, 1400);
+    } finally {
+      setThinking(false);
+    }
+  };
+
+  const handleRegenerate = async (messageText) => {
+    if (!messageText) return;
+    await handleSend(null, messageText);
+  };
+
+  const handleFeedback = async (messageId, vote) => {
+    if (!messageId) return;
+    try {
+      await feedbackApi.submit(messageId, vote);
+      addToast("Feedback saved", "success");
+    } catch (error) {
+      addToast(
+        error.response?.data?.detail || "Unable to save feedback right now.",
+        "error",
+      );
+    }
   };
 
   return (
@@ -115,14 +185,32 @@ export default function Chat() {
           >
             <div
               className="mx-auto max-w-3xl px-4 py-3 mt-3 rounded-xl flex items-start gap-3"
-              style={{ background: "var(--orange-subtle)", border: "1px solid var(--orange-border)" }}
+              style={{
+                background: "var(--orange-subtle)",
+                border: "1px solid var(--orange-border)",
+              }}
             >
-              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--orange)" }} />
+              <AlertTriangle
+                className="w-4 h-4 mt-0.5 flex-shrink-0"
+                style={{ color: "var(--orange)" }}
+              />
               <div>
-                <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--orange)" }}>
+                <p
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    color: "var(--orange)",
+                  }}
+                >
                   We're concerned about you
                 </p>
-                <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                <p
+                  style={{
+                    fontSize: "0.8125rem",
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.6,
+                  }}
+                >
                   Please reach out — iCall helpline:{" "}
                   <strong style={{ color: "var(--orange)" }}>9152987821</strong>
                 </p>
@@ -153,20 +241,32 @@ export default function Chat() {
 
               <motion.h2
                 variants={itemVariants}
-                style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.5rem" }}
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: 700,
+                  color: "var(--text-primary)",
+                  marginBottom: "0.5rem",
+                }}
               >
                 How can I help you today?
               </motion.h2>
 
               <motion.p
                 variants={itemVariants}
-                style={{ fontSize: "0.9375rem", color: "var(--text-muted)", marginBottom: "2.5rem" }}
+                style={{
+                  fontSize: "0.9375rem",
+                  color: "var(--text-muted)",
+                  marginBottom: "2.5rem",
+                }}
               >
                 Ask me anything about your {currentMode.label.toLowerCase()}.
               </motion.p>
 
               {/* Suggested prompts */}
-              <motion.div variants={itemVariants} className="grid gap-2 w-full max-w-lg">
+              <motion.div
+                variants={itemVariants}
+                className="grid gap-2 w-full max-w-lg"
+              >
                 {SUGGESTED_PROMPTS[currentMode.id].map((prompt, i) => (
                   <button
                     key={i}
@@ -209,25 +309,57 @@ export default function Chat() {
                   {msg.sender === "ai" && (
                     <div
                       className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-1"
-                      style={{ background: currentMode.bg, border: `1px solid ${currentMode.color}` }}
+                      style={{
+                        background: currentMode.bg,
+                        border: `1px solid ${currentMode.color}`,
+                      }}
                     >
-                      <currentMode.icon className="w-4 h-4" style={{ color: currentMode.color }} />
+                      <currentMode.icon
+                        className="w-4 h-4"
+                        style={{ color: currentMode.color }}
+                      />
                     </div>
                   )}
 
                   <div
-                    className="max-w-[75%]"
-                    style={{
-                      padding: "0.625rem 1rem",
-                      borderRadius: msg.sender === "user" ? "1.25rem 1.25rem 0.25rem 1.25rem" : "0.25rem 1.25rem 1.25rem 1.25rem",
-                      background: msg.sender === "user" ? currentMode.bg : "transparent",
-                      border: msg.sender === "user" ? `1px solid ${currentMode.color}30` : "none",
-                      fontSize: "0.9375rem",
-                      color: "var(--text-primary)",
-                      lineHeight: 1.65,
-                    }}
+                    className={`max-w-[75%] ${msg.sender === "ai" ? "flex flex-col gap-2" : ""}`}
                   >
-                    {msg.text}
+                    <div
+                      style={{
+                        padding: "0.625rem 1rem",
+                        borderRadius:
+                          msg.sender === "user"
+                            ? "1.25rem 1.25rem 0.25rem 1.25rem"
+                            : "0.25rem 1.25rem 1.25rem 1.25rem",
+                        background:
+                          msg.sender === "user"
+                            ? currentMode.bg
+                            : "transparent",
+                        border:
+                          msg.sender === "user"
+                            ? `1px solid ${currentMode.color}30`
+                            : "none",
+                        fontSize: "0.9375rem",
+                        color: "var(--text-primary)",
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      {msg.text}
+                    </div>
+
+                    {msg.sender === "ai" && (
+                      <ResponseActionBar
+                        responseText={msg.text}
+                        disabled={thinking}
+                        messageId={msg.id}
+                        activeSpeechMessageId={activeSpeechMessageId}
+                        onSpeechStateChange={setActiveSpeechMessageId}
+                        onRegenerate={() => handleRegenerate(msg.text)}
+                        onFeedback={(vote) =>
+                          handleFeedback(msg.messageId, vote)
+                        }
+                      />
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -243,20 +375,30 @@ export default function Chat() {
                   >
                     <div
                       className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-1"
-                      style={{ background: currentMode.bg, border: `1px solid ${currentMode.color}` }}
+                      style={{
+                        background: currentMode.bg,
+                        border: `1px solid ${currentMode.color}`,
+                      }}
                     >
-                      <currentMode.icon className="w-4 h-4" style={{ color: currentMode.color }} />
+                      <currentMode.icon
+                        className="w-4 h-4"
+                        style={{ color: currentMode.color }}
+                      />
                     </div>
                     <div
                       className="flex items-center gap-1.5 px-4 py-3 rounded-2xl"
-                      style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}
+                      style={{
+                        background: "var(--bg-surface)",
+                        border: "1px solid var(--border)",
+                      }}
                     >
                       {[0, 1, 2].map((i) => (
                         <span
                           key={i}
                           className="animate-breathe"
                           style={{
-                            width: 6, height: 6,
+                            width: 6,
+                            height: 6,
                             borderRadius: "50%",
                             background: currentMode.color,
                             display: "inline-block",
@@ -276,7 +418,10 @@ export default function Chat() {
       </div>
 
       {/* ── Floating input bar ── */}
-      <div className="flex-shrink-0 px-4 pb-5 pt-2 sticky bottom-0 z-10" style={{ background: "var(--bg-base)" }}>
+      <div
+        className="flex-shrink-0 px-4 pb-5 pt-2 sticky bottom-0 z-10"
+        style={{ background: "var(--bg-base)" }}
+      >
         <form
           onSubmit={handleSend}
           className="max-w-3xl mx-auto flex items-center gap-2 rounded-2xl px-2 py-1.5 transition-all duration-200"
@@ -285,8 +430,12 @@ export default function Chat() {
             border: "1px solid var(--border)",
             boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
           }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = currentMode.color; }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = currentMode.color;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "var(--border)";
+          }}
         >
           {/* Attach */}
           <button
@@ -296,8 +445,12 @@ export default function Chat() {
             disabled={thinking}
             className="p-2 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-40"
             style={{ color: "var(--text-muted)", background: "transparent" }}
-            onMouseEnter={(e) => { if (!thinking) e.currentTarget.style.color = currentMode.color; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+            onMouseEnter={(e) => {
+              if (!thinking) e.currentTarget.style.color = currentMode.color;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--text-muted)";
+            }}
           >
             <Paperclip className="w-4 h-4" />
           </button>
@@ -327,8 +480,12 @@ export default function Chat() {
             disabled={thinking}
             className="p-2 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-40"
             style={{ color: "var(--text-muted)", background: "transparent" }}
-            onMouseEnter={(e) => { if (!thinking) e.currentTarget.style.color = currentMode.color; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+            onMouseEnter={(e) => {
+              if (!thinking) e.currentTarget.style.color = currentMode.color;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--text-muted)";
+            }}
           >
             <Mic className="w-4 h-4" />
           </button>
@@ -340,7 +497,10 @@ export default function Chat() {
             disabled={!input.trim() || thinking}
             className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              background: input.trim() && !thinking ? currentMode.color : "var(--bg-elevated)",
+              background:
+                input.trim() && !thinking
+                  ? currentMode.color
+                  : "var(--bg-elevated)",
               color: input.trim() && !thinking ? "#fff" : "var(--text-muted)",
             }}
           >
@@ -348,7 +508,10 @@ export default function Chat() {
           </button>
         </form>
 
-        <p className="text-center mt-2" style={{ fontSize: "0.6875rem", color: "var(--text-dim)" }}>
+        <p
+          className="text-center mt-2"
+          style={{ fontSize: "0.6875rem", color: "var(--text-dim)" }}
+        >
           ReassureAI can make mistakes. Verify important information.
         </p>
       </div>

@@ -52,7 +52,7 @@ Mental health: Chain 3 only.
 - **RAG:** FAISS (local) → Qdrant Cloud (when set up) + BM25 + RRF
 - **DB:** MongoDB on Windows, accessed from WSL2 (see wsl_setup.md)
 - **Ollama:** On Windows, accessed from WSL2 via 127.0.0.1:11434
-- **Files:** SHA-256 dedup + Google Drive storage + pytesseract OCR
+- **Files:** SHA-256 dedup + local disk storage + pytesseract OCR
 - **Automation:** n8n for guardian alert emails
 
 ---
@@ -105,7 +105,7 @@ backend/app/core/safety/ → semantic_gate.py, dnode.py, rule_based.py
 backend/app/core/pipeline/ → disigen.py, qil.py, router.py, fusion.py
 backend/app/core/models/ → chain1_openbiollm.py, chain2_ayurparam.py, chain3_mistral.py
 backend/app/core/rag/ → embedder.py, indexer.py, retriever.py
-backend/app/core/files/ → extractor.py, dedup.py, drive_storage.py
+backend/app/core/files/ → extractor.py, dedup.py
 backend/app/api/v1/endpoints/ → auth.py, chat.py, reports.py, feedback.py, health.py
 frontend/src/components/ → ChatMessage, ResponseActionBar, ChatInput, CrisisCard
 frontend/src/hooks/ → useChat, useAuth, useReport, useTTS, useAutoScroll

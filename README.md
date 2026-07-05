@@ -288,7 +288,7 @@ Disigen Node (dispatcher)
 | MongoDB          | Primary database                   |
 | Qdrant Cloud     | Vector database (RAG)              |
 | FAISS            | Local vector search fallback       |
-| Google Drive API | File storage                       |
+| Local disk       | File upload storage                |
 | n8n              | Guardian alert workflow automation |
 | Ollama           | Local LLM inference                |
 | Docker           | As Running Env                     |
@@ -366,7 +366,8 @@ GROQ_API_KEY=
 QDRANT_URL=
 QDRANT_API_KEY=
 N8N_WEBHOOK_URL=
-GOOGLE_DRIVE_FOLDER_ID=
+UPLOAD_DIR=data/uploads
+MAX_UPLOAD_SIZE_BYTES=10485760
 ```
 
 Generate JWT secret:
