@@ -1,0 +1,5 @@
+qdrant-client
+sentence-transformers
+pymupdf 
+requests 
+python-dotenv

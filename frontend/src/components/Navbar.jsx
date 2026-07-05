@@ -1,40 +1,13 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const [user, setUser] = React.useState(null);
-
-  React.useEffect(() => {
-    // Dev fallback: use locally stored DEV_USER when backend not connected
-    if (import.meta.env.DEV) {
-      const dev = localStorage.getItem("DEV_USER");
-      if (dev) {
-        try {
-          setUser(JSON.parse(dev));
-          return;
-        } catch { }
-      }
-    }
-
-    axios
-      .get("/api/v1/auth/me", { withCredentials: true })
-      .then((res) => setUser(res.data.user))
-      .catch(() => setUser(null));
-  }, []);
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    if (import.meta.env.DEV) {
-      // clear local dev user only
-      localStorage.removeItem("DEV_USER");
-      setUser(null);
-      navigate("/auth");
-      return;
-    }
-
-    await axios.post("/api/v1/auth/logout", {}, { withCredentials: true });
-    setUser(null);
+    await logout();
     navigate("/auth");
   };
 
@@ -54,7 +27,7 @@ export default function Navbar() {
             {user ? (
               <>
                 <span className="text-gray-700">
-                  Hi, {user.fullName?.split(" ")[0]}
+                  Hi, {(user.full_name || user.name || user.email)?.split(" ")[0]}
                 </span>
                 <button
                   onClick={handleLogout}

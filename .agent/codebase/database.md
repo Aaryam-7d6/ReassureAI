@@ -106,10 +106,28 @@ MONGODB_URI=mongodb://192.168.x.x:27017/reassureai
   "original_filename": "string",
   "file_type": "pdf | image",
   "file_hash": "string (SHA-256 — for deduplication, indexed)",
-  "google_drive_file_id": "string (Drive file ID for retrieval)",
+  "document_id": "ObjectId (ref: documents)",
   "extracted_text": "string (raw OCR/extracted text)",
   "simplified_report": "string (markdown — Chain 1 output)",
   "created_at": "datetime"
+}
+```
+
+### documents
+
+```json
+{
+  "_id": "ObjectId",
+  "user_id": "ObjectId (ref: users)",
+  "original_filename": "string",
+  "stored_filename": "string",
+  "stored_path": "string",
+  "content_type": "string",
+  "file_size": "number",
+  "file_hash": "string (SHA-256 — for deduplication, indexed)",
+  "upload_date": "datetime",
+  "status": "uploaded | processed | failed",
+  "extracted_text_path": "string | null"
 }
 ```
 

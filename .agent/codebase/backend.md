@@ -74,7 +74,6 @@ backend/
 │   │   └── files/
 │   │       ├── extractor.py          # PDF (PyPDF2) + image OCR (pytesseract)
 │   │       ├── dedup.py              # SHA-256 hash check
-│   │       └── drive_storage.py      # Google Drive upload/download
 │   │
 │   ├── db/
 │   │   ├── connection.py             # Motor AsyncIOMotorClient
@@ -242,8 +241,8 @@ QDRANT_URL=https://your-cluster.qdrant.io
 QDRANT_API_KEY=your_qdrant_api_key
 
 # File Storage
-GOOGLE_DRIVE_CREDENTIALS=credentials.json
-GOOGLE_DRIVE_FOLDER_ID=your_drive_folder_id
+UPLOAD_DIR=data/uploads
+MAX_UPLOAD_SIZE_BYTES=10485760
 
 # Automation
 N8N_WEBHOOK_URL=http://localhost:5678/webhook/crisis

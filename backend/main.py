@@ -9,6 +9,10 @@ import ollama
 
 import backend.config as cfg
 from backend.app.core import exceptions as exc
+from backend.app.api.v1.endpoints.auth import router as auth_router
+from backend.app.api.v1.endpoints.chat import router as chat_router
+from backend.app.api.v1.endpoints.feedback import router as feedback_router
+from backend.app.api.v1.endpoints.reports import router as reports_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,6 +39,10 @@ async def lifespan(app: FastAPI):
     cfg.LOGGER.info("App shutdown, connections closed")
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(chat_router, prefix="/api/v1")
+app.include_router(feedback_router, prefix="/api/v1")
+app.include_router(reports_router, prefix="/api/v1")
 # CORS policy
 app.add_middleware(
     CORSMiddleware,

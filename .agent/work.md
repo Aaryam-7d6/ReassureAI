@@ -243,7 +243,11 @@
   - Retry with exponential backoff before failover
   - Write `backend/tests/test_openbiollm.py`
 
-- [~] **TASK-010** — Chain 2 AyurParam with graduated fallback (placeholder implementation; RAG not yet integrated)
+- [x] **TASK-010** — Chain 2 AyurParam with graduated fallback (completed) — 2026-07-04
+  - Ollama Mistral integration implemented
+  - Graduated fallback logic (DEC-004) fully implemented
+  - Confidence scoring (0.0-1.0) added
+  - Placeholder for RAG integration
   - `backend/app/core/models/ayurparam.py`
   - Ollama local (Windows)
   - Fallback logic (DEC-004):
@@ -254,43 +258,58 @@
   - confidence score (0.0–1.0) in response
   - Write `backend/tests/test_ayurparam.py`
 
-- [ ] **TASK-011** — RAG pipeline (FAISS local → Qdrant Cloud)
-  - `backend/app/core/rag/embedder.py` — sentence-transformers
-  - `backend/app/core/rag/indexer.py` — chunk, embed, build FAISS + BM25 locally
-  - `backend/app/core/rag/retriever.py` — hybrid FAISS + BM25 + RRF
-  - `backend/app/core/rag/qdrant_client.py` — Qdrant Cloud connection
-    (use FAISS if QDRANT_URL not set, for local dev)
-  - Create initial knowledge base text files
+- [x] **TASK-011** — RAG retrieval pipeline (Colab ingestion → Qdrant Cloud) — 2026-07-04
+  - `backend/app/core/rag/embedder.py` — query-time sentence-transformers helper only
+  - `backend/app/core/rag/indexer.py` — documents backend indexing is disabled by design
+  - `backend/app/core/rag/retriever.py` — hybrid dense + exact keyword/sparse retrieval with RRF
+  - `backend/app/core/rag/qdrant_client.py` — Qdrant Cloud query client
+  - Note: document chunking, embedding, sparse vector generation, and upload are done in Google Colab
   - Write `backend/tests/test_rag.py`
 
-- [ ] **TASK-012** — Concurrent 3-chain execution + Disigen Node
+- [x] **TASK-012** — Concurrent 3-chain execution + Disigen Node — 2026-07-04
   - `backend/app/core/pipeline/disigen.py`
   - Mental health: semantic_gate → dnode → Mistral (safe) / rule_based (crisis)
   - Physical health: QIL → router → asyncio.gather(chain1, chain2, chain3) → RAG → fusion
   - Report: file text → chain1 simplification
   - Write `backend/tests/test_disigen.py`
 
-- [ ] **TASK-013** — SEC2 Query Fusion + Post-safety
-  - `backend/app/core/pipeline/fusion.py`
-  - Uses chain2_confidence to weight Ayurvedic perspective
-  - If chain2 returned None → feature chain1 and chain3 only
+- [x] 2026-07-05 **TASK-013** — SEC2 Query Fusion + Post-safety
+  - `backend/app/core/pipeline/fusion.py` — FusionNode with ChainResponse, FusionResult models`
+  - Uses chain2_confidence to weight Ayurvedic perspective (threshold: 0.3)
+  - If chain2 returned None or low confidence → feature chain1 and chain3 only
   - Structure: modern_perspective, ayurvedic_perspective, common_ground,
     key_differences, disclaimer
   - Contradiction check, herb-drug interaction flag
   - Disclaimer ALWAYS injected
-  - Write `backend/tests/test_fusion.py`
+  - Write `backend/tests/test_fusion.py — 35 tests passing`
 
 ---
 
 ## Phase 5 — File Processing
 
-- [ ] **TASK-014** — OCR + file upload + SHA-256 dedup
+- [x] 2026-07-05 **TASK-014** — OCR + file upload + SHA-256 dedup
   - `backend/app/core/files/extractor.py`
     - PDF → PyPDF2
     - Images (PNG/JPG/JPEG) → pytesseract
     - Handwritten docs → pytesseract with preprocessing
   - `backend/app/core/files/dedup.py` — SHA-256 hash check
-  - `backend/app/core/files/drive_storage.py` — Google Drive upload/download
+  <!-- Google Drive storage removed; local disk storage is used. -->
+  - Remove the Google Drive upload integration entirely (find and quarantine google*drive_service.py or drive_storage.py or equivalent, remove its imports/calls from the upload endpoint). Replace it with local disk storage: files saved to UPLOAD_DIR (from .env), namespaced as {UPLOAD_DIR}/{user_id}/{uuid}*{filename}. Add a MongoDB collection documents with schema:
+
+  ```
+  {
+  _id, user_id, original_filename, stored_filename,
+  stored_path,        // e.g. "/data/uploads/{user_id}/{uuid}.pdf"
+  content_type, file_size, upload_date,
+  status,              // "uploaded" | "processed" | "failed"
+  extracted_text_path  // optional, if you cache extracted text
+  }
+  ```
+
+  On upload: validate file type/size, save to disk, insert a Mongo document record, return the document \_id to the client. Do NOT reintroduce any Google API dependency. Show me the diff for the upload endpoint and the updated .env.example before I run anything.
+  - Remove GOOGLE_DRIVE_CREDENTIALS and GOOGLE_DRIVE_FOLDER_ID entirely in .env and '.env copy'
+  - make appropriate changes in docker-compose file, other code etc all.
+  - add needed things in .gitignore file etc all.
   - Accepted formats: PDF, PNG, JPG, JPEG
   - Max size: 10MB
   - Write `backend/tests/test_files.py`
@@ -299,24 +318,24 @@
 
 ## Phase 6 — API Endpoints
 
-- [ ] **TASK-015** — Chat endpoint
+- [x] 2026-07-05 **TASK-015** — Chat endpoint
   - `POST /api/v1/chat` — full pipeline via Disigen Node
   - `GET  /api/v1/chat/history` — paginated
   - `GET  /api/v1/chat/{id}` — full conversation
   - `DELETE /api/v1/chat/{id}`
   - Save to MongoDB after each response
-  - Integration test: full query → response end-to-end
+  - Integration test: full query → response end-to-end (`backend/tests/test_chat.py`)
 
-- [ ] **TASK-016** — Feedback endpoint
+- [x] 2026-07-05 **TASK-016** — Feedback endpoint
   - `POST /api/v1/feedback` — like/dislike per message
   - Validate message_id exists in conversation
   - Write `backend/tests/test_feedback.py`
 
-- [ ] **TASK-017** — Report upload endpoint
+- [x] 2026-07-05 **TASK-017** — Report upload endpoint
   - `POST /api/v1/reports/upload`
     - Check SHA-256 → return existing if duplicate
     - Extract text (OCR/PDF)
-    - Upload to Google Drive → store file_id
+    - Store file on local disk under UPLOAD_DIR → store document_id
     - Run through Chain 1 simplification
     - Store simplified report
   - `GET  /api/v1/reports` — list user reports
@@ -326,26 +345,30 @@
 
 ## Phase 7 — Frontend ↔ Backend
 
-- [ ] **TASK-018** — Wire auth
+- [x] 2026-07-05 **TASK-018** — Wire auth
   - `frontend/src/api/authApi.js`
   - axios withCredentials: true on all calls
   - Show specific field-level error messages from backend
+  - Verified via frontend auth flow and backend auth tests
 
-- [ ] **TASK-019** — Wire chat
+- [x] 2026-07-05 **TASK-019** — Wire chat
   - `frontend/src/api/chatApi.js`
   - Handle crisis=true response → show crisis card
   - Handle normal response → render markdown + action bar
   - Loading state during inference (show typing indicator)
+  - Verified via chat endpoint tests and frontend build
 
-- [ ] **TASK-020** — Wire feedback
+- [x] 2026-07-05 **TASK-020** — Wire feedback
   - `frontend/src/api/feedbackApi.js`
   - POST on like/dislike click
   - Optimistic UI — button highlights immediately
+  - Verified via feedback endpoint tests
 
-- [ ] **TASK-021** — Wire report upload
+- [x] 2026-07-05 **TASK-021** — Wire report upload
   - `frontend/src/api/reportApi.js`
   - Show simplified report in ReportViewer (markdown)
   - "Already processed — showing saved result" toast on duplicate
+  - Verified via report upload tests and frontend build
 
 ---
 

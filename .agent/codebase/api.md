@@ -447,7 +447,7 @@ File deduplication via SHA-256 — if same file uploaded before, returns cached 
 | `FILE_TOO_LARGE`        | 413  | Upload exceeds 10MB                                             |
 | `UNSUPPORTED_FORMAT`    | 415  | Only PDF, PNG, JPG, JPEG accepted                               |
 | `DUPLICATE_FILE`        | 200  | Same file uploaded before — returning cached result             |
-| `DRIVE_UPLOAD_FAILED`   | 500  | Google Drive upload failed — file not saved                     |
+| `LOCAL_UPLOAD_FAILED`   | 500  | Local file save failed                                          |
 
 ---
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SpeakButton from "./SpeakButton";
 
 const Toast = ({ message, visible, duration = 3000 }) => {
   const [isVisible, setIsVisible] = React.useState(visible);
@@ -25,30 +26,13 @@ export const ResponseActionBar = ({
   onRegenerate,
   onFeedback,
   disabled,
+  messageId,
+  activeSpeechMessageId,
+  onSpeechStateChange,
 }) => {
   const [feedbackSent, setFeedbackSent] = useState(null); // null, 'like', 'dislike'
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-
-  const handleTTS = () => {
-    if ("speechSynthesis" in window) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-
-      // Extract plain text from markdown (remove markdown syntax)
-      const plainText = responseText
-        .replace(/\*\*/g, "") // bold
-        .replace(/\*(.+?)\*/g, "$1") // italic
-        .replace(/`(.+?)`/g, "$1") // inline code
-        .replace(/\n/g, " "); // newlines
-
-      const utterance = new SpeechSynthesisUtterance(plainText);
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      utterance.volume = 1;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
 
   const handleCopy = () => {
     const plainText = responseText
@@ -77,15 +61,13 @@ export const ResponseActionBar = ({
   return (
     <>
       <div className="flex gap-2 mt-3 text-gray-600">
-        {/* TTS Button */}
-        <button
-          onClick={handleTTS}
+        <SpeakButton
+          text={responseText}
+          messageId={messageId}
+          activeMessageId={activeSpeechMessageId}
+          onActiveChange={onSpeechStateChange}
           disabled={disabled}
-          className="p-2 hover:bg-gray-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Read aloud"
-        >
-          🔊
-        </button>
+        />
 
         {/* Copy Button */}
         <button

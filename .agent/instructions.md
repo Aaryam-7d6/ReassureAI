@@ -30,7 +30,7 @@ This means:
 - Use local Ollama (Windows) — don't worry about GPU cloud yet
 - Use MongoDB on Windows — don't worry about Atlas yet
 - Use FAISS locally — switch to Qdrant Cloud once local works
-- Use Google Drive API for file storage — don't worry about S3 yet
+- Use local disk storage under `UPLOAD_DIR` — don't worry about S3 yet
 - Hardcode the test user seed script — don't wait for full admin UI
 - Get the 3 chains talking to each other before optimizing anything
 - A response that works is worth more than an optimized response that doesn't
@@ -127,7 +127,8 @@ class Settings(BaseSettings):
     ollama_base_url: str        # Windows host IP:11434
     qdrant_url: str             # Qdrant Cloud URL
     qdrant_api_key: str
-    google_drive_credentials: str  # path to credentials.json
+    upload_dir: str                # local upload root
+    max_upload_size_bytes: int
     jwt_secret: str
     huggingface_api_key: str
     groq_api_key: str           # fallback when HF rate limits

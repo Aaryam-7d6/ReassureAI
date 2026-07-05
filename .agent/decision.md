@@ -144,15 +144,15 @@ Fusion (SEC2) picks the best from all three.
 
 ---
 
-## DEC-010 — Qdrant Cloud for vector DB, Google Drive for file storage
+## DEC-010 — Qdrant Cloud for vector DB, local disk for file storage
 
 **Date:** May 2026
-**Decision:** Qdrant Cloud (free tier) as vector DB. Google Drive API for file storage.
-**Why local dev:** Both have generous free tiers. No self-hosting needed.
-Google Drive is familiar and has a straightforward Python API.
+**Updated:** 2026-07-05
+**Decision:** Qdrant Cloud (free tier) as vector DB. Uploaded files are stored on local disk under `UPLOAD_DIR`.
+**Why local dev:** Local disk storage removes Google API credentials and keeps upload processing simple for the prototype.
 Qdrant Cloud requires zero infrastructure management.
-**Migration path:** Google Drive → S3 or GCS later. Qdrant free → Qdrant paid later.
-**Consequences:** Need QDRANT_URL, QDRANT_API_KEY, GOOGLE_DRIVE_CREDENTIALS in .env.
+**Migration path:** Local disk → S3 or GCS later. Qdrant free → Qdrant paid later.
+**Consequences:** Need QDRANT_URL, QDRANT_API_KEY, UPLOAD_DIR, MAX_UPLOAD_SIZE_BYTES in .env.
 
 ---
 
@@ -162,7 +162,7 @@ Qdrant Cloud requires zero infrastructure management.
 **Decision:** Hash every uploaded file with SHA-256 before processing.
 If hash exists in DB for same user → return existing result, skip re-processing.
 **Why:** Saves compute, storage, and API costs. Users often re-upload the same report.
-**Consequences:** Store file_hash field in reports collection. Index on (user_id, file_hash).
+**Consequences:** Store file_hash field in documents collection. Index on (user_id, file_hash).
 
 ---
 

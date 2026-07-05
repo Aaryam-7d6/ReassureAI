@@ -6,3 +6,9 @@ python-dotenv
 motor
 ollama
 pydantic-settings
+python-multipart
+PyJWT
+PyPDF2
+pytesseract
+Pillow
+pdf2image
