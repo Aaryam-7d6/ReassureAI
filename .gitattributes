@@ -1,7 +1,14 @@
+###############################################################################
+# 1. CROSS-PLATFORM LINE ENDINGS (Essential for Linux + Windows Team)
+###############################################################################
+
 # Handle line endings automatically for all files detected as text 
 # and force them to be normalized to LF when committed to GitHub.
 
 * text=auto
+
+# Keep environment configuration templates consistent
+.env.copy text eol=lf
 
 ###############################################################################
 # FRONTEND / DEPENDENCY MANAGEMENT
@@ -17,3 +24,22 @@
 package-lock.json linguist-generated=true
 yarn.lock linguist-generated=true
 pnpm-lock.yaml linguist-generated=true
+
+# Mark minified files or auto-generated build assets as generated
+**/dist/** linguist-generated=true
+**/build/** linguist-generated=true
+*.min.js linguist-generated=true
+*.min.css linguist-generated=true
+
+
+# Clean up repository language statistics
+docs/** linguist-documentation
+.agent/* linguist-documentation
+
+
+# Ignore a specific folder (like node_modules or external libraries)
+
+node_modules/ linguist-vendored
+frontend/node_modules/ linguist-vendored
+
+frontend/dist/ linguist-vendored

@@ -13,6 +13,8 @@ backend/knowledge_base/faiss.index
 venv/
 __pycache__/
 .pytest_cache/
+.venv/
+
 
 # Google Drive credentials
 backend/credentials.json
