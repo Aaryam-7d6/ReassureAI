@@ -31,15 +31,22 @@ pnpm-lock.yaml linguist-generated=true
 *.min.js linguist-generated=true
 *.min.css linguist-generated=true
 
+# Mark static assets and vendored frontend content
+frontend/public/** linguist-vendored
+frontend/src/assets/** linguist-vendored
+**/*.png linguist-vendored
+**/*.jpg linguist-vendored
+**/*.jpeg linguist-vendored
+**/*.gif linguist-vendored
+**/*.svg linguist-vendored
+**/*.webp linguist-vendored
 
 # Clean up repository language statistics
 docs/** linguist-documentation
 .agent/* linguist-documentation
-
+*.md linguist-documentation
 
 # Ignore a specific folder (like node_modules or external libraries)
-
 node_modules/ linguist-vendored
 frontend/node_modules/ linguist-vendored
-
 frontend/dist/ linguist-vendored

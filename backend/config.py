@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 from backend.app.utils.logger import get_logger
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 class Settings(BaseSettings):
     MONGO_URI: str = "mongodb://localhost:27017"
@@ -25,7 +29,8 @@ class Settings(BaseSettings):
     RAG_DEFAULT_COLLECTION: str = "ayurveda_kb"
     
     class Config:
-        env_file = ".env"
+        env_file = str(BASE_DIR / ".env")
+        env_file_encoding = "utf-8"
         case_sensitive = False
         extra = "ignore"
 
