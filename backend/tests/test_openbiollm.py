@@ -1,11 +1,12 @@
 import pytest
 from backend.app.core.models.openbiollm import OpenBioLLM, get_openbiollm
+from backend.config import cfg
 
 @pytest.mark.asyncio
 async def test_openbiollm_initialization():
     model = OpenBioLLM()
     assert isinstance(model, OpenBioLLM)
-    assert model.base_model == "microsoft/BioGPT-Large"
+    assert model.base_model == cfg.OPENBIO_MODEL_NAME
     await model.close()
 
 @pytest.mark.asyncio

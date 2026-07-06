@@ -19,6 +19,8 @@ with LEXICON_PATH.open("r") as f:
 def keyword_fallback(query: str) -> DNodeResult:
     lowered = query.lower()
     for risk, terms in CRISIS_LEXICON.items():
+        if not isinstance(terms, list):
+            continue
         for term in terms:
             if term in lowered:
                 # assign level based on risk tier

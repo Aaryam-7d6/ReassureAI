@@ -117,6 +117,29 @@ async def test_mental_health_safe_uses_mistral():
 
 
 @pytest.mark.asyncio
+async def test_mental_health_mistral_error_falls_back_gracefully():
+    async def semantic(_query):
+        return FakeSemanticAnalysis(emotional_state="anxious", distress_level=3)
+
+    class FailingMistralChain:
+        async def invoke(self, prompt):
+            raise RuntimeError("connection timeout")
+
+    node = DisigenNode(
+        mistral_chain=FailingMistralChain(),
+        semantic_analyzer=semantic,
+    )
+
+    result = await node.process_query("Hello there")
+
+    assert result.is_crisis is False
+    assert "having trouble accessing the assistant" in result.response
+    assert result.confidence == 0.35
+    assert result.chain_runs[0].status == "error"
+    assert result.sources == ["semantic_gate", "mistral"]
+
+
+@pytest.mark.asyncio
 async def test_physical_health_runs_three_chains_and_rag():
     def router(_query):
         return RouteResult(

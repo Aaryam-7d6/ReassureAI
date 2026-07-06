@@ -1,40 +1,24 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import logging
-import os
+
+import httpx
 import motor.motor_asyncio
-import ollama
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 import backend.config as cfg
-from backend.app.core import exceptions as exc
 from backend.app.api.v1.endpoints.auth import router as auth_router
 from backend.app.api.v1.endpoints.chat import router as chat_router
 from backend.app.api.v1.endpoints.feedback import router as feedback_router
 from backend.app.api.v1.endpoints.reports import router as reports_router
+from backend.app.core import exceptions as exc
+from backend.app.db.init import ensure_required_collections
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.mongo_client = None
     app.state.ollama = None
-
-    # MongoDB
-    try:
-        client = motor.motor_asyncio.AsyncIOMotorClient(cfg.MONGO_URI)
-        await client.admin.command('ping')
-        app.state.mongo_client = client
-        cfg.LOGGER.info("MongoDB connected")
-    except Exception as e:
-        cfg.LOGGER.warning(f"MongoDB connection failed: {e}. Continuing without DB.")
-
-    # Ollama
-    try:
-        response = ollama.list()
-        app.state.ollama = response
-        cfg.LOGGER.info("Ollama connected")
-    except Exception as e:
-        cfg.LOGGER.warning(f"Ollama connection failed: {e}. Continuing without Ollama.")
 
     yield
 
@@ -57,13 +41,56 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/api/v1/health")
+@app.get("/health")
 async def health():
+    mongo_status = "disconnected"
+    ollama_status = "disconnected"
+
+    try:
+        client = motor.motor_asyncio.AsyncIOMotorClient(cfg.MONGO_URI)
+        await client.admin.command("ping")
+        mongo_status = "connected"
+        app.state.mongo_client = client
+        await ensure_required_collections(cfg.MONGO_URI)
+    except Exception as exc:
+        cfg.LOGGER.warning(f"Health check MongoDB failed: {exc}")
+        if getattr(app.state, "mongo_client", None) is not None:
+            app.state.mongo_client.close()
+            app.state.mongo_client = None
+    finally:
+        if getattr(app.state, "mongo_client", None) is not None and mongo_status != "connected":
+            app.state.mongo_client.close()
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{cfg.OLLAMA_URL}/api/version")
+            response.raise_for_status()
+        ollama_status = "connected"
+        app.state.ollama = {"status": "ok"}
+    except Exception as exc:
+        cfg.LOGGER.warning(f"Health check Ollama failed: {exc}")
+
     return JSONResponse({
-        "status": "ok",
-        "ollama": "connected" if getattr(app.state, "ollama", None) else "disconnected",
-        "mongodb": "connected" if getattr(app.state, "mongo_client", None) is not None else "disconnected"
+        "status": "ok" if mongo_status == "connected" and ollama_status == "connected" else "degraded",
+        "services": {
+            "ollama": {
+                "status": ollama_status,
+                "url": cfg.OLLAMA_URL,
+            },
+            "mongodb": {
+                "status": mongo_status,
+                "uri": cfg.MONGO_URI,
+            },
+        },
+        "checks": {
+            "ollama": ollama_status,
+            "mongodb": mongo_status,
+        },
     })
+
+@app.get("/api/v1/health")
+async def health_v1():
+    return await health()
 
 # global exception handler
 @app.exception_handler(exc.AppException)

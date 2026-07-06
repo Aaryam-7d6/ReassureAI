@@ -38,10 +38,12 @@ Return ONLY valid JSON:
   "reasoning": "one sentence explanation"
 }}"""
 
+from backend.config import cfg
+
 async def call_ollama(query: str, timeout: int = 15) -> SemanticAnalysis:
-    ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    ollama_base_url = (cfg.OLLAMA_BASE_URL or cfg.OLLAMA_URL).rstrip("/")
     payload = {
-        "model": "mistral",
+        "model": "mistral:7b",
         "prompt": SEMANTIC_GATE_PROMPT.format(query=query),
         "options": {"temperature": 0.0},
         "stream": False,

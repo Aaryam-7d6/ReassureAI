@@ -11,7 +11,7 @@ from groq import Groq
 from typing import Optional
 import logging
 
-from app.config import settings
+from backend.config import cfg
 
 logger = logging.getLogger(__name__)
 
@@ -30,16 +30,16 @@ class OpenBioLLM:
     """
     
     def __init__(self):
-        self.hf_token = settings.HUGGINGFACE_TOKEN
-        self.groq_api_key = settings.GROQ_API_KEY
-        self.base_model = "microsoft/BioGPT-Large"  # OpenBioLLM model on HF
-        self.fallback_model = "llama-3-70b-versatile"  # Groq fallback
+        self.hf_token = getattr(cfg, "HUGGINGFACE_API_KEY", "")
+        self.groq_api_key = getattr(cfg, "GROQ_API_KEY", "")
+        self.base_model = getattr(cfg, "OPENBIO_MODEL_NAME", "aaditya/Llama3-OpenBioLLM-70B")
+        self.fallback_model = getattr(cfg, "OPENBIO_GROQ_MODEL", "llama-3-70b-versatile")
         self.hf_base_url = "https://api-inference.huggingface.co/models"
         
         # Initialize clients
         self.hf_client = httpx.AsyncClient(
             base_url=self.hf_base_url,
-            headers={"Authorization": f"Bearer {self.hf_token}"},
+            headers={"Authorization": f"Bearer {self.hf_token}"} if self.hf_token else {},
             timeout=30.0
         )
         self.groq_client = Groq(api_key=self.groq_api_key) if self.groq_api_key else None
@@ -76,7 +76,11 @@ class OpenBioLLM:
                                         request=response.request, response=response)
         elif response.status_code != 200:
             # Other errors - don't retry, failover
-            error_msg = response.json().get("error", "Unknown error")
+            error_msg = "Unknown error"
+            try:
+                error_msg = response.json().get("error", error_msg)
+            except Exception:
+                pass
             logger.warning(f"HuggingFace inference failed: {error_msg}")
             raise OpenBioLLMError(f"HF API error: {error_msg}")
         
@@ -119,27 +123,33 @@ class OpenBioLLM:
         Raises:
             OpenBioLLMError: If both primary and fallback fail
         """
-        # Try HuggingFace primary with retries
-        try:
-            logger.info("Attempting HuggingFace Inference API...")
-            response = await self._hf_inference(prompt)
-            if response:
-                logger.info("HuggingFace inference successful")
+        # Try HuggingFace primary with retries when configured
+        if self.hf_token:
+            try:
+                logger.info("Attempting HuggingFace Inference API...")
+                response = await self._hf_inference(prompt)
+                if response:
+                    logger.info("HuggingFace inference successful")
+                    return response
+            except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
+                logger.warning(f"HuggingFace inference failed after retries: {str(e)}")
+            except OpenBioLLMError as e:
+                logger.warning(f"HuggingFace inference error: {str(e)}")
+        else:
+            logger.warning("HuggingFace API key not configured, skipping HF primary.")
+
+        # Fallback to Groq if configured
+        if self.groq_client:
+            logger.info("Falling back to Groq API...")
+            try:
+                response = await self._groq_fallback(prompt)
+                logger.info("Groq fallback successful")
                 return response
-        except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
-            logger.warning(f"HuggingFace inference failed after retries: {str(e)}")
-        except OpenBioLLMError as e:
-            logger.warning(f"HuggingFace inference error: {str(e)}")
-        
-        # Fallback to Groq
-        logger.info("Falling back to Groq API...")
-        try:
-            response = await self._groq_fallback(prompt)
-            logger.info("Groq fallback successful")
-            return response
-        except OpenBioLLMError as e:
-            logger.error(f"Both HuggingFace and Groq failed: {str(e)}")
-            raise
+            except OpenBioLLMError as e:
+                logger.error(f"Groq fallback failed: {str(e)}")
+                raise
+
+        raise OpenBioLLMError("No valid inference provider configured for OpenBioLLM.")
     
     async def close(self):
         """Close HTTP clients."""

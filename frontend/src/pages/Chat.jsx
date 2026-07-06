@@ -112,6 +112,7 @@ export default function Chat() {
       const response = await chatApi.sendMessage({
         query: textToSend,
         conversation_id: conversationId || undefined,
+        processing_type: activeMode,
       });
 
       const assistantPayload = response?.data?.message || {};

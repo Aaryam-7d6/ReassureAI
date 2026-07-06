@@ -8,7 +8,6 @@ services:
       - n8n
     ports:
       - "8080:80"
-      - "5678:5678"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -41,8 +40,8 @@ services:
     depends_on:
       - mongo
     environment:
-      MONGO_URI: mongodb://mongo:27017/reassureai
-      MONGODB_URI: mongodb://mongo:27017/reassureai
+      MONGO_URI: mongodb://host.docker.internal:27017/reassureai
+      MONGODB_URI: mongodb://host.docker.internal:27017/reassureai
       OLLAMA_BASE_URL: http://host.docker.internal:11434
       FRONTEND_URL: http://localhost:8080
       BACKEND_URL: http://localhost:8080
@@ -74,12 +73,12 @@ services:
     container_name: reassureai-n8n
     user: "0:0"
     environment:
-      N8N_HOST: localhost
+      N8N_HOST: 0.0.0.0
       N8N_PORT: 5678
       N8N_PROTOCOL: http
-      N8N_PATH: /n8n/
-      N8N_EDITOR_BASE_URL: http://localhost:8080/n8n/
-      WEBHOOK_URL: http://localhost:8080/n8n/
+      N8N_PATH: /
+      N8N_EDITOR_BASE_URL: http://localhost:5678/
+      WEBHOOK_URL: http://localhost:5678/
       N8N_SECURE_COOKIE: "false"
       GENERIC_TIMEZONE: Etc/UTC
       TZ: Etc/UTC
@@ -88,10 +87,8 @@ services:
 
     volumes:
       - ./data/n8n:/home/node/.n8n
-
-    # no "ports:" section — only reachable via caddy now
-    #ports:
-    #- "5678:5678"
+    ports:
+      - "5678:5678"
 
     extra_hosts:
       - "host.docker.internal:host-gateway"

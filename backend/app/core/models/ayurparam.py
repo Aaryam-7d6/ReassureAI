@@ -3,21 +3,20 @@ import os
 from typing import Any, Dict, Optional
 import logging
 
+from backend.config import cfg
+
 # Import Ollama client
 try:
     from ollama import Client
-    OLLAMA_CLIENT = Client(host="http://127.0.0.1:11434")
+    OLLAMA_CLIENT = Client(host=cfg.OLLAMA_BASE_URL or cfg.OLLAMA_URL)
 except ImportError:
     OLLAMA_CLIENT = None
 
-# Import Mistral model
-try:
-    MISTRAL_MODEL = "mistral"  # Standard Mistral model name for Ollama
-except Exception:
-    MISTRAL_MODEL = "openassistant"  # Fallback model name
-
-# Import configuration
-from app.config import settings
+MISTRAL_MODEL = "mistral:7b"
+AYURAPARAM_MODELS = [
+    "hf.co/A-Aryam/AyurParam-GGUF:q4_k_m",
+    "hf.co/A-Aryam/AyurParam-GGUF:F16",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +42,7 @@ class AyurParamModel:
     def __init__(self):
         self.ollama_client = OLLAMA_CLIENT
         self.ollama_available = OLLAMA_CLIENT is not None
+        self.ollama_models = AYURAPARAM_MODELS
         self.ollama_model = MISTRAL_MODEL
         
         # Configuration
@@ -141,13 +141,34 @@ class AyurParamModel:
             self.rag_context = ""
             return False, ""
 
+    async def _call_ollama_model(self, prompt: str, temperature: float, max_tokens: int) -> str:
+        if not self.ollama_available:
+            raise RuntimeError("Ollama client not available")
+
+        last_error = None
+        for model_name in self.ollama_models:
+            try:
+                response = await self.ollama_client.generate(
+                    model=model_name,
+                    prompt=prompt,
+                    options={"temperature": temperature, "max_tokens": max_tokens},
+                    stream=False,
+                )
+                if hasattr(response, "response"):
+                    return str(response.response).strip()
+                return str(response).strip()
+            except Exception as e:
+                logger.warning("AyurParam model %s failed: %s", model_name, e)
+                last_error = e
+
+        raise RuntimeError(f"All AyurParam Ollama models failed: {last_error}")
+
     async def _breakdown_query(self, query: str) -> str:
-        """Use Ollama Mistral to break down and analyze the query."""
+        """Use Ollama to break down and analyze the query."""
         if not self.ollama_available:
             return "Error: Ollama not available"
-            
+
         try:
-            # Create prompt for query breakdown
             prompt = f"""You are a medical AI assistant specialized in Ayurvedic medicine.
 Analyze the following query and break it down into key components for proper Ayurvedic assessment.
 Query: {query}
@@ -157,23 +178,10 @@ Break down into:
 2. Recommended lifestyle/dietary changes
 3. Suggested herbs or formulations
 4. Precautions or warnings
-2. Generate a structured response in JSON format with these fields:
-   - dosha: string or list
-   - diet: string
-   - herbs: list
-   - precautions: string
+
+Generate a concise structured summary.
 """
-            
-            # Call Ollama
-            response = await self.ollama_client.generate(
-                model=self.ollama_model,
-                prompt=prompt,
-                options={"temperature": 0.3, "max_tokens": 512}
-            )
-            
-            # Parse response (simplified - in real implementation would parse JSON)
-            return response.response or "Could not parse response"
-            
+            return await self._call_ollama_model(prompt, temperature=0.3, max_tokens=512)
         except Exception as e:
             logger.error(f"Ollama query breakdown failed: {str(e)}")
             return "Error in query breakdown"
@@ -182,30 +190,24 @@ Break down into:
         """Generate Ayurvedic response based on query breakdown."""
         if not self.ollama_available:
             return "Error: Ollama not available"
-            
+
         try:
-            # Create prompt for response generation
             prompt = f"""Based on the query breakdown: {breakdown}
 
 Generate a comprehensive Ayurvedic recommendation in 2-3 paragraphs.
 Include:
 - Assessment of dosha imbalance
 - Dietary recommendations
-- Herbal suggestions  
+- Herbal suggestions
 - Lifestyle advice
 - Precautions
 
 Use traditional Ayurvedic knowledge but keep it practical and evidence-informed.
 """
-            
-            # Call Ollama
-            response = await self.ollama_client.generate(
-                model=self.ollama_model,
-                prompt=prompt,
-                options={"temperature": 0.7, "max_tokens": 1024}
-            )
-            
-            return response.response or "Could not generate response"
+            return await self._call_ollama_model(prompt, temperature=0.7, max_tokens=1024)
+        except Exception as e:
+            logger.error(f"Ollama Ayurvedic response generation failed: {str(e)}")
+            return "Could not generate response"
 
     def _calculate_confidence(self, breakdown: str, response: str) -> float:
         """Calculate confidence score (0.0-1.0) based on response quality."""
