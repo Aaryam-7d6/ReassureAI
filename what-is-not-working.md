@@ -20,3 +20,7 @@ The current codebase now exposes the expected auth routes under the frontend’s
 - datetime.utcnow() deprecation warnings.
 
 These do not break the current auth flow, but they are worth cleaning up later if you want a quieter test run.
+
+### security note:
+
+1. if we're on a shared/university network: 0.0.0.0 on Mongo with no auth means anything on your local network can connect. Fine for now, but after that at least add a Mongo username/password, or bind to the WSL2 subnet only if you can pin it down.
