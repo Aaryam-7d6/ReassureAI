@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
 import { chatApi } from "../api/chatApi";
+import { reportApi } from "../api/reportApi";
 import { feedbackApi } from "../api/feedbackApi";
 import { useToast } from "../components/Toast";
 import ResponseActionBar from "../components/ResponseActionBar";
@@ -12,6 +13,7 @@ import {
   Heart,
   Activity,
   Sparkles,
+  Upload,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -78,6 +80,13 @@ export default function Chat() {
   const inputRef = useRef(null);
 
   const currentMode = MODES.find((m) => m.id === activeMode) || MODES[0];
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [uploadingReport, setUploadingReport] = useState(false);
+  const fileInputRef = useRef(null);
+  const MODE_DESCRIPTIONS = {
+    mental_health: "Mental health mode uses a supportive emotional chain powered by a specialized conversational model.",
+    physical_health: "Physical health mode uses symptom analysis routing and blended medical/ayurvedic model responses.",
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -112,6 +121,7 @@ export default function Chat() {
       const response = await chatApi.sendMessage({
         query: textToSend,
         conversation_id: conversationId || undefined,
+        processing_type: activeMode,
       });
 
       const assistantPayload = response?.data?.message || {};
@@ -127,6 +137,7 @@ export default function Chat() {
         sender: "ai",
         messageId: assistantPayload.id,
         metadata: assistantPayload.metadata || response?.data?.metadata,
+        mode: activeMode,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -151,6 +162,40 @@ export default function Chat() {
     }
   };
 
+  const uploadReport = async () => {
+    if (!attachedFile) return;
+    setUploadingReport(true);
+    try {
+      const response = await reportApi.upload(attachedFile);
+      const payload = response?.data || {};
+      addToast(
+        payload.status === "processed"
+          ? "Report processed successfully."
+          : payload.message || "Report uploaded and is being analysed.",
+        payload.status === "processed" ? "success" : "info",
+      );
+
+      const assistantMessage = {
+        id: Date.now() + 2,
+        text:
+          payload.simplified_report ||
+          "Your report was uploaded successfully. The summary will appear once processing completes.",
+        sender: "ai",
+        mode: activeMode,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+      setAttachedFile(null);
+      setConversationId(null);
+    } catch (error) {
+      addToast(
+        error.response?.data?.detail ||
+          "Unable to upload the report right now.",
+        "error",
+      );
+    } finally {
+      setUploadingReport(false);
+    }
+  };
   const handleRegenerate = async (messageText) => {
     if (!messageText) return;
     await handleSend(null, messageText);
@@ -256,11 +301,30 @@ export default function Chat() {
                 style={{
                   fontSize: "0.9375rem",
                   color: "var(--text-muted)",
-                  marginBottom: "2.5rem",
+                  marginBottom: "1.25rem",
                 }}
               >
                 Ask me anything about your {currentMode.label.toLowerCase()}.
               </motion.p>
+
+              <motion.div
+                variants={itemVariants}
+                className="mb-6 rounded-2xl border px-4 py-3"
+                style={{
+                  borderColor: currentMode.color,
+                  background: currentMode.bg,
+                }}
+              >
+                <p className="font-semibold" style={{ color: currentMode.color }}>
+                  Current mode: {currentMode.label}
+                </p>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
+                  {MODE_DESCRIPTIONS[currentMode.id]}
+                </p>
+                <p className="mt-2" style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                  Backend processing_type: <strong>{activeMode}</strong>
+                </p>
+              </motion.div>
 
               {/* Suggested prompts */}
               <motion.div
@@ -438,19 +502,32 @@ export default function Chat() {
           }}
         >
           {/* Attach */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg"
+            className="hidden"
+            onChange={(e) => {
+              const selectedFile = e.target.files?.[0];
+              if (selectedFile) {
+                setAttachedFile(selectedFile);
+              }
+            }}
+          />
           <button
             type="button"
             id="btn-attach"
             aria-label="Attach file"
-            disabled={thinking}
+            disabled={thinking || uploadingReport}
             className="p-2 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-40"
             style={{ color: "var(--text-muted)", background: "transparent" }}
             onMouseEnter={(e) => {
-              if (!thinking) e.currentTarget.style.color = currentMode.color;
+              if (!thinking && !uploadingReport) e.currentTarget.style.color = currentMode.color;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = "var(--text-muted)";
             }}
+            onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip className="w-4 h-4" />
           </button>
@@ -471,6 +548,25 @@ export default function Chat() {
               opacity: thinking ? 0.6 : 1,
             }}
           />
+
+          {/* Attach status */}
+          {attachedFile && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+              <Upload className="w-4 h-4" style={{ color: currentMode.color }} />
+              <span style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                {attachedFile.name}
+              </span>
+              <button
+                type="button"
+                aria-label="Remove attachment"
+                onClick={() => setAttachedFile(null)}
+                className="text-sm text-red-500"
+                style={{ background: "transparent", border: "none" }}
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           {/* Mic */}
           <button
@@ -506,6 +602,22 @@ export default function Chat() {
           >
             <Send className="w-4 h-4" />
           </button>
+          {attachedFile && (
+            <button
+              type="button"
+              onClick={uploadReport}
+              disabled={uploadingReport || thinking}
+              className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: uploadingReport
+                  ? "var(--bg-elevated)"
+                  : currentMode.bg,
+                color: uploadingReport ? "var(--text-muted)" : currentMode.color,
+              }}
+            >
+              {uploadingReport ? "Uploading..." : "Upload File"}
+            </button>
+          )}
         </form>
 
         <p

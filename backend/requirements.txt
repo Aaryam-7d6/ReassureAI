@@ -4,6 +4,7 @@ httpx
 pydantic
 python-dotenv
 motor
+beanie
 ollama
 pydantic-settings
 python-multipart
@@ -12,3 +13,6 @@ PyPDF2
 pytesseract
 Pillow
 pdf2image
+bcrypt
+tenacity
+groq

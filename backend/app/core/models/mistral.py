@@ -20,11 +20,13 @@ class MistralModel:
     def __init__(
         self,
         base_url: Optional[str] = None,
-        model: str = "mistral",
-        timeout: float = 30.0,
+        model: str = "mistral:7b",
+        timeout: float = 60.0,
         temperature: float = 0.3,
     ):
-        self.base_url = (base_url or cfg.OLLAMA_URL).rstrip("/")
+        self.base_url = (
+            base_url or cfg.OLLAMA_BASE_URL or cfg.OLLAMA_URL
+        ).rstrip("/")
         self.model = model
         self.timeout = timeout
         self.temperature = temperature

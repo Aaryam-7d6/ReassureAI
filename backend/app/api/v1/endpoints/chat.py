@@ -22,6 +22,7 @@ class ChatRequest(BaseModel):
     conversation_id: str | None = None
     guardian_email: str | None = None
     file_content: str | None = None
+    processing_type: str | None = None
 
 
 @router.post("")
@@ -33,7 +34,7 @@ async def create_chat_message(
 ):
     user_id = _resolve_user_id(request, x_user_id)
     query = payload.query.strip()
-    if not query:
+    if not query and not payload.file_content:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Query cannot be empty")
 
     node = DisigenNode()
@@ -42,6 +43,7 @@ async def create_chat_message(
         user_id=user_id,
         guardian_email=payload.guardian_email,
         file_content=payload.file_content,
+        processing_type=payload.processing_type,
     )
     result_payload = _serialize_disigen_result(result)
 

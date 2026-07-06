@@ -1,44 +1,65 @@
+# Environment files
 .env
-# Environment
-backend/.env
-.env
-*.env
+.env.local
+.env.*
+!.env.copy
 
 # Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+backend/.venv/
 backend/venv/
 backend/__pycache__/
 backend/**/__pycache__/
-backend/*.pyc
 backend/knowledge_base/faiss.index
-venv/
-__pycache__/
-.pytest_cache/
-.venv/
 
-
-# Google Drive credentials
-backend/credentials.json
-backend/token.json
-
-# Local uploads and extracted text cache
-data/uploads/
+# Local uploads and generated data
 backend/data/uploads/
+data/uploads/
 
-# Node
+# Node / frontend
 node_modules/
 frontend/node_modules/
-
-# Build
 frontend/dist/
+frontend/.vite/
 
-# OS
+#----- Builds and artifacts -----
+
+#logs
+logs/
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+# OS/editor files
 .DS_Store
 Thumbs.db
-
-#vscode
 .vscode/
-.vscode/*
-
-#aider
+.idea/
 .aider/
-.aider/*

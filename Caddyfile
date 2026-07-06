@@ -3,29 +3,25 @@
 }
 
 :80 {
-	encode gzip zstd
+        encode gzip zstd
 
-	@backend_routes {
-		path /api/* /health /docs* /redoc* /openapi.json
-	}
-	handle @backend_routes {
-		reverse_proxy backend:8000
-	}
+        @backend_routes {
+                path /api/v1 /api/v1/* /health /health/* /docs /docs/* /redoc /redoc/* /openapi.json
+        }
+        reverse_proxy @backend_routes backend:8000
 
-	redir /n8n /n8n/
+        @n8n_routes {
+                path /n8n /n8n/*
+        }
+        reverse_proxy @n8n_routes n8n:5678 {
+                header_up X-Forwarded-Proto http
+        }
 
-	handle_path /n8n/* {
-		reverse_proxy n8n:5678 {
-			header_up X-Forwarded-Prefix /n8n
-			header_up X-Forwarded-Proto http
-		}
-	}
-
-	handle {
-		reverse_proxy frontend:5173
-	}
+        reverse_proxy frontend:5173
 }
 
-#:5678 {
-#	redir * http://localhost:8080/n8n/{uri} permanent
-#}
+n8n.localhost {
+        reverse_proxy n8n:5678 {
+                header_up X-Forwarded-Proto http
+        }
+}

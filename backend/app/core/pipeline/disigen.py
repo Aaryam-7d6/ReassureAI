@@ -96,6 +96,7 @@ class DisigenNode:
         user_id: Optional[str] = None,
         guardian_email: Optional[str] = None,
         file_content: Optional[str] = None,
+        processing_type: Optional[str] = None,
     ) -> DisigenResult:
         query = (query or "").strip()
         if not query and not file_content:
@@ -106,16 +107,27 @@ class DisigenNode:
                 sources=[],
             )
 
-        processing_type = self._determine_type(query, file_content)
-        if processing_type == ProcessingType.REPORT_PROCESSING:
+        processing_type_enum = self._determine_type(query, file_content, processing_type)
+        if processing_type_enum == ProcessingType.REPORT_PROCESSING:
             return await self._process_report(file_content or query)
-        if processing_type == ProcessingType.PHYSICAL_HEALTH:
+        if processing_type_enum == ProcessingType.PHYSICAL_HEALTH:
             return await self._process_physical_health(query)
         return await self._process_mental_health(query, user_id=user_id, guardian_email=guardian_email)
 
-    def _determine_type(self, query: str, file_content: Optional[str]) -> ProcessingType:
+    def _determine_type(
+        self,
+        query: str,
+        file_content: Optional[str],
+        explicit_type: Optional[str] = None,
+    ) -> ProcessingType:
         if file_content:
             return ProcessingType.REPORT_PROCESSING
+
+        if explicit_type:
+            try:
+                return ProcessingType(explicit_type)
+            except ValueError:
+                pass
 
         lowered = query.lower()
         mental_terms = {
@@ -191,13 +203,23 @@ class DisigenNode:
             "Do not diagnose. Encourage professional help when appropriate.\n\n"
             f"User message: {query}"
         )
-        response = await self._run_mistral(prompt)
+        try:
+            response = await self._run_mistral(prompt)
+            chain_runs = [ChainRun(name="mistral", status=ChainStatus.OK, response=response, confidence=0.85)]
+        except Exception as exc:
+            logger.warning("Mental health Mistral chain failed, falling back: %s", exc)
+            response = (
+                "I’m sorry, I’m having trouble accessing the assistant right now. "
+                "Please try again shortly."
+            )
+            chain_runs = [ChainRun(name="mistral", status=ChainStatus.ERROR, error=str(exc), confidence=0.0)]
+
         return DisigenResult(
             processing_type=ProcessingType.MENTAL_HEALTH,
             response=response,
-            confidence=0.85,
+            confidence=0.35 if chain_runs[0].status == ChainStatus.ERROR else 0.85,
             sources=["semantic_gate" if analysis else "keyword_fallback", "mistral"],
-            chain_runs=[ChainRun(name="mistral", status=ChainStatus.OK, response=response, confidence=0.85)],
+            chain_runs=chain_runs,
             metadata={
                 "emotional_state": getattr(analysis, "emotional_state", None),
                 "distress_level": getattr(analysis, "distress_level", None),
@@ -426,6 +448,15 @@ class DisigenNode:
                 context_lines.append(f"- {text[:260]}")
         if context_lines:
             sections.append("## Retrieved Context\n\n" + "\n".join(context_lines))
+
+        if rag_results:
+            citation_lines = []
+            for result in rag_results[:3]:
+                text = getattr(result, "text", "") or ""
+                metadata = getattr(result, "metadata", {}) or {}
+                source = metadata.get("source") or metadata.get("title") or metadata.get("name") or metadata.get("document_id") or "qdrant"
+                citation_lines.append(f"- [{source}] {text[:220].strip()}...")
+            sections.append("## Citations\n\n" + "\n".join(citation_lines))
 
         if not sections:
             sections.append("I could not generate a reliable answer right now. Please try again or consult a qualified clinician.")
