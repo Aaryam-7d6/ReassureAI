@@ -16,6 +16,9 @@ from backend.app.api.v1.endpoints.reports import router as reports_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.mongo_client = None
+    app.state.ollama = None
+
     # MongoDB
     try:
         client = motor.motor_asyncio.AsyncIOMotorClient(cfg.MONGO_URI)
@@ -23,20 +26,22 @@ async def lifespan(app: FastAPI):
         app.state.mongo_client = client
         cfg.LOGGER.info("MongoDB connected")
     except Exception as e:
-        cfg.LOGGER.error(f"MongoDB connection failed: {e}")
-        raise
+        cfg.LOGGER.warning(f"MongoDB connection failed: {e}. Continuing without DB.")
+
     # Ollama
     try:
         response = ollama.list()
         app.state.ollama = response
         cfg.LOGGER.info("Ollama connected")
     except Exception as e:
-        cfg.LOGGER.error(f"Ollama connection failed: {e}")
-        raise
+        cfg.LOGGER.warning(f"Ollama connection failed: {e}. Continuing without Ollama.")
+
     yield
+
     # cleanup
-    client.close()
-    cfg.LOGGER.info("App shutdown, connections closed")
+    if app.state.mongo_client is not None:
+        app.state.mongo_client.close()
+        cfg.LOGGER.info("App shutdown, connections closed")
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router, prefix="/api/v1")
@@ -54,7 +59,11 @@ app.add_middleware(
 
 @app.get("/api/v1/health")
 async def health():
-    return JSONResponse({"status":"ok","ollama":"connected","mongodb":"connected"})
+    return JSONResponse({
+        "status": "ok",
+        "ollama": "connected" if getattr(app.state, "ollama", None) else "disconnected",
+        "mongodb": "connected" if getattr(app.state, "mongo_client", None) is not None else "disconnected"
+    })
 
 # global exception handler
 @app.exception_handler(exc.AppException)

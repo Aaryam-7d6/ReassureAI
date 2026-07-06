@@ -35,24 +35,38 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: reassureai-backend
+    depends_on:
+      - mongo
     environment:
-      MONGO_URI: mongodb://host.docker.internal:27017/reassureai
-      MONGODB_URI: mongodb://host.docker.internal:27017/reassureai
+      MONGO_URI: mongodb://mongo:27017/reassureai
+      MONGODB_URI: mongodb://mongo:27017/reassureai
       OLLAMA_BASE_URL: http://host.docker.internal:11434
       FRONTEND_URL: http://localhost:8080
       BACKEND_URL: http://localhost:8080
       UPLOAD_DIR: /data/uploads
       MAX_UPLOAD_SIZE_BYTES: 10485760
     volumes:
-      - ./backend:/app
+      - ./backend:/app/backend
       - ./data/uploads:/data/uploads
+      - ./.env:/app/.env:ro
     ports:
       - "8000:8000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: reassureai-mongo
+    environment:
+      MONGO_INITDB_DATABASE: reassureai
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
     restart: unless-stopped
 
   n8n:
@@ -77,7 +91,7 @@ services:
 
     # no "ports:" section — only reachable via caddy now
     #ports:
-      #- "5678:5678"
+    #- "5678:5678"
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -87,3 +101,4 @@ volumes:
   frontend_node_modules:
   caddy_data:
   caddy_config:
+  mongo_data:

@@ -6,11 +6,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY requirements.txt ./
-RUN pip install --upgrade pip && pip install -r requirements.txt
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --upgrade pip && pip install -r /tmp/requirements.txt
 
-COPY . .
+COPY backend/ /app/backend/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
