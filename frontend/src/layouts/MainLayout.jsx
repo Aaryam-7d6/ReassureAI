@@ -57,7 +57,7 @@ const MOCK_HISTORY = [
 export default function MainLayout() {
   const { user, logout } = useAuth();
   const { theme, themeMode, setThemeMode, toggleTheme, isDark } = useTheme();
-  const { activeMode, setActiveMode, setMessages, setIsCrisis } = useChat();
+  const { activeMode, setActiveMode, setMessages, setIsCrisis, setConversationId } = useChat();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -65,6 +65,7 @@ export default function MainLayout() {
 
   const handleNewChat = () => {
     setMessages([]);
+    setConversationId(null);
     setIsCrisis(false);
     if (window.innerWidth < 768) {
       setSidebarOpen(false);

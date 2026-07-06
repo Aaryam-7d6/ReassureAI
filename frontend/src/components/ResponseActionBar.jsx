@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Copy, RefreshCcw, ThumbsUp, ThumbsDown } from "lucide-react";
 import SpeakButton from "./SpeakButton";
 
 const Toast = ({ message, visible, duration = 3000 }) => {
@@ -75,8 +76,9 @@ export const ResponseActionBar = ({
           disabled={disabled}
           className="p-2 hover:bg-gray-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           title="Copy to clipboard"
+          type="button"
         >
-          📋
+          <Copy className="w-4 h-4" />
         </button>
 
         {/* Regenerate Button */}
@@ -85,8 +87,9 @@ export const ResponseActionBar = ({
           disabled={disabled}
           className="p-2 hover:bg-gray-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           title="Regenerate response"
+          type="button"
         >
-          🔄
+          <RefreshCcw className="w-4 h-4" />
         </button>
 
         {/* Feedback Buttons */}
@@ -100,8 +103,9 @@ export const ResponseActionBar = ({
                 : "hover:bg-gray-200 text-gray-600"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Helpful"
+            type="button"
           >
-            👍
+            <ThumbsUp className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleFeedback("dislike")}
@@ -112,8 +116,9 @@ export const ResponseActionBar = ({
                 : "hover:bg-gray-200 text-gray-600"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Not helpful"
+            type="button"
           >
-            👎
+            <ThumbsDown className="w-4 h-4" />
           </button>
         </div>
       </div>
