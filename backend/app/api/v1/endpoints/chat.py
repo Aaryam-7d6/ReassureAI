@@ -23,6 +23,7 @@ class ChatRequest(BaseModel):
     guardian_email: str | None = None
     file_content: str | None = None
     processing_type: str | None = None
+    selected_model: str | None = None
 
 
 @router.post("")
@@ -44,6 +45,7 @@ async def create_chat_message(
         guardian_email=payload.guardian_email,
         file_content=payload.file_content,
         processing_type=payload.processing_type,
+        selected_model=payload.selected_model,
     )
     result_payload = _serialize_disigen_result(result)
 

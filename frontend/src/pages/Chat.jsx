@@ -14,6 +14,8 @@ import {
   Activity,
   Sparkles,
   Upload,
+  Copy,
+  Pencil,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -71,6 +73,9 @@ export default function Chat() {
     setIsCrisis,
     conversationId,
     setConversationId,
+    selectedModel,
+    setSelectedModel,
+    fetchConversations,
   } = useChat();
   const { addToast } = useToast();
   const [input, setInput] = useState("");
@@ -78,6 +83,15 @@ export default function Chat() {
   const [activeSpeechMessageId, setActiveSpeechMessageId] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editText, setEditText] = useState("");
+
+  useEffect(() => {
+    if (conversationId) {
+      fetchConversations();
+    }
+  }, [conversationId]);
 
   const currentMode = MODES.find((m) => m.id === activeMode) || MODES[0];
   const [attachedFile, setAttachedFile] = useState(null);
@@ -92,12 +106,18 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, thinking]);
 
-  // Clear chat history when the conversation mode changes
-  useEffect(() => {
-    setMessages([]);
-    setConversationId(null);
-    setIsCrisis(false);
-  }, [activeMode, setConversationId, setIsCrisis, setMessages]);
+  const handleSaveEdit = async (msgId, newText) => {
+    if (!newText.trim() || thinking) return;
+    const idx = messages.findIndex((m) => m.id === msgId);
+    if (idx === -1) return;
+
+    const truncated = messages.slice(0, idx);
+    setMessages(truncated);
+    setEditingMessageId(null);
+    setEditText("");
+
+    await handleSend(null, newText);
+  };
 
   // Clear input when messages are cleared (e.g. New chat clicked)
   useEffect(() => {
@@ -122,6 +142,7 @@ export default function Chat() {
         query: textToSend,
         conversation_id: conversationId || undefined,
         processing_type: activeMode,
+        selected_model: activeMode === "physical_health" ? selectedModel : undefined,
       });
 
       const assistantPayload = response?.data?.message || {};
@@ -368,7 +389,7 @@ export default function Chat() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className={`flex gap-3 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex gap-3 group ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.sender === "ai" && (
                     <div
@@ -388,41 +409,123 @@ export default function Chat() {
                   <div
                     className={`max-w-[75%] ${msg.sender === "ai" ? "flex flex-col gap-2" : ""}`}
                   >
-                    <div
-                      style={{
-                        padding: "0.625rem 1rem",
-                        borderRadius:
-                          msg.sender === "user"
-                            ? "1.25rem 1.25rem 0.25rem 1.25rem"
-                            : "0.25rem 1.25rem 1.25rem 1.25rem",
-                        background:
-                          msg.sender === "user"
-                            ? currentMode.bg
-                            : "transparent",
-                        border:
-                          msg.sender === "user"
-                            ? `1px solid ${currentMode.color}30`
-                            : "none",
-                        fontSize: "0.9375rem",
-                        color: "var(--text-primary)",
-                        lineHeight: 1.65,
-                      }}
-                    >
-                      {msg.text}
-                    </div>
-
-                    {msg.sender === "ai" && (
-                      <ResponseActionBar
-                        responseText={msg.text}
-                        disabled={thinking}
-                        messageId={msg.id}
-                        activeSpeechMessageId={activeSpeechMessageId}
-                        onSpeechStateChange={setActiveSpeechMessageId}
-                        onRegenerate={() => handleRegenerate(msg.text)}
-                        onFeedback={(vote) =>
-                          handleFeedback(msg.messageId, vote)
-                        }
-                      />
+                    {msg.sender === "user" ? (
+                      editingMessageId === msg.id ? (
+                        <div className="flex flex-col gap-2 w-full min-w-[250px] p-2 bg-[var(--bg-elevated)] border rounded-2xl">
+                          <textarea
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="w-full p-2 text-sm rounded-lg border outline-none bg-transparent"
+                            style={{
+                              borderColor: currentMode.color,
+                              color: "var(--text-primary)",
+                            }}
+                            rows={Math.max(2, editText.split("\n").length)}
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setEditingMessageId(null)}
+                              className="px-2.5 py-1 text-xs rounded border cursor-pointer"
+                              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveEdit(msg.id, editText)}
+                              className="px-2.5 py-1 text-xs rounded text-white cursor-pointer font-medium"
+                              style={{ background: currentMode.color }}
+                            >
+                              Save & Submit
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-end">
+                          <div
+                            style={{
+                              padding: "0.625rem 1rem",
+                              borderRadius: "1.25rem 1.25rem 0.25rem 1.25rem",
+                              background: currentMode.bg,
+                              border: `1px solid ${currentMode.color}30`,
+                              fontSize: "0.9375rem",
+                              color: "var(--text-primary)",
+                              lineHeight: 1.65,
+                            }}
+                          >
+                            {msg.text}
+                          </div>
+                          <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(msg.text);
+                                addToast("Prompt copied to clipboard!", "success");
+                              }}
+                              className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                              style={{ background: "transparent", border: "none" }}
+                              title="Copy prompt"
+                            >
+                              <Copy className="w-3.5 h-3.5" style={{ color: "var(--text-muted)" }} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingMessageId(msg.id);
+                                setEditText(msg.text);
+                              }}
+                              className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                              style={{ background: "transparent", border: "none" }}
+                              title="Edit prompt"
+                            >
+                              <Pencil className="w-3.5 h-3.5" style={{ color: "var(--text-muted)" }} />
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            padding: "0.625rem 1rem",
+                            borderRadius: "0.25rem 1.25rem 1.25rem 1.25rem",
+                            fontSize: "0.9375rem",
+                            color: "var(--text-primary)",
+                            lineHeight: 1.65,
+                          }}
+                        >
+                          {msg.text}
+                        </div>
+                        {msg.metadata?.sources && (
+                          <div className="flex flex-wrap gap-1 px-1 mb-1 select-none">
+                            {msg.metadata.sources.map((src, idx) => (
+                              <span
+                                key={idx}
+                                className="text-[0.65rem] px-2 py-0.5 rounded-full font-semibold border uppercase tracking-wider"
+                                style={{
+                                  borderColor: "var(--border)",
+                                  background: "var(--bg-elevated)",
+                                  color: "var(--text-secondary)",
+                                }}
+                              >
+                                {src === "openbiollm" ? "OpenBioLLM" : src === "ayurparam" ? "AyurParam" : src === "mistral" ? "Mistral" : src === "rag" ? "RAG" : src === "mistral_fusion" ? "Fused Response" : src}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <ResponseActionBar
+                          responseText={msg.text}
+                          disabled={thinking}
+                          messageId={msg.id}
+                          activeSpeechMessageId={activeSpeechMessageId}
+                          onSpeechStateChange={setActiveSpeechMessageId}
+                          onRegenerate={() => handleRegenerate(msg.text)}
+                          onFeedback={(vote) =>
+                            handleFeedback(msg.messageId, vote)
+                          }
+                        />
+                      </>
                     )}
                   </div>
                 </motion.div>
@@ -486,6 +589,31 @@ export default function Chat() {
         className="flex-shrink-0 px-4 pb-5 pt-2 sticky bottom-0 z-10"
         style={{ background: "var(--bg-base)" }}
       >
+        {activeMode === "physical_health" && (
+          <div className="max-w-3xl mx-auto mb-3 flex gap-2 items-center justify-start text-[0.8rem] flex-wrap">
+            <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>Select Model:</span>
+            {[
+              { id: "all", label: "Both (Fused)" },
+              { id: "openbiollm", label: "OpenBioLLM (Modern)" },
+              { id: "ayurparam", label: "AyurParam (Ayurvedic)" },
+            ].map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setSelectedModel(m.id)}
+                className="px-3 py-1 rounded-full border transition-all cursor-pointer text-xs"
+                style={{
+                  borderColor: selectedModel === m.id ? "var(--purple)" : "var(--border)",
+                  background: selectedModel === m.id ? "var(--purple-subtle)" : "var(--bg-surface)",
+                  color: selectedModel === m.id ? "var(--purple)" : "var(--text-secondary)",
+                  fontWeight: selectedModel === m.id ? 600 : 400,
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
         <form
           onSubmit={handleSend}
           className="max-w-3xl mx-auto flex items-center gap-2 rounded-2xl px-2 py-1.5 transition-all duration-200"
