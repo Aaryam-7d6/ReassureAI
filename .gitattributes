@@ -5,7 +5,10 @@
 # Handle line endings automatically for all files detected as text 
 # and force them to be normalized to LF when committed to GitHub.
 
-* text=auto
+#* text=auto
+
+# Force all auto-detected text files to strictly use LF everywhere
+* text=auto eol=lf
 
 # Keep environment configuration templates consistent
 .env.copy text eol=lf
