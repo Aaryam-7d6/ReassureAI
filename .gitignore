@@ -63,3 +63,7 @@ Thumbs.db
 .vscode/
 .idea/
 .aider/
+
+# rag insertion pipeline
+processed_sources.txt
+ingestion.log
