@@ -97,6 +97,7 @@ class DisigenNode:
         guardian_email: Optional[str] = None,
         file_content: Optional[str] = None,
         processing_type: Optional[str] = None,
+        selected_model: Optional[str] = None,
     ) -> DisigenResult:
         query = (query or "").strip()
         if not query and not file_content:
@@ -111,7 +112,7 @@ class DisigenNode:
         if processing_type_enum == ProcessingType.REPORT_PROCESSING:
             return await self._process_report(file_content or query)
         if processing_type_enum == ProcessingType.PHYSICAL_HEALTH:
-            return await self._process_physical_health(query)
+            return await self._process_physical_health(query, selected_model=selected_model)
         return await self._process_mental_health(query, user_id=user_id, guardian_email=guardian_email)
 
     def _determine_type(
@@ -197,12 +198,24 @@ class DisigenNode:
                 },
             )
 
+        # Retrieve RAG results for mental health
+        rag_results = []
+        try:
+            rag_results = await self.retriever.retrieve(query, top_k=3)
+        except Exception as exc:
+            logger.warning("Mental health RAG retrieval failed: %s", exc)
+
+        rag_context = "\n".join([getattr(r, "text", "") for r in rag_results if getattr(r, "text", "")])
+
         prompt = (
             "You are ReassureAI, a supportive mental health assistant. "
             "Respond with warmth, validation, and practical next steps. "
             "Do not diagnose. Encourage professional help when appropriate.\n\n"
-            f"User message: {query}"
         )
+        if rag_context:
+            prompt += f"Use the following retrieved mental health guidelines and context to inform your response:\n{rag_context}\n\n"
+        
+        prompt += f"User message: {query}"
         try:
             response = await self._run_mistral(prompt)
             chain_runs = [ChainRun(name="mistral", status=ChainStatus.OK, response=response, confidence=0.85)]
@@ -214,51 +227,129 @@ class DisigenNode:
             )
             chain_runs = [ChainRun(name="mistral", status=ChainStatus.ERROR, error=str(exc), confidence=0.0)]
 
+        sources = ["semantic_gate" if analysis else "keyword_fallback", "mistral"]
+        if rag_results:
+            sources.append("rag")
+
         return DisigenResult(
             processing_type=ProcessingType.MENTAL_HEALTH,
             response=response,
             confidence=0.35 if chain_runs[0].status == ChainStatus.ERROR else 0.85,
-            sources=["semantic_gate" if analysis else "keyword_fallback", "mistral"],
+            sources=sources,
             chain_runs=chain_runs,
             metadata={
                 "emotional_state": getattr(analysis, "emotional_state", None),
                 "distress_level": getattr(analysis, "distress_level", None),
+                "rag_results_count": len(rag_results),
             },
         )
 
-    async def _process_physical_health(self, query: str) -> DisigenResult:
-        qil_result = await self._call(self.qil_analyzer, query)
-        route_result = self.router(query)
-        reformatted = getattr(qil_result, "reformatted_queries", {}) or {}
-
-        tasks: Dict[str, Awaitable[ChainRun]] = {
-            "mistral": self._run_chain("mistral", self._run_mistral, reformatted.get("for_chain3", query)),
-        }
-        if "modern" in route_result.active_chains:
-            tasks["openbiollm"] = self._run_chain(
-                "openbiollm",
-                self._run_openbiollm,
-                reformatted.get("for_chain1", query),
-            )
-        if "ayurvedic" in route_result.active_chains:
-            tasks["ayurparam"] = self._run_chain(
-                "ayurparam",
-                self._run_ayurparam,
-                reformatted.get("for_chain2", query),
-            )
-
-        chain_runs = list(await asyncio.gather(*tasks.values()))
-
+    async def _process_physical_health(self, query: str, selected_model: Optional[str] = None) -> DisigenResult:
+        # 1. Retrieve RAG context first
         rag_results = []
         try:
             rag_results = await self.retriever.retrieve(query, top_k=3)
         except Exception as exc:
             logger.warning("RAG retrieval failed: %s", exc)
 
-        response = self._fuse_physical_response(chain_runs, rag_results)
+        rag_context = "\n".join([getattr(r, "text", "") for r in rag_results if getattr(r, "text", "")])
+
+        # 2. Run QIL and Router for metadata/compatibility
+        qil_result = None
+        route_result = None
+        try:
+            qil_result = await self._call(self.qil_analyzer, query)
+            route_result = self.router(query)
+        except Exception as exc:
+            logger.warning("QIL/Router lookup failed: %s", exc)
+
+        # 3. Process query using Mistral (pre-processing / refinement)
+        try:
+            pre_process_prompt = (
+                "You are a medical query pre-processor. Rewrite and expand the following health-related query "
+                "to make it clear, precise, and optimized for clinical and Ayurvedic retrieval. "
+                "Do not answer the query. Just return the optimized query.\n\n"
+                f"Query: {query}"
+            )
+            refined_query = await self._run_mistral(pre_process_prompt)
+        except Exception as exc:
+            logger.warning("Mistral pre-processing failed, using original query: %s", exc)
+            refined_query = query
+
+        # 4. Determine models to run based on selected_model
+        run_modern = selected_model in (None, "all", "openbiollm")
+        run_ayurvedic = selected_model in (None, "all", "ayurparam")
+
+        tasks: Dict[str, Awaitable[ChainRun]] = {}
+
+        if run_modern:
+            openbiollm_prompt = (
+                "You are a modern clinical medical AI assistant. Answer the query based on modern medical science, "
+                "providing clear, clinical explanations and evidence-based guidance.\n\n"
+                f"Query: {refined_query}"
+            )
+            tasks["openbiollm"] = self._run_chain("openbiollm", self._run_openbiollm, openbiollm_prompt)
+
+        if run_ayurvedic:
+            ayur_prompt = (
+                "You are an expert Ayurvedic practitioner AI. Answer the query based on Ayurvedic principles, "
+                "dosha balancing (Vata, Pitta, Kapha), dietary and herbal remedies, and traditional medicine.\n"
+            )
+            if rag_context:
+                ayur_prompt += f"Use the following retrieved Ayurvedic clinical context to inform your response:\n{rag_context}\n\n"
+            ayur_prompt += f"Query: {refined_query}"
+            tasks["ayurparam"] = self._run_chain("ayurparam", self._run_ayurparam, ayur_prompt)
+
+        # Execute selected chains concurrently
+        chain_runs = []
+        if tasks:
+            chain_runs = list(await asyncio.gather(*tasks.values()))
+
+        # 5. Merge the responses using the response fusion layer (via Mistral)
+        by_name = {run.name: run for run in chain_runs if run.status == ChainStatus.OK and run.response}
+
+        if "openbiollm" in by_name and "ayurparam" in by_name:
+            # Both successfully returned, merge using Mistral
+            try:
+                fusion_prompt = (
+                    "You are a medical response fusion layer. Merge the following two health perspectives "
+                    "(Modern Medical and Ayurvedic) into a unified, coherent, and patient-friendly response. "
+                    "Identify common ground, explain how they complement each other, and highlight any key differences "
+                    "or precautions. Use the retrieved context if relevant. Maintain a professional, empathetic tone.\n\n"
+                    f"Retrieved Context:\n{rag_context}\n\n"
+                    f"Modern Medical Response:\n{by_name['openbiollm'].response}\n\n"
+                    f"Ayurvedic Response:\n{by_name['ayurparam'].response}\n\n"
+                    "Fused Response:"
+                )
+                response = await self._run_mistral(fusion_prompt)
+            except Exception as exc:
+                logger.warning("Mistral response fusion failed, falling back to concatenated perspectives: %s", exc)
+                response = f"## Modern Medical Perspective\n\n{by_name['openbiollm'].response}\n\n## Ayurvedic Perspective\n\n{by_name['ayurparam'].response}"
+        elif "openbiollm" in by_name:
+            response = by_name["openbiollm"].response
+        elif "ayurparam" in by_name:
+            response = by_name["ayurparam"].response
+        else:
+            response = "I could not generate a reliable answer right now. Please try again or consult a qualified clinician."
+
+        # Add mandatory medical disclaimer
+        disclaimer = (
+            "\n\n## Safety Disclaimer\n\n"
+            "ReassureAI can make mistakes. Cross-verify important health information "
+            "with a qualified healthcare professional. This information is for educational "
+            "purposes only and not a substitute for professional medical advice."
+        )
+        response += disclaimer
+
+        # Calculate final confidence and sources
         ok_runs = [run for run in chain_runs if run.status == ChainStatus.OK]
-        confidence = self._average_confidence(ok_runs)
+        confidence = self._average_confidence(ok_runs) if ok_runs else 0.5
+        
         sources = [run.name for run in ok_runs]
+        if len(by_name) > 1:
+            sources.append("mistral_fusion")
+        else:
+            sources.append("mistral_pre_process")
         if rag_results:
             sources.append("rag")
 
@@ -269,13 +360,17 @@ class DisigenNode:
             sources=sources,
             chain_runs=chain_runs,
             metadata={
-                "qil_intent": getattr(qil_result, "intent", None),
-                "qil_urgency": getattr(qil_result, "urgency", None),
-                "biomedical_score": getattr(qil_result, "biomedical_score", None),
-                "ayurvedic_score": getattr(qil_result, "ayurvedic_score", None),
-                "route_strategy": route_result.strategy.value if isinstance(route_result.strategy, Strategy) else str(route_result.strategy),
-                "active_chains": route_result.active_chains,
+                "qil_intent": getattr(qil_result, "intent", None) if qil_result else None,
+                "qil_urgency": getattr(qil_result, "urgency", None) if qil_result else None,
+                "biomedical_score": getattr(qil_result, "biomedical_score", None) if qil_result else None,
+                "ayurvedic_score": getattr(qil_result, "ayurvedic_score", None) if qil_result else None,
+                "route_strategy": (
+                    route_result.strategy.value if route_result and hasattr(route_result.strategy, "value")
+                    else str(route_result.strategy) if route_result else "default"
+                ),
+                "active_chains": route_result.active_chains if route_result else ["modern", "ayurvedic"],
                 "rag_results_count": len(rag_results),
+                "selected_model": selected_model or "all",
             },
         )
 
@@ -506,9 +601,16 @@ async def process_health_query(
     user_id: Optional[str] = None,
     guardian_email: Optional[str] = None,
     file_content: Optional[str] = None,
+    selected_model: Optional[str] = None,
 ) -> DisigenResult:
     node = DisigenNode()
-    return await node.process_query(query, user_id=user_id, guardian_email=guardian_email, file_content=file_content)
+    return await node.process_query(
+        query,
+        user_id=user_id,
+        guardian_email=guardian_email,
+        file_content=file_content,
+        selected_model=selected_model,
+    )
 
 
 __all__ = [

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useChat } from "../context/ChatContext";
@@ -49,24 +49,57 @@ const unauthNavLinks = [
   },
 ];
 
-const MOCK_HISTORY = [
-  { id: 1, title: "Anxiety management", date: "Today", mode: "mental_health" },
-  { id: 2, title: "Blood test results", date: "Yesterday", mode: "physical_health" },
-];
+
 
 export default function MainLayout() {
   const { user, logout } = useAuth();
   const { theme, themeMode, setThemeMode, toggleTheme, isDark } = useTheme();
-  const { activeMode, setActiveMode, setMessages, setIsCrisis, setConversationId } = useChat();
+  const {
+    activeMode,
+    setActiveMode,
+    setMessages,
+    setIsCrisis,
+    conversationId,
+    setConversationId,
+    conversations,
+    fetchConversations,
+    loadConversation,
+    deleteConversation
+  } = useChat();
   const location = useLocation();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [contactHover, setContactHover] = useState(false);
+
+  const getConversationTitle = (chat) => {
+    const userMsg = (chat.messages || []).find((m) => m.role === "user");
+    if (userMsg?.content) {
+      return userMsg.content.length > 24
+        ? userMsg.content.substring(0, 24) + "..."
+        : userMsg.content;
+    }
+    return "New Conversation";
+  };
+
+  const getConversationMode = (chat) => {
+    const lastAssistant = [...(chat.messages || [])]
+      .reverse()
+      .find((m) => m.role === "assistant");
+    return lastAssistant?.metadata?.processing_type || "mental_health";
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchConversations();
+    }
+  }, [user]);
 
   const handleNewChat = () => {
     setMessages([]);
     setConversationId(null);
     setIsCrisis(false);
+    navigate("/chat");
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
@@ -116,9 +149,10 @@ export default function MainLayout() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredHistory = MOCK_HISTORY.filter((chat) =>
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredHistory = conversations.filter((chat) => {
+    const title = getConversationTitle(chat);
+    return title.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const displayName = user?.name || user?.email || "Guest";
   const avatarInitial = displayName.charAt(0).toUpperCase();
@@ -215,7 +249,12 @@ export default function MainLayout() {
                       <button
                         key={mode.id}
                         id={`nav-mode-${mode.id}`}
-                        onClick={() => setActiveMode(mode.id)}
+                        onClick={() => {
+                          if (activeMode !== mode.id) {
+                            setActiveMode(mode.id);
+                            handleNewChat();
+                          }
+                        }}
                         className="relative flex items-center gap-2 px-4 py-1.5 rounded-xl text-sm font-medium transition-colors duration-200 outline-none"
                         style={{ color: active ? mode.color : "var(--text-muted)" }}
                       >
@@ -652,35 +691,67 @@ export default function MainLayout() {
                       No conversations found
                     </p>
                   ) : (
-                    filteredHistory.map((chat) => (
-                      <button
-                        key={chat.id}
-                        id={`btn-history-chat-${chat.id}`}
-                        onClick={() => {
-                          setActiveMode(chat.mode);
-                          setMessages([]);
-                          setIsCrisis(false);
-                          if (window.innerWidth < 768) {
-                            setSidebarOpen(false);
-                          }
-                        }}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left group"
-                        style={{ background: "transparent" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-elevated)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                      >
-                        <MessageSquare className="w-4 h-4 flex-shrink-0" style={{ color: "var(--text-muted)" }} />
-                        <div className="flex-1 overflow-hidden">
-                          <p className="truncate" style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-                            {chat.title}
-                          </p>
-                        </div>
-                        <Trash2
-                          className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all"
-                          style={{ color: "var(--text-muted)" }}
-                        />
-                      </button>
-                    ))
+                    filteredHistory.map((chat) => {
+                      const title = getConversationTitle(chat);
+                      const isSelected = conversationId === chat.id;
+                      return (
+                        <button
+                          key={chat.id}
+                          id={`btn-history-chat-${chat.id}`}
+                          onClick={() => {
+                            loadConversation(chat.id);
+                            if (window.innerWidth < 768) {
+                              setSidebarOpen(false);
+                            }
+                          }}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left group w-full"
+                          style={{
+                            background: isSelected ? "var(--bg-elevated)" : "transparent",
+                            border: isSelected ? "1px solid var(--border)" : "1px solid transparent",
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = "var(--bg-elevated)";
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = "transparent";
+                          }}
+                        >
+                          <MessageSquare
+                            className="w-4 h-4 flex-shrink-0"
+                            style={{ color: isSelected ? "var(--brand)" : "var(--text-muted)" }}
+                          />
+                          <div className="flex-1 overflow-hidden">
+                            <p
+                              className="truncate"
+                              style={{
+                                fontSize: "0.875rem",
+                                color: isSelected ? "var(--text-primary)" : "var(--text-secondary)",
+                                fontWeight: isSelected ? 500 : 400,
+                              }}
+                            >
+                              {title}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm("Are you sure you want to delete this conversation?")) {
+                                deleteConversation(chat.id);
+                              }
+                            }}
+                            className="p-1 rounded hover:bg-red-500/10 text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center"
+                            style={{ background: "transparent", border: "none" }}
+                            title="Delete conversation"
+                          >
+                            <Trash2
+                              className="w-3.5 h-3.5 flex-shrink-0"
+                              style={{ color: "var(--text-muted)" }}
+                            />
+                          </button>
+                        </button>
+                      );
+                    })
                   )}
                 </div>
 
