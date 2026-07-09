@@ -4,6 +4,9 @@ OpenBioLLM Model with HuggingFace Inference API Primary & Groq Failover
 Primary: HuggingFace Inference API (httpx async)
 Failover: Groq API on 429/503 -> llama-3-70b-versatile
 Retry with exponential backoff before failover
+
+Note: Uses OpenBioLLM-8B (aaditya/Llama3-OpenBioLLM-8B) which is available
+on HuggingFace Inference API. The 70B variant is not deployed by any provider.
 """
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -32,7 +35,7 @@ class OpenBioLLM:
     def __init__(self):
         self.hf_token = getattr(cfg, "HUGGINGFACE_API_KEY", "")
         self.groq_api_key = getattr(cfg, "GROQ_API_KEY", "")
-        self.base_model = getattr(cfg, "OPENBIO_MODEL_NAME", "aaditya/Llama3-OpenBioLLM-70B")
+        self.base_model = getattr(cfg, "OPENBIO_MODEL_NAME", "aaditya/Llama3-OpenBioLLM-8B")
         self.fallback_model = getattr(cfg, "OPENBIO_GROQ_MODEL", "llama-3-70b-versatile")
         self.hf_base_url = "https://api-inference.huggingface.co/models"
         

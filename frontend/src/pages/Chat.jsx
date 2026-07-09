@@ -1,19 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "../context/ChatContext";
 import { chatApi } from "../api/chatApi";
-import { reportApi } from "../api/reportApi";
 import { feedbackApi } from "../api/feedbackApi";
 import { useToast } from "../components/Toast";
 import ResponseActionBar from "../components/ResponseActionBar";
 import {
   Send,
-  Paperclip,
+  Square,
   AlertTriangle,
   Mic,
   Heart,
   Activity,
   Sparkles,
-  Upload,
   Copy,
   Pencil,
 } from "lucide-react";
@@ -83,6 +81,7 @@ export default function Chat() {
   const [activeSpeechMessageId, setActiveSpeechMessageId] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editText, setEditText] = useState("");
@@ -94,9 +93,6 @@ export default function Chat() {
   }, [conversationId]);
 
   const currentMode = MODES.find((m) => m.id === activeMode) || MODES[0];
-  const [attachedFile, setAttachedFile] = useState(null);
-  const [uploadingReport, setUploadingReport] = useState(false);
-  const fileInputRef = useRef(null);
   const MODE_DESCRIPTIONS = {
     mental_health: "Mental health mode uses a supportive emotional chain powered by a specialized conversational model.",
     physical_health: "Physical health mode uses symptom analysis routing and blended medical/ayurvedic model responses.",
@@ -126,6 +122,14 @@ export default function Chat() {
     }
   }, [messages]);
 
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setThinking(false);
+  };
+
   const handleSend = async (e, customText = null) => {
     if (e) e.preventDefault();
     const textToSend = customText !== null ? customText : input;
@@ -137,19 +141,25 @@ export default function Chat() {
     setThinking(true);
     setIsCrisis(false);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
-      const response = await chatApi.sendMessage({
-        query: textToSend,
-        conversation_id: conversationId || undefined,
-        processing_type: activeMode,
-        selected_model: activeMode === "physical_health" ? selectedModel : undefined,
-      });
+      const response = await chatApi.sendMessage(
+        {
+          query: textToSend,
+          conversation_id: conversationId || undefined,
+          processing_type: activeMode,
+          selected_model: activeMode === "physical_health" ? selectedModel : undefined,
+        },
+        { signal: controller.signal },
+      );
 
       const assistantPayload = response?.data?.message || {};
       const assistantText =
         assistantPayload.content ||
         response?.data?.response ||
-        "I’m here to help.";
+        "I'm here to help.";
       const assistantMessage = {
         id: assistantPayload.id
           ? `assistant-${assistantPayload.id}`
@@ -165,6 +175,10 @@ export default function Chat() {
       setConversationId(response?.data?.conversation_id || conversationId);
       setIsCrisis(Boolean(response?.data?.is_crisis));
     } catch (error) {
+      if (error?.code === "ERR_CANCELED" || error?.name === "CanceledError") {
+        // User clicked stop — do nothing, thinking already cleared by handleStop
+        return;
+      }
       addToast(
         error.response?.data?.detail ||
           "Unable to reach the assistant right now.",
@@ -179,44 +193,11 @@ export default function Chat() {
         },
       ]);
     } finally {
+      abortControllerRef.current = null;
       setThinking(false);
     }
   };
 
-  const uploadReport = async () => {
-    if (!attachedFile) return;
-    setUploadingReport(true);
-    try {
-      const response = await reportApi.upload(attachedFile);
-      const payload = response?.data || {};
-      addToast(
-        payload.status === "processed"
-          ? "Report processed successfully."
-          : payload.message || "Report uploaded and is being analysed.",
-        payload.status === "processed" ? "success" : "info",
-      );
-
-      const assistantMessage = {
-        id: Date.now() + 2,
-        text:
-          payload.simplified_report ||
-          "Your report was uploaded successfully. The summary will appear once processing completes.",
-        sender: "ai",
-        mode: activeMode,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setAttachedFile(null);
-      setConversationId(null);
-    } catch (error) {
-      addToast(
-        error.response?.data?.detail ||
-          "Unable to upload the report right now.",
-        "error",
-      );
-    } finally {
-      setUploadingReport(false);
-    }
-  };
   const handleRegenerate = async (messageText) => {
     if (!messageText) return;
     await handleSend(null, messageText);
@@ -629,37 +610,6 @@ export default function Chat() {
             e.currentTarget.style.borderColor = "var(--border)";
           }}
         >
-          {/* Attach */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg"
-            className="hidden"
-            onChange={(e) => {
-              const selectedFile = e.target.files?.[0];
-              if (selectedFile) {
-                setAttachedFile(selectedFile);
-              }
-            }}
-          />
-          <button
-            type="button"
-            id="btn-attach"
-            aria-label="Attach file"
-            disabled={thinking || uploadingReport}
-            className="p-2 rounded-xl flex-shrink-0 transition-colors duration-150 disabled:opacity-40"
-            style={{ color: "var(--text-muted)", background: "transparent" }}
-            onMouseEnter={(e) => {
-              if (!thinking && !uploadingReport) e.currentTarget.style.color = currentMode.color;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--text-muted)";
-            }}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Paperclip className="w-4 h-4" />
-          </button>
-
           {/* Text input */}
           <input
             ref={inputRef}
@@ -676,25 +626,6 @@ export default function Chat() {
               opacity: thinking ? 0.6 : 1,
             }}
           />
-
-          {/* Attach status */}
-          {attachedFile && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
-              <Upload className="w-4 h-4" style={{ color: currentMode.color }} />
-              <span style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>
-                {attachedFile.name}
-              </span>
-              <button
-                type="button"
-                aria-label="Remove attachment"
-                onClick={() => setAttachedFile(null)}
-                className="text-sm text-red-500"
-                style={{ background: "transparent", border: "none" }}
-              >
-                ×
-              </button>
-            </div>
-          )}
 
           {/* Mic */}
           <button
@@ -714,36 +645,36 @@ export default function Chat() {
             <Mic className="w-4 h-4" />
           </button>
 
-          {/* Send */}
-          <button
-            type="submit"
-            id="btn-send"
-            disabled={!input.trim() || thinking}
-            className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              background:
-                input.trim() && !thinking
-                  ? currentMode.color
-                  : "var(--bg-elevated)",
-              color: input.trim() && !thinking ? "#fff" : "var(--text-muted)",
-            }}
-          >
-            <Send className="w-4 h-4" />
-          </button>
-          {attachedFile && (
+          {/* Send / Stop */}
+          {thinking ? (
             <button
               type="button"
-              onClick={uploadReport}
-              disabled={uploadingReport || thinking}
+              id="btn-stop"
+              aria-label="Stop generating"
+              onClick={handleStop}
+              className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-200 cursor-pointer"
+              style={{
+                background: "#ef4444",
+                color: "#fff",
+              }}
+              title="Stop generating"
+            >
+              <Square className="w-4 h-4" fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              id="btn-send"
+              disabled={!input.trim()}
               className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
-                background: uploadingReport
-                  ? "var(--bg-elevated)"
-                  : currentMode.bg,
-                color: uploadingReport ? "var(--text-muted)" : currentMode.color,
+                background: input.trim()
+                  ? currentMode.color
+                  : "var(--bg-elevated)",
+                color: input.trim() ? "#fff" : "var(--text-muted)",
               }}
             >
-              {uploadingReport ? "Uploading..." : "Upload File"}
+              <Send className="w-4 h-4" />
             </button>
           )}
         </form>

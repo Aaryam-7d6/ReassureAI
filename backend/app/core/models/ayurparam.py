@@ -49,16 +49,52 @@ class AyurParamModel:
         self.rag_threshold = 0.7  # Minimum confidence to trust RAG context
         self.min_model_confidence = 0.3  # Minimum confidence for model response
         
-        # For tracking RAG status (will be implemented in TASK-011)
-        self.rag_found = False
-        self.rag_context = ""
+        # RAG retriever (lazy-initialized)
+        self._retriever = None
+
+    @property
+    def retriever(self):
+        """Lazy-initialize the HybridRetriever for Ayurveda knowledge base."""
+        if self._retriever is None:
+            from backend.app.core.rag.retriever import HybridRetriever
+            self._retriever = HybridRetriever(
+                collection=cfg.QDRANT_COLLECTION_AYURVEDA or "ayurveda_kb",
+            )
+        return self._retriever
+
+    async def _retrieve_rag_context(self, query: str) -> tuple[bool, str]:
+        """Retrieve relevant Ayurvedic context from Qdrant via HybridRetriever.
+
+        Returns:
+            tuple[bool, str]: (rag_found, context_text)
+        """
+        try:
+            results = await self.retriever.retrieve(query, top_k=3)
+            if not results:
+                logger.info("RAG retrieval returned no results for AyurParam query")
+                return False, ""
+
+            context_parts = []
+            for result in results:
+                text = getattr(result, "text", "")
+                if text:
+                    context_parts.append(text)
+
+            if context_parts:
+                context = "\n\n".join(context_parts)
+                logger.info("RAG retrieved %d context chunks for AyurParam query", len(context_parts))
+                return True, context
+            return False, ""
+        except Exception as exc:
+            logger.warning("AyurParam RAG retrieval failed: %s", exc)
+            return False, ""
 
     async def invoke(self, query: str) -> AyurParamResult:
         """Process a query using the AyurParam chain with graduated fallback.
 
         Implementation Steps:
-        1. Check if RAG context is available (placeholder for TASK-011 integration)
-        2. If RAG found and confidence high → return context with high confidence
+        1. Retrieve context from Qdrant knowledge base via HybridRetriever
+        2. If RAG found and confidence high → return context-enriched response
         3. If RAG empty or confidence low → use Ollama Mistral for query breakdown
            and generate response with confidence scoring
         4. If Ollama unavailable or both uncertain → return None (fallback to Chain 1)
@@ -66,34 +102,24 @@ class AyurParamModel:
         Returns:
             AyurParamResult: Response and confidence score (0.0-1.0)
         """
-        # Step 1: Check RAG status (placeholder - will be implemented in TASK-011)
-        # For now, simulate RAG availability based on query content
-        self.rag_found, self.rag_context = self._simulate_rag_status(query)
-        
-        # Step 2: Apply graduated fallback logic
-        if self.rag_found and self._is_confident():
-            # RAG found with sufficient confidence
-            return AyurParamResult(
-                response=f"Context-based response: {self.rag_context[:200]}...",  # Truncate for demo
-                confidence=0.95  # High confidence for RAG-based responses
-            )
-        elif self.rag_found and not self._is_confident():
-            # RAG found but low confidence
-            logger.warning(f"RAG found but confidence low: {self.rag_context}")
-            # Fall through to model-based response with lower confidence
-            pass
+        # Step 1: Retrieve context from Qdrant knowledge base
+        rag_found, rag_context = await self._retrieve_rag_context(query)
             
-        # Step 3: Use Ollama Mistral for query breakdown and response
+        # Step 2: Use Ollama Mistral for query breakdown and response
         if self.ollama_available:
             try:
                 # Use Mistral to break down and analyze the query
                 breakdown = await self._breakdown_query(query)
                 
-                # Generate response based on breakdown
-                response = await self._generate_ayurvedic_response(breakdown)
+                # Generate response based on breakdown + RAG context
+                response = await self._generate_ayurvedic_response(breakdown, rag_context)
                 
                 # Calculate confidence based on response quality
                 confidence = self._calculate_confidence(breakdown, response)
+                
+                # Boost confidence when RAG context was available
+                if rag_found and confidence > 0.0:
+                    confidence = min(1.0, confidence + 0.1)
                 
                 # Log low confidence if needed
                 if confidence < self.min_model_confidence:
@@ -107,39 +133,20 @@ class AyurParamModel:
                 logger.error(f"Ollama processing failed: {str(e)}")
                 # Continue to fallback logic
         
+        # Step 3: If RAG found but Ollama unavailable, return context directly
+        if rag_found and rag_context:
+            logger.info("Ollama unavailable, returning RAG context directly")
+            return AyurParamResult(
+                response=f"Based on Ayurvedic knowledge:\n\n{rag_context[:1000]}",
+                confidence=0.7
+            )
+
         # Step 4: Both RAG and Ollama unavailable - return None for Chain 1 fallback
         logger.info("Both RAG and Ollama unavailable - returning None for Chain 1 fallback")
         return AyurParamResult(
             response=None,
             confidence=0.0
         )
-
-    def _simulate_rag_status(self, query: str) -> tuple[bool, str]:
-        """Simulate RAG status for demonstration purposes.
-        
-        In actual implementation (TASK-011), this would:
-        - Check if QDRANT_URL is set
-        - Connect to Qdrant or FAISS
-        - Retrieve relevant context based on query
-        - Return True/False and context string
-        
-        For now, simulate based on query content:
-        - "ayurvedic" or "dosha" queries → return simulated context
-        - Other queries → return no context
-        """
-        # Simulate RAG based on query keywords
-        query_lower = query.lower()
-        if any(keyword in query_lower for keyword in ["dosha", "ayurvedic", "tridosha", "agni"]):
-            self.rag_found = True
-            # Simulated context - in real implementation this would come from RAG system
-            self.rag_context = ("Simulated Ayurvedic context for dosha analysis. "
-                             "Based on query about dosha balance and natural remedies. "
-                             "Would recommend dietary changes and herbal supplements.")
-            return True, self.rag_context
-        else:
-            self.rag_found = False
-            self.rag_context = ""
-            return False, ""
 
     async def _call_ollama_model(self, prompt: str, temperature: float, max_tokens: int) -> str:
         if not self.ollama_available:
@@ -186,15 +193,21 @@ Generate a concise structured summary.
             logger.error(f"Ollama query breakdown failed: {str(e)}")
             return "Error in query breakdown"
 
-    async def _generate_ayurvedic_response(self, breakdown: str) -> str:
-        """Generate Ayurvedic response based on query breakdown."""
+    async def _generate_ayurvedic_response(self, breakdown: str, rag_context: str = "") -> str:
+        """Generate Ayurvedic response based on query breakdown and RAG context."""
         if not self.ollama_available:
             return "Error: Ollama not available"
 
         try:
             prompt = f"""Based on the query breakdown: {breakdown}
 
-Generate a comprehensive Ayurvedic recommendation in 2-3 paragraphs.
+"""
+            if rag_context:
+                prompt += f"""Use the following retrieved Ayurvedic knowledge to inform your response:
+{rag_context}
+
+"""
+            prompt += """Generate a comprehensive Ayurvedic recommendation in 2-3 paragraphs.
 Include:
 - Assessment of dosha imbalance
 - Dietary recommendations
@@ -228,9 +241,3 @@ Use traditional Ayurvedic knowledge but keep it practical and evidence-informed.
         """Check if confidence is above threshold."""
         # This is a placeholder - in real implementation would consider multiple factors
         return True  # Always return True for now to demonstrate fallback logic
-
-# Note: Real implementation will include:
-# - Ollama local model call (Mistral) for AyurParam specific reasoning
-# - Confidence scoring (0.0‑1.0) based on model output and RAG quality
-# - Graduated fallback as described in DEC‑004
-# - Integration with Qdrant FAISS system in TASK-011

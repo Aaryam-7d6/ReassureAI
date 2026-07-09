@@ -70,7 +70,10 @@ async def create_chat_message(
             {"_id": conversation_id, "user_id": user_id},
             {
                 "$push": {"messages": {"$each": [user_message, assistant_message]}},
-                "$set": {"updated_at": now},
+                "$set": {
+                    "updated_at": now,
+                    "processing_type": result_payload["processing_type"],
+                },
             },
         )
         if update.matched_count == 0:
@@ -80,6 +83,7 @@ async def create_chat_message(
             {
                 "user_id": user_id,
                 "messages": [user_message, assistant_message],
+                "processing_type": result_payload["processing_type"],
                 "created_at": now,
                 "updated_at": now,
             }
@@ -183,6 +187,7 @@ def _serialize_conversation(conversation: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": str(conversation["_id"]),
         "user_id": conversation["user_id"],
+        "processing_type": conversation.get("processing_type", "mental_health"),
         "messages": [_serialize_message(message) for message in conversation.get("messages", [])],
         "created_at": _serialize_datetime(conversation.get("created_at")),
         "updated_at": _serialize_datetime(conversation.get("updated_at")),

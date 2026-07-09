@@ -201,7 +201,7 @@ Disigen Node (dispatcher)
         Query Intelligence Layer (QIL)
           ↓
         ┌─────────────────────────────────┐
-        │ Chain 1: OpenBioLLM-70B         │
+        │ Chain 1: OpenBioLLM-8B          │
         │ Chain 2: AyurParam (Ayurvedic)  │  ← All 3 run concurrently
         │ Chain 3: Mistral-7B (General)   │
         └─────────────────────────────────┘
@@ -230,7 +230,7 @@ Disigen Node (dispatcher)
 | **Mistral (Chain 3) — Mental Health** | Mistral-7B Ollama        | Empathetic mental health conversation                                |
 | **Rule Based + n8n**                  | n8n workflow             | Guardian alert email on crisis                                       |
 | **QIL**                               | Mistral-7B (Chain 3)     | Intent, urgency, domain scores, query reformulation                  |
-| **Chain 1 — OpenBioLLM**              | OpenBioLLM-70B HF        | Biomedical clinical reasoning                                        |
+| **Chain 1 — OpenBioLLM**              | OpenBioLLM-8B HF         | Biomedical clinical reasoning                                        |
 | **Chain 2 — AyurParam**               | Aayupahar 3B Ollama      | Ayurvedic reasoning (requires RAG context)                           |
 | **Chain 3 — Mistral**                 | Mistral-7B Ollama        | QIL, fusion synthesis, general support                               |
 | **Other Media**                       | OCR (pytesseract)        | PDF, image, handwritten docs → text                                  |
@@ -266,20 +266,20 @@ Disigen Node (dispatcher)
 
 | Chain    | Model                    | Role                                      |
 | -------- | ------------------------ | ----------------------------------------- |
-| Chain 1  | OpenBioLLM-70B           | Biomedical clinical reasoning             |
+| Chain 1  | OpenBioLLM-8B            | Biomedical clinical reasoning             |
 | Chain 2  | AyurParam (Aayupahar 3B) | Ayurvedic traditional reasoning           |
 | Chain 3  | Mistral-7B               | QIL, semantic gate, fusion, mental health |
-| Embedder | all-MiniLM-L6-v2         | RAG document embedding                    |
+| Embedder | BAAI/bge-m3              | RAG document embedding (1024-dim)         |
 -->
 
 ### AI Models
 
 | Chain    | Model                                                              | Role                                      |
 | -------- | ------------------------------------------------------------------ | ----------------------------------------- |
-| Chain 1  | OpenBioLLM-70B                                                     | Biomedical clinical reasoning             |
+| Chain 1  | [OpenBioLLM-8B](https://huggingface.co/aaditya/Llama3-OpenBioLLM-8B) | Biomedical clinical reasoning             |
 | Chain 2  | [AyurParam GGUF 3B](https://huggingface.co/A-Aryam/AyurParam-GGUF) | Ayurvedic reasoning                       |
 | Chain 3  | Mistral-7B                                                         | QIL, semantic gate, fusion, mental health |
-| Embedder | all-MiniLM-L6-v2                                                   | RAG document embedding                    |
+| Embedder | BAAI/bge-m3                                                        | RAG document embedding (1024-dim)         |
 
 ### Infrastructure
 
@@ -298,7 +298,7 @@ Disigen Node (dispatcher)
 | -------------- | ---------------- |
 | Frontend       | React.js         |
 | Backend        | Python / FastAPI |
-| Biomedical LLM | OpenBioLLM-70B   |
+| Biomedical LLM | OpenBioLLM-8B    |
 | Ayurvedic LLM  | AyurParam        |
 | General LLM    | Mistral          |
 | Vector Store   | FAISS            |
