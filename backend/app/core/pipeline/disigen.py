@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from backend.app.core.pipeline.router import RouteResult, Strategy, route_physical_query
 from backend.app.core.safety.dnode import DNodeResult, keyword_fallback
+from backend.config import cfg
 
 logger = logging.getLogger(__name__)
 
@@ -201,7 +202,10 @@ class DisigenNode:
         # Retrieve RAG results for mental health
         rag_results = []
         try:
-            rag_results = await self.retriever.retrieve(query, top_k=3)
+            rag_results = await self.retriever.retrieve(
+                query, top_k=3,
+                collection=cfg.QDRANT_COLLECTION_MENTAL_HEALTH or "mental_health_kb",
+            )
         except Exception as exc:
             logger.warning("Mental health RAG retrieval failed: %s", exc)
 
@@ -248,7 +252,10 @@ class DisigenNode:
         # 1. Retrieve RAG context first
         rag_results = []
         try:
-            rag_results = await self.retriever.retrieve(query, top_k=3)
+            rag_results = await self.retriever.retrieve(
+                query, top_k=3,
+                collection=cfg.QDRANT_COLLECTION_AYURVEDA or "ayurveda_kb",
+            )
         except Exception as exc:
             logger.warning("RAG retrieval failed: %s", exc)
 
@@ -286,8 +293,10 @@ class DisigenNode:
             openbiollm_prompt = (
                 "You are a modern clinical medical AI assistant. Answer the query based on modern medical science, "
                 "providing clear, clinical explanations and evidence-based guidance.\n\n"
-                f"Query: {refined_query}"
             )
+            if rag_context:
+                openbiollm_prompt += f"Use the following retrieved clinical context to inform your response:\n{rag_context}\n\n"
+            openbiollm_prompt += f"Query: {refined_query}"
             tasks["openbiollm"] = self._run_chain("openbiollm", self._run_openbiollm, openbiollm_prompt)
 
         if run_ayurvedic:

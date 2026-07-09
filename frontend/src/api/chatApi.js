@@ -1,8 +1,8 @@
 import api from './axios'
 
 export const chatApi = {
-  sendMessage(payload) {
-    return api.post('/chat', payload)
+  sendMessage(payload, { signal } = {}) {
+    return api.post('/chat', payload, { signal })
   },
   history(params = {}) {
     return api.get('/chat/history', { params })

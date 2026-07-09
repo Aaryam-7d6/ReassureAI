@@ -119,6 +119,7 @@ export default function MainLayout() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountExpand, setAccountExpand] = useState(false);
   const [appearanceExpand, setAppearanceExpand] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState("all");
   const accountRef = useRef(null);
 
   const isOnChatPage = location.pathname === "/chat";
@@ -151,7 +152,11 @@ export default function MainLayout() {
 
   const filteredHistory = conversations.filter((chat) => {
     const title = getConversationTitle(chat);
-    return title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (historyFilter === "all") return true;
+    const mode = chat.processing_type || getConversationMode(chat);
+    return mode === historyFilter;
   });
 
   const displayName = user?.name || user?.email || "Guest";
@@ -677,6 +682,34 @@ export default function MainLayout() {
                   </div>
                 </div>
 
+                {/* Type Filter Buttons */}
+                <div className="px-4 mb-2 flex gap-1 flex-shrink-0 flex-wrap">
+                  {[
+                    { id: "all", label: "All" },
+                    { id: "mental_health", label: "Mental", color: "var(--orange)" },
+                    { id: "physical_health", label: "Physical", color: "var(--purple)" },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setHistoryFilter(f.id)}
+                      className="px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+                      style={{
+                        background: historyFilter === f.id
+                          ? (f.color ? f.color + "20" : "var(--brand-subtle)")
+                          : "transparent",
+                        color: historyFilter === f.id
+                          ? (f.color || "var(--brand)")
+                          : "var(--text-muted)",
+                        border: historyFilter === f.id
+                          ? `1px solid ${f.color || "var(--brand)"}`
+                          : "1px solid transparent",
+                      }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Recent Label */}
                 <div className="px-5 mb-2 flex-shrink-0">
                   <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -716,10 +749,23 @@ export default function MainLayout() {
                             if (!isSelected) e.currentTarget.style.background = "transparent";
                           }}
                         >
-                          <MessageSquare
-                            className="w-4 h-4 flex-shrink-0"
-                            style={{ color: isSelected ? "var(--brand)" : "var(--text-muted)" }}
-                          />
+                          {(() => {
+                            const mode = chat.processing_type || getConversationMode(chat);
+                            if (mode === "physical_health") {
+                              return (
+                                <Activity
+                                  className="w-4 h-4 flex-shrink-0"
+                                  style={{ color: isSelected ? "var(--purple)" : "var(--purple)" }}
+                                />
+                              );
+                            }
+                            return (
+                              <Heart
+                                className="w-4 h-4 flex-shrink-0"
+                                style={{ color: isSelected ? "var(--orange)" : "var(--orange)" }}
+                              />
+                            );
+                          })()}
                           <div className="flex-1 overflow-hidden">
                             <p
                               className="truncate"
