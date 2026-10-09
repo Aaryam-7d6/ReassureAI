@@ -1,11 +1,11 @@
 import asyncio
 import json
-import httpx
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict
 
 from .dnode import DNodeResult, evaluate_message
+from backend.app.services.n8n import send_crisis_email_event
 from backend.app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,14 +22,7 @@ async def send_to_n8n(payload: Dict[str, Any]) -> None:
     """Fire‑and‑forget POST to n8n webhook.
     Errors are logged; the function never raises.
     """
-    webhook_url = "http://localhost:5678/webhook/crisis"  # placeholder; configure as needed
-    try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.post(webhook_url, json=payload)
-            resp.raise_for_status()
-            logger.info("Sent crisis payload to n8n: %s", payload)
-    except Exception as exc:  # pragma: no cover – best‑effort logging only
-        logger.error("Failed to send crisis payload to n8n: %s", exc)
+    await send_crisis_email_event(payload)
 
 async def trigger_rule(user_id: str, guardian_email: str, crisis_level: int, timestamp: str, query_snippet: str) -> None:
     """Trigger n8n workflow for a crisis detection.
