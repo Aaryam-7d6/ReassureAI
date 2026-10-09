@@ -225,10 +225,7 @@ class DisigenNode:
             chain_runs = [ChainRun(name="mistral", status=ChainStatus.OK, response=response, confidence=0.85)]
         except Exception as exc:
             logger.warning("Mental health Mistral chain failed, falling back: %s", exc)
-            response = (
-                "I’m sorry, I’m having trouble accessing the assistant right now. "
-                "Please try again shortly."
-            )
+            response = self._mental_health_fallback(query)
             chain_runs = [ChainRun(name="mistral", status=ChainStatus.ERROR, error=str(exc), confidence=0.0)]
 
         sources = ["semantic_gate" if analysis else "keyword_fallback", "mistral"]
@@ -404,7 +401,7 @@ class DisigenNode:
             result = await func(prompt)
             response = self._extract_response(result)
             confidence = self._extract_confidence(result, default=0.75)
-            if not response:
+            if not response or self._is_invalid_model_response(response):
                 return ChainRun(name=name, status=ChainStatus.SKIPPED, confidence=0.0)
             return ChainRun(name=name, status=ChainStatus.OK, response=response, confidence=confidence)
         except Exception as exc:
@@ -581,6 +578,23 @@ class DisigenNode:
         if isinstance(result, dict):
             return str(result.get("response") or result.get("text") or "")
         return str(result)
+
+    def _is_invalid_model_response(self, response: str) -> bool:
+        normalized = response.strip().lower()
+        invalid_responses = {
+            "could not generate response",
+            "error: ollama not available",
+            "error in query breakdown",
+        }
+        return normalized in invalid_responses
+
+    def _mental_health_fallback(self, query: str) -> str:
+        return (
+            "I hear you. I cannot reach the local assistant model right now, but you do not have to wait to take "
+            "one small stabilizing step: pause, take a few slow breaths, and name what feels hardest in this moment. "
+            "If this is urgent or you might harm yourself, contact local emergency services or a trusted person nearby. "
+            "When the assistant is back, I can help you unpack this more gently."
+        )
 
     def _extract_confidence(self, result: Any, default: float) -> float:
         value = None

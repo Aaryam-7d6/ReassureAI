@@ -5,10 +5,10 @@ import logging
 
 from backend.config import cfg
 
-# Import Ollama client
+# Import Ollama async client
 try:
-    from ollama import Client
-    OLLAMA_CLIENT = Client(host=cfg.OLLAMA_BASE_URL or cfg.OLLAMA_URL)
+    from ollama import AsyncClient
+    OLLAMA_CLIENT = AsyncClient(host=cfg.OLLAMA_BASE_URL or cfg.OLLAMA_URL)
 except ImportError:
     OLLAMA_CLIENT = None
 
@@ -163,6 +163,8 @@ class AyurParamModel:
                 )
                 if hasattr(response, "response"):
                     return str(response.response).strip()
+                if isinstance(response, dict):
+                    return str(response.get("response") or "").strip()
                 return str(response).strip()
             except Exception as e:
                 logger.warning("AyurParam model %s failed: %s", model_name, e)
@@ -220,7 +222,7 @@ Use traditional Ayurvedic knowledge but keep it practical and evidence-informed.
             return await self._call_ollama_model(prompt, temperature=0.7, max_tokens=1024)
         except Exception as e:
             logger.error(f"Ollama Ayurvedic response generation failed: {str(e)}")
-            return "Could not generate response"
+            raise RuntimeError("Could not generate AyurParam response") from e
 
     def _calculate_confidence(self, breakdown: str, response: str) -> float:
         """Calculate confidence score (0.0-1.0) based on response quality."""
