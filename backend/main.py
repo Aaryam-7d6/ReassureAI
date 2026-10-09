@@ -12,13 +12,18 @@ from backend.app.api.v1.endpoints.chat import router as chat_router
 from backend.app.api.v1.endpoints.feedback import router as feedback_router
 from backend.app.api.v1.endpoints.reports import router as reports_router
 from backend.app.core import exceptions as exc
-from backend.app.db.init import ensure_required_collections
+from backend.app.db.init import ensure_required_collections, ensure_test_user
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.mongo_client = None
     app.state.ollama = None
+    try:
+        await ensure_required_collections(cfg.MONGO_URI)
+        await ensure_test_user(cfg.MONGO_URI)
+    except Exception as startup_exc:
+        cfg.LOGGER.warning(f"Startup MongoDB initialization failed: {startup_exc}")
 
     yield
 
@@ -27,19 +32,34 @@ async def lifespan(app: FastAPI):
         app.state.mongo_client.close()
         cfg.LOGGER.info("App shutdown, connections closed")
 
+
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(chat_router, prefix="/api/v1")
 app.include_router(feedback_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 # CORS policy
+configured_origins = [
+    origin.strip()
+    for origin in (cfg.CORS_ORIGINS or "").split(",")
+    if origin.strip() and origin.strip() != "*"
+]
+if not configured_origins:
+    configured_origins = [
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=configured_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/health")
 async def health():
@@ -52,13 +72,17 @@ async def health():
         mongo_status = "connected"
         app.state.mongo_client = client
         await ensure_required_collections(cfg.MONGO_URI)
+        await ensure_test_user(cfg.MONGO_URI)
     except Exception as exc:
         cfg.LOGGER.warning(f"Health check MongoDB failed: {exc}")
         if getattr(app.state, "mongo_client", None) is not None:
             app.state.mongo_client.close()
             app.state.mongo_client = None
     finally:
-        if getattr(app.state, "mongo_client", None) is not None and mongo_status != "connected":
+        if (
+            getattr(app.state, "mongo_client", None) is not None
+            and mongo_status != "connected"
+        ):
             app.state.mongo_client.close()
 
     try:
@@ -70,34 +94,46 @@ async def health():
     except Exception as exc:
         cfg.LOGGER.warning(f"Health check Ollama failed: {exc}")
 
-    return JSONResponse({
-        "status": "ok" if mongo_status == "connected" and ollama_status == "connected" else "degraded",
-        "services": {
-            "ollama": {
-                "status": ollama_status,
-                "url": cfg.OLLAMA_URL,
+    return JSONResponse(
+        {
+            "status": "ok"
+            if mongo_status == "connected" and ollama_status == "connected"
+            else "degraded",
+            "services": {
+                "ollama": {
+                    "status": ollama_status,
+                    "url": cfg.OLLAMA_URL,
+                },
+                "mongodb": {
+                    "status": mongo_status,
+                    "uri": cfg.MONGO_URI,
+                },
             },
-            "mongodb": {
-                "status": mongo_status,
-                "uri": cfg.MONGO_URI,
+            "checks": {
+                "ollama": ollama_status,
+                "mongodb": mongo_status,
             },
-        },
-        "checks": {
-            "ollama": ollama_status,
-            "mongodb": mongo_status,
-        },
-    })
+        }
+    )
+
 
 @app.get("/api/v1/health")
 async def health_v1():
     return await health()
 
+
 # global exception handler
 @app.exception_handler(exc.AppException)
 async def app_exception_handler(request: Request, exc_obj: exc.AppException):
-    return JSONResponse({"detail":exc_obj.detail,"code":exc_obj.code}, status_code=exc_obj.status_code)
+    return JSONResponse(
+        {"detail": exc_obj.detail, "code": exc_obj.code},
+        status_code=exc_obj.status_code,
+    )
+
 
 @app.exception_handler(500)
 async def generic_exception_handler(request: Request, exc: Exception):
     cfg.LOGGER.exception("Unhandled exception")
-    return JSONResponse({"detail":"Internal Server Error","code":500}, status_code=500)
+    return JSONResponse(
+        {"detail": "Internal Server Error", "code": 500}, status_code=500
+    )

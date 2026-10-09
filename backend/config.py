@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     OPENBIO_GROQ_MODEL: str = "llama-3-70b-versatile"
     LOG_LEVEL: str = "INFO"
     CORS_ORIGINS: str = "*"
+    TEST_USER_EMAIL: str = "test@reassureai.dev"
+    TEST_USER_PASSWORD: str = "Test@1234!"
+    TEST_USER_FULL_NAME: str = "Test User"
+    TEST_USER_GUARDIAN_EMAIL: str = "guardian@reassureai.dev"
     EMBEDDING_MODEL_NAME: str = "BAAI/bge-m3"
     JWT_SECRET: str = "dev-only-change-me"
     JWT_ALGORITHM: str = "HS256"
@@ -43,6 +47,7 @@ LOGGER = get_logger("backend")
 
 MONGO_URI = cfg.MONGODB_URI or cfg.MONGO_URI
 MONGODB_URI = cfg.MONGODB_URI or cfg.MONGO_URI
+CORS_ORIGINS = cfg.CORS_ORIGINS
 OLLAMA_BASE_URL = cfg.OLLAMA_BASE_URL
 OLLAMA_URL = cfg.OLLAMA_BASE_URL or cfg.OLLAMA_URL
 UPLOAD_DIR = cfg.UPLOAD_DIR

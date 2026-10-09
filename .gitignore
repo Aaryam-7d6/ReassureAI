@@ -67,3 +67,6 @@ Thumbs.db
 # rag insertion pipeline
 processed_sources.txt
 ingestion.log
+
+# Graphify
+graphify-out/
