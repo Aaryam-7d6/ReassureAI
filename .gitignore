@@ -70,3 +70,6 @@ ingestion.log
 
 # Graphify
 graphify-out/
+
+#n8n
+data/

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
 
 from backend.app.db.connection import get_db
+from backend.app.services.n8n import send_welcome_email_event
 from backend.app.utils.security import create_access_token, get_password_hash, verify_password
 from backend.app.utils.validators import validate_email_format, validate_password
 
@@ -61,6 +62,7 @@ async def register(payload: RegisterRequest, response: Response, db=Depends(get_
     }
     insert = await db.users.insert_one(user)
     user["_id"] = insert.inserted_id
+    await send_welcome_email_event(user)
 
     token = create_access_token({"sub": str(insert.inserted_id)})
     _set_auth_cookie(response, token)

@@ -38,11 +38,14 @@ async def create_chat_message(
     if not query and not payload.file_content:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Query cannot be empty")
 
+    user = await _get_user_for_alerts(db, user_id)
+    guardian_email = user.get("guardian_email") if user else payload.guardian_email
+
     node = DisigenNode()
     result = await node.process_query(
         query,
         user_id=user_id,
-        guardian_email=payload.guardian_email,
+        guardian_email=guardian_email,
         file_content=payload.file_content,
         processing_type=payload.processing_type,
         selected_model=payload.selected_model,
@@ -174,6 +177,17 @@ def _resolve_user_id(request: Request, x_user_id: str | None) -> str:
             pass
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
+
+async def _get_user_for_alerts(db, user_id: str) -> dict[str, Any] | None:
+    try:
+        lookup_id = ObjectId(user_id)
+    except (InvalidId, TypeError):
+        return None
+    users = getattr(db, "users", None)
+    if users is None:
+        return None
+    return await users.find_one({"_id": lookup_id})
 
 
 def _to_object_id(value: str) -> ObjectId:
