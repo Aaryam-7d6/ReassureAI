@@ -117,6 +117,33 @@ async def test_upload_returns_existing_duplicate(monkeypatch, tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_upload_returns_processing_error_in_result_box(monkeypatch, tmp_path):
+    db = FakeDb()
+    monkeypatch.setattr(reports.config, "UPLOAD_DIR", str(tmp_path))
+    monkeypatch.setattr(reports.FileExtractor, "extract", lambda path: "extracted report text")
+    monkeypatch.setattr(
+        reports,
+        "_simplify_report",
+        async_return_error(RuntimeError("model unavailable")),
+    )
+
+    upload = UploadFile(
+        file=BytesIO(b"report bytes"),
+        filename="blood report.pdf",
+        headers=Headers({"content-type": "application/pdf"}),
+    )
+    request = SimpleNamespace(cookies={}, headers={})
+
+    result = await reports.upload_report(request, Response(), upload, db=db, x_user_id="user-123")
+
+    assert result["status"] == "failed"
+    assert result["simplified_report"] is None
+    assert result["processing_error"] == (
+        "The report text was extracted, but the simplification models were unavailable."
+    )
+
+
+@pytest.mark.asyncio
 async def test_list_and_get_reports_for_user():
     document_id = ObjectId()
     db = FakeDb(
@@ -148,6 +175,13 @@ async def test_list_and_get_reports_for_user():
 def async_return(value):
     async def _inner(*_args, **_kwargs):
         return value
+
+    return _inner
+
+
+def async_return_error(error):
+    async def _inner(*_args, **_kwargs):
+        raise error
 
     return _inner
 

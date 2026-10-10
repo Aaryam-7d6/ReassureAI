@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import logging
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
@@ -17,6 +18,7 @@ from backend.app.db.connection import get_db
 
 
 router = APIRouter(prefix="/reports", tags=["reports"])
+logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg"}
 ALLOWED_CONTENT_TYPES = {
@@ -79,6 +81,7 @@ async def upload_report(
     extracted_text_path = None
     simplified_report = None
     simplified_report_path = None
+    processing_error = None
     try:
         extracted_text = FileExtractor.extract(stored_path)
         extracted_text_path = str(stored_path.with_suffix(stored_path.suffix + ".txt"))
@@ -87,8 +90,13 @@ async def upload_report(
         simplified_report_path = str(stored_path.with_suffix(stored_path.suffix + ".summary.md"))
         Path(simplified_report_path).write_text(simplified_report, encoding="utf-8")
         status_value = "processed"
-    except FileExtractionError:
+    except FileExtractionError as exc:
         status_value = "failed"
+        processing_error = str(exc)
+    except Exception as exc:
+        status_value = "failed"
+        processing_error = "The report text was extracted, but the simplification models were unavailable."
+        logger.exception("Report simplification failed for %s", original_filename)
 
     await db.documents.update_one(
         {"_id": document_id},
@@ -99,6 +107,7 @@ async def upload_report(
                 "extracted_text": extracted_text,
                 "simplified_report": simplified_report,
                 "simplified_report_path": simplified_report_path,
+                "processing_error": processing_error,
                 "processed_at": datetime.utcnow(),
             }
         },
@@ -114,6 +123,7 @@ async def upload_report(
         "extracted_text_path": extracted_text_path,
         "simplified_report": simplified_report,
         "simplified_report_path": simplified_report_path,
+        "processing_error": processing_error,
     }
 
 
@@ -214,6 +224,7 @@ def _serialize_report(report: dict) -> dict:
         "extracted_text_path": report.get("extracted_text_path"),
         "simplified_report": report.get("simplified_report"),
         "simplified_report_path": report.get("simplified_report_path"),
+        "processing_error": report.get("processing_error"),
     }
 
 

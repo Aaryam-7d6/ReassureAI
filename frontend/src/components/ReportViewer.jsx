@@ -15,6 +15,7 @@ export default function ReportViewer() {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
+      setResult(null);
     }
   };
 
@@ -29,10 +30,13 @@ export default function ReportViewer() {
         title: payload.original_filename || file.name,
         summary:
           payload.simplified_report ||
-          "Your report is being processed. Please check back shortly.",
+          payload.processing_error ||
+          payload.message ||
+          "No simplification was returned.",
         status: payload.status,
         duplicate: Boolean(payload.duplicate),
         message: payload.message,
+        processingError: payload.processing_error,
       });
 
       if (payload.duplicate) {
@@ -75,103 +79,109 @@ export default function ReportViewer() {
         Medical Report Simplifier
       </h2>
 
-      {!result ? (
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-          className="border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer"
-          style={{
-            borderColor: "var(--brand-border)",
-            background: "var(--brand-subtle)",
-          }}
-        >
-          <div className="flex flex-col items-center justify-center gap-3">
-            <UploadCloud
-              className="h-12 w-12"
-              style={{ color: "var(--brand)" }}
-            />
-            <h3
-              className="font-semibold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Drag & drop your report here
-            </h3>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Supports PDF, PNG, JPG up to 10MB
-            </p>
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
+        className="border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer"
+        style={{
+          borderColor: "var(--brand-border)",
+          background: "var(--brand-subtle)",
+        }}
+      >
+        <div className="flex flex-col items-center justify-center gap-3">
+          <UploadCloud
+            className="h-12 w-12"
+            style={{ color: "var(--brand)" }}
+          />
+          <h3
+            className="font-semibold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Drag & drop your report here
+          </h3>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Supports PDF, PNG, JPG up to 10MB
+          </p>
 
-            <input
-              type="file"
-              id="report-upload"
-              className="hidden"
-              onChange={(e) => setFile(e.target.files[0])}
-              accept=".pdf,.png,.jpg,.jpeg"
-            />
+          <input
+            type="file"
+            id="report-upload"
+            className="hidden"
+            onChange={(e) => {
+              setFile(e.target.files[0]);
+              setResult(null);
+            }}
+            accept=".pdf,.png,.jpg,.jpeg"
+          />
 
-            <label
-              htmlFor="report-upload"
-              className="btn-secondary mt-2 cursor-pointer"
-            >
-              Browse Files
-            </label>
-          </div>
-
-          {file && (
-            <div
-              className="mt-6 flex items-center justify-between p-3 rounded-lg shadow-sm"
-              style={{
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <div className="flex items-center gap-3 overflow-hidden">
-                <File
-                  className="h-5 w-5 flex-shrink-0"
-                  style={{ color: "var(--text-dim)" }}
-                />
-                <span
-                  className="text-sm font-medium truncate"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {file.name}
-                </span>
-              </div>
-              <button
-                onClick={() => setFile(null)}
-                className="hover:text-red-500"
-                style={{ color: "var(--text-dim)" }}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-
-          {file && (
-            <button
-              onClick={handleUpload}
-              disabled={isUploading}
-              className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
-            >
-              {isUploading ? (
-                <span className="animate-pulse">Analyzing Report...</span>
-              ) : (
-                "Simplify Report"
-              )}
-            </button>
-          )}
+          <label
+            htmlFor="report-upload"
+            className="btn-secondary mt-2 cursor-pointer"
+          >
+            Browse Files
+          </label>
         </div>
-      ) : (
+
+        {file && (
+          <div
+            className="mt-6 flex items-center justify-between p-3 rounded-lg shadow-sm"
+            style={{
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <File
+                className="h-5 w-5 flex-shrink-0"
+                style={{ color: "var(--text-dim)" }}
+              />
+              <span
+                className="text-sm font-medium truncate"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {file.name}
+              </span>
+            </div>
+            <button
+              onClick={() => setFile(null)}
+              className="hover:text-red-500"
+              style={{ color: "var(--text-dim)" }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {file && (
+          <button
+            onClick={handleUpload}
+            disabled={isUploading}
+            className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
+          >
+            {isUploading ? (
+              <span className="animate-pulse">Reading and simplifying...</span>
+            ) : (
+              "Simplify Report"
+            )}
+          </button>
+        )}
+      </div>
+
+      {result && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div
             className="flex items-center gap-3 mb-4"
-            style={{ color: "var(--green)" }}
+            style={{ color: result.processingError ? "var(--orange)" : "var(--green)" }}
           >
             <CheckCircle
               className="h-6 w-6"
-              style={{ color: "var(--green)" }}
+              style={{ color: result.processingError ? "var(--orange)" : "var(--green)" }}
             />
-            <h3 className="text-xl font-bold" style={{ color: "var(--green)" }}>
-              Analysis Complete
+            <h3
+              className="text-xl font-bold"
+              style={{ color: result.processingError ? "var(--orange)" : "var(--green)" }}
+            >
+              {result.processingError ? "Report Could Not Be Simplified" : "Simplified Report"}
             </h3>
           </div>
 
@@ -196,7 +206,7 @@ export default function ReportViewer() {
                 className="font-bold"
                 style={{ color: "var(--text-primary)" }}
               >
-                Plain Language Summary
+                {result.processingError ? "What happened" : "Plain Language Summary"}
               </h4>
               <div
                 className="leading-relaxed"
@@ -206,6 +216,11 @@ export default function ReportViewer() {
                   {result.summary}
                 </ReactMarkdown>
               </div>
+              {result.processingError && (
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  Check that the report contains readable text and that the model service is running, then try again.
+                </p>
+              )}
             </div>
             {result.duplicate && (
               <div
