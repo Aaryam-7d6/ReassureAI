@@ -55,6 +55,13 @@ class FakeMistralChain:
         return self.response
 
 
+class RecordingMistralChain(FakeMistralChain):
+    async def invoke(self, prompt):
+        self.calls.append(prompt)
+        await asyncio.sleep(0)
+        return f"{self.response}: {prompt}"
+
+
 class FakeAyurParamChain:
     async def invoke(self, prompt):
         await asyncio.sleep(0)
@@ -62,7 +69,7 @@ class FakeAyurParamChain:
 
 
 class FakeRetriever:
-    async def retrieve(self, query, top_k=3):
+    async def retrieve(self, query, top_k=3, collection=None):
         return [type("Hit", (), {"text": "retrieved context about vata and sleep"})()]
 
 
@@ -159,10 +166,34 @@ async def test_physical_health_runs_three_chains_and_rag():
     result = await node.process_query("I have sleep issues with vata dosha")
 
     assert result.processing_type == ProcessingType.PHYSICAL_HEALTH
-    assert set(result.sources) == {"mistral", "openbiollm", "ayurparam", "rag"}
-    assert "Modern Medical Perspective" in result.response
-    assert "Ayurvedic Perspective" in result.response
-    assert "Retrieved Context" in result.response
+    assert set(result.sources) == {"mistral_fusion", "openbiollm", "ayurparam", "rag"}
+    assert "Safety Disclaimer" in result.response
+    assert result.metadata["rag_results_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_physical_health_passes_rag_context_to_models_and_fusion():
+    mistral = RecordingMistralChain("mistral response")
+    openbiollm = FakeTextChain("modern response")
+
+    node = DisigenNode(
+        mistral_chain=mistral,
+        openbiollm_chain=openbiollm,
+        ayurparam_chain=FakeAyurParamChain(),
+        retriever=FakeRetriever(),
+        qil_analyzer=lambda _query: FakeQIL(),
+        router=lambda _query: RouteResult(
+            strategy=Strategy.DUAL_PARALLEL,
+            active_chains=["modern", "ayurvedic"],
+        ),
+    )
+
+    result = await node.process_query("I have sleep issues with vata dosha")
+
+    rag_context = "retrieved context about vata and sleep"
+    assert any(rag_context in prompt for prompt in openbiollm.calls)
+    assert any(rag_context in prompt for prompt in mistral.calls)
+    assert result.metadata["rag_results_count"] == 1
 
 
 @pytest.mark.asyncio

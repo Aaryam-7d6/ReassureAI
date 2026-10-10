@@ -154,7 +154,6 @@ export default function Chat() {
         },
         { signal: controller.signal },
       );
-
       const assistantPayload = response?.data?.message || {};
       const assistantText =
         assistantPayload.content ||
@@ -170,7 +169,6 @@ export default function Chat() {
         metadata: assistantPayload.metadata || response?.data?.metadata,
         mode: activeMode,
       };
-
       setMessages((prev) => [...prev, assistantMessage]);
       setConversationId(response?.data?.conversation_id || conversationId);
       setIsCrisis(Boolean(response?.data?.is_crisis));
@@ -493,6 +491,17 @@ export default function Chat() {
                                 {src === "openbiollm" ? "OpenBioLLM" : src === "ayurparam" ? "AyurParam" : src === "mistral" ? "Mistral" : src === "rag" ? "RAG" : src === "mistral_fusion" ? "Fused Response" : src}
                               </span>
                             ))}
+                            {msg.metadata.rag_used && (
+                              <span
+                                className="text-[0.65rem] px-2 py-0.5 rounded-full font-semibold border uppercase tracking-wider"
+                                style={{
+                                  borderColor: "var(--green-border)",
+                                  color: "var(--green)",
+                                }}
+                              >
+                                RAG {msg.metadata.rag_results_count || 0} chunks
+                              </span>
+                            )}
                           </div>
                         )}
                         <ResponseActionBar
