@@ -342,7 +342,36 @@ class DisigenNode:
         elif "ayurparam" in by_name:
             response = by_name["ayurparam"].response
         else:
-            response = "I could not generate a reliable answer right now. Please try again or consult a qualified clinician."
+            if selected_model == "openbiollm":
+                fallback_prompt = (
+                    "OpenBioLLM was unavailable. Answer the following medical question using "
+                    "careful, evidence-based guidance. Do not diagnose, and say when a clinician "
+                    "should be consulted.\n\n"
+                )
+                if rag_context:
+                    fallback_prompt += f"Retrieved clinical context:\n{rag_context}\n\n"
+                fallback_prompt += f"Question: {refined_query}"
+                try:
+                    fallback_response = await self._run_mistral(fallback_prompt)
+                    if fallback_response:
+                        response = fallback_response
+                        sources.append("mistral_fallback")
+                        chain_runs.append(
+                            ChainRun(
+                                name="mistral_fallback",
+                                status=ChainStatus.OK,
+                                response=fallback_response,
+                                confidence=0.65,
+                            )
+                        )
+                except Exception as exc:
+                    logger.warning("OpenBioLLM fallback failed: %s", exc)
+
+            if not response:
+                response = (
+                    "The selected model is unavailable right now. "
+                    "Please check the OpenBioLLM provider configuration and try again."
+                )
 
         # Add mandatory medical disclaimer
         disclaimer = (
@@ -382,7 +411,16 @@ class DisigenNode:
                 ),
                 "active_chains": route_result.active_chains if route_result else ["modern", "ayurvedic"],
                 "rag_results_count": len(rag_results),
+                "rag_used": bool(rag_results),
+                "rag_context_ids": [getattr(result, "id", None) for result in rag_results[:3]],
                 "selected_model": selected_model or "all",
+                "model_status": {
+                    run.name: {
+                        "status": run.status.value,
+                        "error": run.error,
+                    }
+                    for run in chain_runs
+                },
             },
         )
 

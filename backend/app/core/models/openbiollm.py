@@ -37,7 +37,11 @@ class OpenBioLLM:
         self.groq_api_key = getattr(cfg, "GROQ_API_KEY", "")
         self.base_model = getattr(cfg, "OPENBIO_MODEL_NAME", "aaditya/Llama3-OpenBioLLM-8B")
         self.fallback_model = getattr(cfg, "OPENBIO_GROQ_MODEL", "llama-3-70b-versatile")
-        self.hf_base_url = "https://api-inference.huggingface.co/models"
+        self.hf_base_url = getattr(
+            cfg,
+            "HUGGINGFACE_INFERENCE_BASE_URL",
+            "https://router.huggingface.co/hf-inference/models",
+        ).rstrip("/")
         
         # Initialize clients
         self.hf_client = httpx.AsyncClient(
@@ -45,6 +49,8 @@ class OpenBioLLM:
             headers={"Authorization": f"Bearer {self.hf_token}"} if self.hf_token else {},
             timeout=30.0
         )
+        if self.hf_token:
+            self.hf_client.headers["Authorization"] = f"Bearer {self.hf_token}"
         self.groq_client = Groq(api_key=self.groq_api_key) if self.groq_api_key else None
     
     @retry(
@@ -93,7 +99,7 @@ class OpenBioLLM:
             return result[0].get("generated_text", "")
         elif isinstance(result, dict):
             return result.get("generated_text", "")
-        return ""
+        raise OpenBioLLMError("Hugging Face returned an empty or unsupported response")
     
     async def _groq_fallback(self, prompt: str) -> str:
         """Execute prompt on Groq as fallback."""
@@ -135,9 +141,9 @@ class OpenBioLLM:
                     logger.info("HuggingFace inference successful")
                     return response
             except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
-                logger.warning(f"HuggingFace inference failed after retries: {str(e)}")
+                logger.warning("HuggingFace inference failed after retries: %s", e)
             except OpenBioLLMError as e:
-                logger.warning(f"HuggingFace inference error: {str(e)}")
+                logger.warning("HuggingFace inference error: %s", e)
         else:
             logger.warning("HuggingFace API key not configured, skipping HF primary.")
 

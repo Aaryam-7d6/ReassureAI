@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     OLLAMA_URL: str = "http://host.docker.internal:11434"
     OLLAMA_BASE_URL: str = ""
     HUGGINGFACE_API_KEY: str = ""
+    HUGGINGFACE_INFERENCE_BASE_URL: str = "https://router.huggingface.co/hf-inference/models"
     GROQ_API_KEY: str = ""
     OPENBIO_MODEL_NAME: str = "aaditya/Llama3-OpenBioLLM-8B"
     OPENBIO_GROQ_MODEL: str = "llama-3-70b-versatile"

@@ -15,3 +15,13 @@ async def test_openbiollm_singleton():
     instance2 = get_openbiollm()
     assert instance1 is instance2
     await instance1.close()
+
+
+@pytest.mark.asyncio
+async def test_openbiollm_uses_bearer_token_for_huggingface(monkeypatch):
+    monkeypatch.setattr(cfg, "HUGGINGFACE_API_KEY", "test-token")
+    model = OpenBioLLM()
+
+    assert model.hf_client.headers["authorization"] == "Bearer test-token"
+
+    await model.close()
