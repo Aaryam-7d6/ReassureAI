@@ -23,6 +23,7 @@ from backend.app.core.safety.dnode import DNodeResult, keyword_fallback
 from backend.config import cfg
 
 logger = logging.getLogger(__name__)
+_UNSET = object()
 
 
 class ProcessingType(str, Enum):
@@ -73,18 +74,23 @@ class DisigenNode:
 
     def __init__(
         self,
-        mistral_chain: Any = None,
-        openbiollm_chain: Any = None,
-        ayurparam_chain: Any = None,
+        mistral_chain: Any = _UNSET,
+        openbiollm_chain: Any = _UNSET,
+        ayurparam_chain: Any = _UNSET,
         retriever: Any = None,
         qil_analyzer: Optional[MaybeAsync] = None,
         router: Callable[[str], RouteResult] = route_physical_query,
         semantic_analyzer: Optional[MaybeAsync] = None,
         rule_trigger: Optional[MaybeAsync] = None,
     ):
-        self._mistral_chain = mistral_chain
-        self._openbiollm_chain = openbiollm_chain
-        self._ayurparam_chain = ayurparam_chain
+        self._report_use_multi_model = not (
+            openbiollm_chain is not _UNSET
+            and mistral_chain is _UNSET
+            and ayurparam_chain is _UNSET
+        )
+        self._mistral_chain = None if mistral_chain is _UNSET else mistral_chain
+        self._openbiollm_chain = None if openbiollm_chain is _UNSET else openbiollm_chain
+        self._ayurparam_chain = None if ayurparam_chain is _UNSET else ayurparam_chain
         self._retriever = retriever
         self.qil_analyzer = qil_analyzer or self._default_qil_analyzer
         self.router = router
@@ -383,16 +389,71 @@ class DisigenNode:
     async def _process_report(self, file_content: str) -> DisigenResult:
         prompt = (
             "Simplify this medical report into patient-friendly markdown. "
-            "Preserve abnormal values, explain what they may mean, and include a doctor-follow-up note.\n\n"
+            "Preserve every value and unit, explain abnormal values in plain language, "
+            "avoid diagnosing the patient, and include a doctor-follow-up note.\n\n"
             f"Report text:\n{file_content}"
         )
-        response = await self._run_openbiollm(prompt)
+
+        if not self._report_use_multi_model:
+            response = await self._run_openbiollm(prompt)
+            return DisigenResult(
+                processing_type=ProcessingType.REPORT_PROCESSING,
+                response=response,
+                confidence=0.9,
+                sources=["openbiollm"],
+                chain_runs=[
+                    ChainRun(
+                        name="openbiollm",
+                        status=ChainStatus.OK,
+                        response=response,
+                        confidence=0.9,
+                    )
+                ],
+                metadata={"original_length": len(file_content), "simplified_length": len(response)},
+            )
+
+        tasks = {
+            "openbiollm": self._run_chain("openbiollm", self._run_openbiollm, prompt),
+            "ayurparam": self._run_chain("ayurparam", self._run_ayurparam, prompt),
+        }
+        chain_runs = list(await asyncio.gather(*tasks.values()))
+        successful_runs = {
+            run.name: run for run in chain_runs if run.status == ChainStatus.OK and run.response
+        }
+
+        response = ""
+        sources = []
+        if len(successful_runs) > 1:
+            fusion_prompt = (
+                "You are the final medical report editor. Combine the two draft summaries below "
+                "into one accurate, patient-friendly markdown explanation. Preserve all report "
+                "values and units, do not invent findings, clearly distinguish medical evidence "
+                "from Ayurvedic context, and advise the patient to consult a qualified clinician "
+                "for interpretation. Return only the final summary.\n\n"
+                f"Original report text:\n{file_content}\n\n"
+                f"Modern medical draft:\n{successful_runs['openbiollm'].response}\n\n"
+                f"Ayurvedic draft:\n{successful_runs['ayurparam'].response}"
+            )
+            try:
+                response = await self._run_mistral(fusion_prompt)
+                if response:
+                    sources = ["openbiollm", "ayurparam", "mistral_fusion"]
+            except Exception as exc:
+                logger.warning("Mistral report fusion failed, using the available draft: %s", exc)
+
+        if not response and successful_runs:
+            response = next(iter(successful_runs.values())).response or ""
+            sources = [next(iter(successful_runs))]
+
+        if not response:
+            raise RuntimeError("No configured model could simplify the uploaded report")
+
         return DisigenResult(
             processing_type=ProcessingType.REPORT_PROCESSING,
             response=response,
-            confidence=0.9,
-            sources=["openbiollm"],
-            chain_runs=[ChainRun(name="openbiollm", status=ChainStatus.OK, response=response, confidence=0.9)],
+            confidence=self._average_confidence(list(successful_runs.values())) if successful_runs else 0.0,
+            sources=sources,
+            chain_runs=chain_runs,
             metadata={"original_length": len(file_content), "simplified_length": len(response)},
         )
 

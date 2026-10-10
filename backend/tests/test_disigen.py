@@ -177,3 +177,25 @@ async def test_report_processing_uses_openbiollm():
     assert result.processing_type == ProcessingType.REPORT_PROCESSING
     assert result.response == "simplified report"
     assert result.sources == ["openbiollm"]
+
+
+@pytest.mark.asyncio
+async def test_report_processing_combines_modern_ayurvedic_and_mistral_models():
+    mistral = FakeMistralChain("final simplified report")
+    openbiollm = FakeTextChain("modern report summary")
+
+    node = DisigenNode(
+        mistral_chain=mistral,
+        openbiollm_chain=openbiollm,
+        ayurparam_chain=FakeAyurParamChain(),
+    )
+
+    result = await node.process_query(
+        "simplifythis",
+        file_content="HbA1c: 8.1 high",
+    )
+
+    assert result.response == "final simplified report"
+    assert result.sources == ["openbiollm", "ayurparam", "mistral_fusion"]
+    assert "HbA1c: 8.1 high" in openbiollm.calls[0]
+    assert "HbA1c: 8.1 high" in mistral.calls[0]
