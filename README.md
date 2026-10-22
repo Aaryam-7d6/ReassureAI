@@ -1,558 +1,466 @@
-<!--# ReassureAI
-
-Hybrid AI healthcare assistant integrating OpenBioLLM (modern biomedicine) and AyurParam (Ayurveda). Mental wellness support (via Mistral) medical report simplification, and Ayurvedic guidance ; in one system.
--->
-
 <div align="center">
 
-<img width="650" height="400" alt="Reaasure-AI-transperant-dark-theme" src="https://github.com/user-attachments/assets/05ea5917-c02f-4df8-8bd3-7daf552e8110" />
+<img width="650" height="400" alt="ReassureAI" src="https://github.com/user-attachments/assets/05ea5917-c02f-4df8-8bd7-3daf552e8110" />
 
-
-# ⚕️ReassureAI
+# ⚕️ ReassureAI
 
 ### A Hybrid AI Healthcare Support System
 
-_Bridging Modern Biomedicine with Ancient Ayurvedic Wisdom_
+_Bridging modern biomedicine with Ayurvedic wisdom_
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-teal.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
-[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://reactjs.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-latest-009688.svg)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![Status](https://img.shields.io/badge/Status-Active_Development-orange.svg)]()
 
-> ReassureAI provides mental wellness support, medical report simplification,
-> and Ayurvedic health guidance through an intelligent tri-model AI pipeline.
-> Built for the Indian context. Not a medical diagnosis tool.
-> A hybrid AI healthcare assistant bridging modern
-> biomedicine with Ayurvedic wisdom.
+**Mental wellness support · Medical report simplification · Ayurvedic guidance**
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+## Overview
 
-- [What is ReassureAI](#-what-is-reassureai)
-- [Core Features](#-core-features)
-- [System Architecture](#️-system-architecture)
-- [Tech Stack](#️-tech-stack)
-- [Models on HuggingFace](#-models-on-huggingface)
-- [Getting Started](#-getting-started)
-- [Demo Login](#-demo-login)
-- [Project Structure](#-project-structure)
-- [Team](#-team)
-- [Disclaimer](#️-disclaimer)
-- [License](#-license)
+ReassureAI is an academic research project that explores how multiple AI models,
+retrieval-augmented generation, and safety checks can support access to
+health-related information.
 
----
+The application provides:
 
-## 🧠 What is ReassureAI?
+- Supportive mental wellness conversations with crisis detection.
+- Plain-language explanations of uploaded medical reports.
+- Combined biomedical and Ayurvedic perspectives for physical-health questions.
+- A React web interface with authentication, chat history, report history,
+  text-to-speech, and message feedback.
 
-India has **150 million+** people who need mental healthcare — over **80% go untreated**.
-Patients receive medical reports in clinical English they cannot understand.
-Ayurvedic knowledge, practiced by millions daily, has no intelligent digital interface.
+ReassureAI is a proof of concept, not a medical device or diagnostic service.
+See the [disclaimer](#disclaimer) before using it.
 
-ReassureAI addresses all three gaps in one unified system:
+## Features
 
-| Problem                                   | ReassureAI Solution                                       |
-| ----------------------------------------- | --------------------------------------------------------- |
-| Mental health support inaccessible        | 24/7 empathetic AI conversation with crisis detection     |
-| Medical reports unreadable by patients    | Plain-language simplification via biomedical LLM          |
-| Ayurveda disconnected from digital health | AyurParam model provides Dosha-based traditional guidance |
+### Mental wellness support
 
----
+- Empathetic conversational responses through the mental-health pipeline.
+- Semantic crisis screening before response generation.
+- Rule-based safety checks and an optional n8n guardian-alert workflow.
+- Conversation history stored per authenticated user.
 
-## ✨ Core Features
+### Medical report simplification
 
-## Core Features
+- Upload PDF and image-based reports.
+- Text extraction using PDF and OCR utilities.
+- Duplicate detection using file hashing.
+- Plain-language report summaries generated through the configured model service.
+- Saved report history and processing status.
 
-### 🧠 Mental Wellness Support
+### Physical-health and Ayurvedic guidance
 
-- Empathetic conversational support available 24/7
-- **Semantic crisis detection** — understands implied distress, not just keywords
-- Automatic guardian alert via email when crisis detected
-- CBT-aligned response patterns
+- Query routing through the Query Intelligence Layer (QIL).
+- Biomedical reasoning through OpenBioLLM.
+- Ayurvedic reasoning through AyurParam.
+- Mistral support for routing, semantic analysis, and response fusion.
+- Retrieval support through Qdrant and local retrieval components.
+- Post-generation fusion for contradictions, herb-drug conflicts, and disclaimers.
 
-### 📋 Medical Report Simplification
+### Web application
 
-- Upload blood reports, radiology summaries, discharge notes
-- Converted to plain language anyone can understand
-- Supports PDF, PNG, JPG, JPEG including handwritten documents
-- SHA-256 deduplication — same report never processed twice
+- Registration, login, logout, and authenticated routes.
+- Dashboard, chat, journal, and report views.
+- Markdown-rendered assistant responses.
+- Copy, regenerate, text-to-speech, like, and dislike actions.
+- Responsive interface with light and dark theme support.
 
-### 🌿 Ayurvedic Guidance
-
-- Traditional Dosha-based wellness recommendations
-- Integrates with modern medical perspective
-- Powered by AyurParam — purpose-built Ayurvedic LLM
-- RAG-enhanced to reduce hallucination
-
-### 🤖 Modern Chatbot UX
-
-- Markdown rendered responses
-- Text-to-speech on every response
-- Copy, regenerate, like/dislike feedback per message
-- Auto-scroll with timestamp on every message
-- Multiline input (Shift+Enter for new line)
-
-### 🛡️ Dual-stage safety screening
-
-- SEC1 — Pre-inference semantic crisis detection via LLM (not keywords)
-- SEC2 — Post-inference contradiction check, herb-drug conflict detection
-- Medical disclaimer injected in every response
-- Guardian alert system for high-risk situations
-
-### 🔍 RAG-enhanced accuracy
-
-- Hybrid retrieval — FAISS (semantic) + BM25 (keyword) combined
-- Reciprocal Rank Fusion for better result ranking
-- Reduces LLM hallucination by grounding responses in trusted sources
-- Separate knowledge bases for biomedical and Ayurvedic domains
-
----
-
-## 🏗️ System Architecture
+## Architecture
 
 ```mermaid
-%%{init: {
-  'theme': 'dark',
-  'themeVariables': {
-    'lineColor': '#BBBBBB',
-    'textColor': '#FFFFFF',
-    'edgeLabelBackground': '#222222'
-  }
-}}%%
-graph TD
-    UserInput["User Input"]
-    ModelSelect["Model Select"]
-    DisigenNode["Disigen Node"]
+flowchart TD
+    User[User] --> UI[React Web App]
+    UI --> Auth[Authentication API]
+    UI --> Router[Chat and Report APIs]
 
-    MentalHealth["Mental Health Branch"]
-    SemanticGate["Semantic Understanding Layer\n(LLM-based — Mistral Chain 3)"]
-    DNode["D-Node\n(SEC1 — Crisis Decision)"]
-    MistralChat["Mistral 7B — Chain 3\n(Mental Health Conversation)"]
-    RuleBased["Rule Based\n(CALL TOOLS N8N)"]
-    EmailSec["Email + Guardian Alert\n+ Security Procedures"]
+    Router --> Dispatch[Disigen Router]
+    Dispatch --> Mental[Mental Wellness Pipeline]
+    Dispatch --> Physical[Physical Health Pipeline]
 
-    PhysicalHealth["Physical Health Branch"]
-    QueryIntelligent["Query Intelligent Layer\n(QIL — Mistral Chain 3)"]
+    Mental --> Semantic[Semantic Gate]
+    Semantic --> Safety[D-Node SEC1]
+    Safety -->|Safe| Mistral[Mistral Conversation]
+    Safety -->|Crisis| Alert[Rule Checks + n8n Guardian Alert]
 
-    Chain1["OpenBioLLM — Chain 1\n(Biomedical Reasoning)"]
-    OtherMedia["Other Media\n(Image, PDF, Docs — OCR)"]
-    Chain2["AyurParam — Chain 2\n(Ayurvedic Reasoning)"]
-    Chain3QIL["Mistral — Chain 3\n(QIL + Fusion Support)"]
+    Physical --> QIL[Query Intelligence Layer]
+    QIL --> Bio[OpenBioLLM]
+    QIL --> Ayur[AyurParam]
+    QIL --> General[Mistral]
+    Bio --> RAG[Retrieval and Context]
+    Ayur --> RAG
+    General --> RAG
+    RAG --> Fusion[SEC2 Query Fusion]
+    Fusion --> Output[Structured Response]
 
-    CallTools["Call Tools + RAG System\n(FAISS + BM25 Hybrid)"]
-    QueryFusion["Query Fusion + Response Check\n(SEC2 — All 3 Chains Merge)"]
-    Output["Structured Output\n(TTS + Copy + Feedback)"]
-
-    UserInput --> ModelSelect
-    ModelSelect --> DisigenNode
-
-    DisigenNode --> MentalHealth
-    DisigenNode --> PhysicalHealth
-
-    MentalHealth --> SemanticGate
-    SemanticGate -- "Understands implied\nmeaning + emotion" --> DNode
-    DNode -- "Safe — proceed" --> MistralChat
-    DNode -- "Crisis detected" --> RuleBased
-    RuleBased --> EmailSec
-
-    PhysicalHealth --> QueryIntelligent
-
-    QueryIntelligent --> Chain1
-    QueryIntelligent --> OtherMedia
-    QueryIntelligent --> Chain2
-    QueryIntelligent --> Chain3QIL
-
-    Chain1 --> CallTools
-    OtherMedia --> CallTools
-    Chain2 --> CallTools
-    Chain3QIL --> CallTools
-
-    CallTools --> QueryFusion
-    QueryFusion --> Output
-
-    style DNode fill:#ff66cc,stroke:#fff,stroke-width:2px,color:#000
-    style DisigenNode fill:#9999ff,stroke:#fff,stroke-width:2px,color:#000
-    style SemanticGate fill:#ff9944,stroke:#fff,stroke-width:2px,color:#000
-    style Chain1 fill:#44aaff,stroke:#fff,stroke-width:2px,color:#000
-    style Chain2 fill:#44ffaa,stroke:#fff,stroke-width:2px,color:#000
-    style Chain3QIL fill:#ffdd44,stroke:#fff,stroke-width:2px,color:#000
-    style MistralChat fill:#ffdd44,stroke:#fff,stroke-width:2px,color:#000
-    classDef default fill:#ccff99,stroke:#333,stroke-width:1px,color:#000
-    linkStyle default stroke:#FFFFFF,stroke-width:2px
+    UI --> Reports[Report Upload API]
+    Reports --> Extract[PDF and OCR Extraction]
+    Extract --> Summary[Report Simplification]
 ```
 
-```
-User Input
-    ↓
-Disigen Node (dispatcher)
-    ├── Mental Health Branch
-    │     ↓
-    │   Semantic Understanding Layer (Mistral-7B — LLM, not keywords)
-    │     ↓
-    │   D-Node SEC1 — Crisis Decision
-    │     ├── Crisis → n8n → Guardian Alert Email
-    │     └── Safe  → Mistral-7B Conversation
-    │
-    └── Physical Health Branch
-          ↓
-        Query Intelligence Layer (QIL)
-          ↓
-        ┌─────────────────────────────────┐
-        │ Chain 1: OpenBioLLM-8B          │
-        │ Chain 2: AyurParam (Ayurvedic)  │  ← All 3 run concurrently
-        │ Chain 3: Mistral-7B (General)   │
-        └─────────────────────────────────┘
-          ↓
-        RAG — FAISS + BM25 Hybrid Retrieval
-          ↓
-        SEC2 Query Fusion + Post-Safety Review
-          ↓
-        Structured Dual-Perspective Response
-```
+### Safety checkpoints
 
-**Two Security Checkpoints:**
+1. **SEC1 — Pre-inference safety:** the semantic gate and D-Node evaluate
+   mental-health messages before the conversational response is generated.
+2. **SEC2 — Post-inference safety:** the fusion layer checks generated
+   responses, identifies contradictions and herb-drug conflicts, and adds
+   safety disclaimers where appropriate.
 
-- **SEC1 (Pre-inference):** LLM semantic analysis before any response model runs
-- **SEC2 (Post-inference):** Contradiction check, herb-drug conflicts, disclaimer injection
+Safety automation depends on the configured n8n workflows. The application
+must not be treated as an emergency response service.
 
-### System Architecture Node Explanations
+## Technology stack
 
-| Node                                  | Model / Tech             | Role                                                                 |
-| ------------------------------------- | ------------------------ | -------------------------------------------------------------------- |
-| **User Input**                        | React frontend           | Raw query, file upload                                               |
-| **Model Select**                      | UI dropdown              | Mental Health / Physical Health / Report                             |
-| **Disigen Node**                      | FastAPI dispatcher       | Routes to correct branch                                             |
-| **Semantic Understanding Layer**      | Mistral-7B (Chain 3)     | LLM understands true intent, emotion, implied meaning — NOT keywords |
-| **D-Node (SEC1)**                     | Decision logic           | Receives semantic analysis → crisis/safe binary decision             |
-| **Mistral (Chain 3) — Mental Health** | Mistral-7B Ollama        | Empathetic mental health conversation                                |
-| **Rule Based + n8n**                  | n8n workflow             | Guardian alert email on crisis                                       |
-| **QIL**                               | Mistral-7B (Chain 3)     | Intent, urgency, domain scores, query reformulation                  |
-| **Chain 1 — OpenBioLLM**              | OpenBioLLM-8B HF         | Biomedical clinical reasoning                                        |
-| **Chain 2 — AyurParam**               | Aayupahar 3B Ollama      | Ayurvedic reasoning (requires RAG context)                           |
-| **Chain 3 — Mistral**                 | Mistral-7B Ollama        | QIL, fusion synthesis, general support                               |
-| **Other Media**                       | OCR (pytesseract)        | PDF, image, handwritten docs → text                                  |
-| **Call Tools + RAG**                  | FAISS + BM25 + LangChain | Hybrid retrieval, tool calls                                         |
-| **SEC2 — Query Fusion**               | Mistral synthesis        | Merges all chains, post-safety, disclaimer                           |
-| **Output**                            | React frontend           | TTS, copy, feedback (like/dislike), regenerate                       |
+| Layer | Technologies |
+| --- | --- |
+| Frontend | React 19, Vite, React Router, Tailwind CSS, Framer Motion |
+| Backend | Python 3.11+, FastAPI, Uvicorn, Pydantic Settings |
+| Database | MongoDB, Motor, Beanie |
+| Retrieval | Qdrant, embedding configuration for `BAAI/bge-m3`, local retrieval utilities |
+| AI services | Ollama, OpenBioLLM-8B, AyurParam GGUF, Mistral, optional Hugging Face and Groq integrations |
+| Document processing | PyPDF2, Pillow, pdf2image, pytesseract |
+| Automation | n8n webhooks for welcome and crisis email workflows |
+| Deployment | Docker Compose, Caddy reverse proxy |
 
----
+## Models and external services
 
-## 🛠️ Tech Stack
+| Model or service | Purpose |
+| --- | --- |
+| [OpenBioLLM-8B](https://huggingface.co/aaditya/Llama3-OpenBioLLM-8B) | Biomedical reasoning |
+| [AyurParam GGUF](https://huggingface.co/A-Aryam/AyurParam-GGUF) | Ayurvedic reasoning through local inference |
+| Mistral | Mental-health conversation, semantic analysis, routing, and fusion |
+| `BAAI/bge-m3` | Embeddings for retrieval workflows |
+| Ollama | Local model serving |
+| Qdrant Cloud | Vector collections for retrieval |
+| MongoDB | Users, conversations, feedback, and report metadata |
+| n8n | Welcome-email and crisis-guardian workflow automation |
 
-### Frontend
+The model availability and quality depend on the local machine, configured
+provider credentials, model versions, and retrieval data.
 
-| Technology                  | Purpose                         |
-| --------------------------- | ------------------------------- |
-| React 18 + Vite             | UI framework                    |
-| Tailwind CSS                | Styling                         |
-| Framer Motion               | Animations                      |
-| react-markdown + remark-gfm | Markdown rendering              |
-| Web Speech API              | Text-to-speech (browser native) |
-
-### Backend
-
-| Technology   | Purpose              |
-| ------------ | -------------------- |
-| FastAPI      | REST API (async)     |
-| Python 3.11+ | Runtime              |
-| Motor        | Async MongoDB driver |
-| python-jose  | JWT authentication   |
-| httpx        | Async HTTP client    |
-
-<!--### AI Models
-
-| Chain    | Model                    | Role                                      |
-| -------- | ------------------------ | ----------------------------------------- |
-| Chain 1  | OpenBioLLM-8B            | Biomedical clinical reasoning             |
-| Chain 2  | AyurParam (Aayupahar 3B) | Ayurvedic traditional reasoning           |
-| Chain 3  | Mistral-7B               | QIL, semantic gate, fusion, mental health |
-| Embedder | BAAI/bge-m3              | RAG document embedding (1024-dim)         |
--->
-
-### AI Models
-
-| Chain    | Model                                                              | Role                                      |
-| -------- | ------------------------------------------------------------------ | ----------------------------------------- |
-| Chain 1  | [OpenBioLLM-8B](https://huggingface.co/aaditya/Llama3-OpenBioLLM-8B) | Biomedical clinical reasoning             |
-| Chain 2  | [AyurParam GGUF 3B](https://huggingface.co/A-Aryam/AyurParam-GGUF) | Ayurvedic reasoning                       |
-| Chain 3  | Mistral-7B                                                         | QIL, semantic gate, fusion, mental health |
-| Embedder | BAAI/bge-m3                                                        | RAG document embedding (1024-dim)         |
-
-### Infrastructure
-
-| Technology       | Purpose                            |
-| ---------------- | ---------------------------------- |
-| MongoDB          | Primary database                   |
-| Qdrant Cloud     | Vector database (RAG)              |
-| FAISS            | Local vector search fallback       |
-| Local disk       | File upload storage                |
-| n8n              | Guardian alert workflow automation |
-| Ollama           | Local LLM inference                |
-| Docker           | As Running Env                     |
-
-<!-- ###
-| Layer          | Technology       |
-| -------------- | ---------------- |
-| Frontend       | React.js         |
-| Backend        | Python / FastAPI |
-| Biomedical LLM | OpenBioLLM-8B    |
-| Ayurvedic LLM  | AyurParam        |
-| General LLM    | Mistral          |
-| Vector Store   | FAISS            |
-| Database       | MongoDB          |
-| Automation     | n8n              |
--->
-
----
-
-## 🤗 Models on HuggingFace
-
-| Model                                                           | Description                                                                             | Downloads                                                                                                                                                       |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [AyurParam-GGUF](https://huggingface.co/A-Aryam/AyurParam-GGUF) | GGUF conversions (F16 + Q4_K_M) of bharatgenai/AyurParam for local inference via Ollama | ![Downloads](https://img.shields.io/badge/dynamic/json?url=https://huggingface.co/api/models/A-Aryam/AyurParam-GGUF&query=downloads&label=downloads&color=teal) |
-
----
-
-## 🚀 Getting Started
+## Getting started
 
 ### Prerequisites
 
-- Python 3.11+
-- Node.js 18+
-- MongoDB (running locally)
-- Ollama (with `mistral` and `aayupahar` models pulled)
-- WSL2 Ubuntu (if on Windows) — see `.agent/codebase/wsl_setup.md`
+For the recommended Docker workflow:
 
-### Installation
+- Docker Engine or Docker Desktop with Compose.
+- At least one configured model provider:
+  - Ollama running on the host, or
+  - the configured Hugging Face/Groq integration.
+- The models and credentials required by the features you want to use.
+
+For host-based development:
+
+- Python 3.11 or newer.
+- Node.js 18 or newer.
+- MongoDB.
+- Ollama, if using local model inference.
+- `make` and a Unix-like shell. Windows users can use WSL2.
+
+### Option A: Docker Compose
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/Aaryam-7d6/ReassureAI.git
+   cd ReassureAI
+   ```
+
+2. Create the local environment file:
+
+   ```bash
+   cp .env.copy .env
+   ```
+
+   Edit `.env` and provide the secrets and provider settings required for
+   your environment. Never commit `.env`.
+
+3. Start the stack:
+
+   ```bash
+   docker compose up --build
+   ```
+
+4. Open the application:
+
+   - Web app: <http://localhost:8080>
+   - FastAPI documentation: <http://localhost:8080/docs>
+   - n8n editor: <http://localhost:5678>
+
+The Compose stack runs Caddy, the frontend, backend, MongoDB, and n8n.
+MongoDB, n8n data, uploads, and other runtime state are stored locally under
+the ignored `data/` directory or in named Docker volumes.
+
+To stop the stack:
 
 ```bash
-# Clone the repository
-git clone https://github.com/Aaryam-7d6/ReassureAI.git
-cd ReassureAI
-
-# Install all dependencies
-make install
-
-# Set up environment variables
-cp backend/.env.example backend/.env
-# Edit backend/.env with your values (see below)
-
-# Seed the test user
-make seed
-
-# Start frontend and backend together
-make dev
+docker compose down
 ```
 
-### Environment Variables
-
-Visit `.env copy` once.
-
-Create `backend/.env` with these values:
+To stop it and remove named volumes:
 
 ```bash
-# Required — fill these now
-MONGODB_URI=mongodb://127.0.0.1:27017/reassureai
-JWT_SECRET=your_32_char_secret_here
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-FRONTEND_URL=http://localhost:5173
-
-# Fill when needed
-HUGGINGFACE_API_KEY=
-GROQ_API_KEY=
-QDRANT_URL=
-QDRANT_API_KEY=
-N8N_WEBHOOK_URL=
-UPLOAD_DIR=data/uploads
-MAX_UPLOAD_SIZE_BYTES=10485760
+docker compose down -v
 ```
 
-Generate JWT secret:
+### Option B: Host-based development
+
+1. Create a Python environment and install backend dependencies:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r backend/requirements.txt
+   ```
+
+2. Install frontend dependencies:
+
+   ```bash
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+3. Create `.env` from the example and configure MongoDB, model providers, and
+   CORS settings:
+
+   ```bash
+   cp .env.copy .env
+   ```
+
+4. Start both development servers:
+
+   ```bash
+   make dev
+   ```
+
+   The frontend runs on <http://localhost:5173> and the backend runs on
+   <http://localhost:8000>.
+
+The root [Makefile](Makefile) also provides `make install`, `make backend`,
+`make frontend`, and `make seed`.
+
+### Environment configuration
+
+The complete variable list is documented in [.env.copy](.env.copy).
+Important settings include:
+
+| Variable | Purpose |
+| --- | --- |
+| `MONGODB_URI` / `MONGO_URI` | MongoDB connection string |
+| `JWT_SECRET` | Secret used to sign authentication tokens |
+| `OLLAMA_BASE_URL` / `OLLAMA_URL` | Ollama service URL |
+| `OPENBIO_MODEL_NAME` | Biomedical model identifier |
+| `HUGGINGFACE_API_KEY` | Optional Hugging Face provider credential |
+| `GROQ_API_KEY` | Optional Groq provider credential |
+| `QDRANT_URL` / `QDRANT_API_KEY` | Optional Qdrant connection |
+| `UPLOAD_DIR` | Local report-upload directory |
+| `N8N_WELCOME_WEBHOOK_URL` | Welcome-email workflow endpoint |
+| `N8N_CRISIS_WEBHOOK_URL` | Crisis-alert workflow endpoint |
+| `CORS_ORIGINS` | Allowed frontend origins |
+
+Generate a strong JWT secret with:
 
 ```bash
 python3 -c "import secrets; print(secrets.token_hex(64))"
 ```
 
-or
+### Local Ollama models
 
-```bash
-openssl rand -hex 64
-```
-
-Pull required Ollama models:
+Model names depend on the Ollama models installed on your machine. For the
+default local setup, make the configured Mistral and AyurParam models
+available, for example:
 
 ```bash
 ollama pull mistral
 ollama run hf.co/A-Aryam/AyurParam-GGUF:Q4_K_M
 ```
 
-<!-- ollama pull aayupahar -->
+The biomedical pipeline can use the configured Hugging Face or Groq provider
+when those credentials are available.
 
-Updating soon...
+## API overview
 
----
+The backend exposes interactive OpenAPI documentation at `/docs`.
 
-## 🧪 Demo Login
+| Area | Routes |
+| --- | --- |
+| Health | `GET /health`, `GET /api/v1/health` |
+| Authentication | `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me` |
+| Chat | `POST /api/v1/chat`, `GET /api/v1/chat/history`, `GET /api/v1/chat/{conversation_id}`, `DELETE /api/v1/chat/{conversation_id}` |
+| Feedback | `POST /api/v1/feedback` |
+| Reports | `POST /api/v1/reports/upload`, `GET /api/v1/reports`, `GET /api/v1/reports/{document_id}` |
 
-A test user is pre-seeded for demonstration and development:
+Example health check:
 
+```bash
+curl http://localhost:8080/health
 ```
 
-Email:    test@reassureai.dev
-Password: Test@1234!
-Full Name: Test User
-Guardian Email: guardian@reassureai.dev
+## Testing
 
+Run the backend test suite from the repository root:
+
+```bash
+source .venv/bin/activate
+pytest backend/tests
 ```
 
-> This account is for testing only. Do not use for real health queries.
+Run frontend linting and a production build:
 
----
-
-## 📁 Project Structure
-
-Updating soon...
-
-<!--
-
+```bash
+cd frontend
+npm run lint
+npm run build
 ```
+
+For a full Docker smoke test, see
+[docs/how-to-test.md](docs/how-to-test.md).
+
+## Project structure
+
+```text
 ReassureAI/
-├── .agent/                    # AI agent memory system
-│   ├── project.md             # System overview and architecture
-│   ├── instructions.md        # Coding standards and rules
-│   ├── work.md                # Task queue
-│   ├── progress.md            # Build progress tracker
-│   ├── decisions.md           # Architectural decision log
-│   ├── errors.md              # Bug history and lessons
-│   └── codebase/              # Per-module documentation
-│       ├── backend.md
-│       ├── frontend.md
-│       ├── models.md
-│       ├── database.md
-│       ├── api.md
-│       ├── wsl_setup.md
-│       └── why.md
-│
-├── backend/                   # FastAPI Python backend
-│   ├── main.py
+├── backend/
+│   ├── app/
+│   │   ├── api/v1/endpoints/  # Authentication, chat, feedback, reports
+│   │   ├── core/
+│   │   │   ├── files/         # File extraction and deduplication
+│   │   │   ├── models/        # AI model adapters
+│   │   │   ├── pipeline/      # Routing, QIL, and response fusion
+│   │   │   ├── rag/           # Embeddings and retrieval
+│   │   │   └── safety/        # Crisis and post-response checks
+│   │   ├── db/                # MongoDB connection and document models
+│   │   ├── schemas/           # Request and response schemas
+│   │   ├── services/          # External services such as n8n
+│   │   └── utils/             # Logging, security, and validation
+│   ├── scripts/               # Database initialization and seed scripts
+│   ├── tests/                 # Backend tests
+│   ├── Dockerfile
 │   ├── config.py
-│   ├── requirements.txt
-│   └── app/
-│       ├── api/               # REST endpoints
-│       ├── core/              # Pipeline, safety, models, RAG
-│       ├── db/                # MongoDB models
-│       ├── schemas/           # Pydantic models
-│       └── utils/
-│
-├── frontend/                  # React + Vite frontend
-│   └── src/
-│       ├── pages/
-│       ├── components/
-│       ├── hooks/
-│       ├── api/
-│       └── utils/
-│
-├── Makefile                   # Dev commands
-├── package.json               # Root concurrently config
+│   ├── main.py
+│   └── requirements.txt
+├── frontend/
+│   ├── public/                # Static assets
+│   ├── src/
+│   │   ├── api/               # Backend API clients
+│   │   ├── components/        # Reusable UI components
+│   │   ├── context/           # Authentication, chat, and theme state
+│   │   ├── layouts/           # Authenticated and public layouts
+│   │   ├── pages/             # Home, auth, dashboard, chat, journal
+│   │   └── routes/            # Protected-route handling
+│   ├── Dockerfile
+│   └── package.json
+├── docs/                      # Setup, deployment, testing, and n8n guides
+├── rag-ingestion-pipeline/    # Qdrant ingestion script and notebook
+├── Caddyfile                  # Reverse-proxy routes
+├── docker-compose.yml         # Local multi-service deployment
+├── Makefile                   # Development shortcuts
+├── .env.copy                  # Safe configuration template
+├── LICENSE
 └── README.md
 ```
 
--->
+The following are intentionally local-only and ignored by Git:
 
----
+```text
+.env
+data/
+node_modules/
+frontend/dist/
+.venv/
+venv/
+__pycache__/
+graphify-out/
+```
 
-## 👥 Team
+## Ingestion pipeline
 
-<!-- Project Lead, Architecture, AI Pipeline -->
+The [rag-ingestion-pipeline/](rag-ingestion-pipeline/) directory contains
+the supporting script and notebook used to prepare content for Qdrant.
+The pipeline is separate from the runtime API and may require its own
+credentials and source data.
 
-| Name                   | Role                                                                     |
-| ---------------------- | ------------------------------------------------------------------------ |
-| **Aarya R. Thakar**    | Originator & Project Lead · System Architecture · AI Pipeline · Research |
-| **Ansh B. Patel**      | Frontend & Backend Development                                           |
-| **Darshan B. Kyada**   | Frontend & Backend Development                                           |
-| **Elvis T. Fernandes** | Database                                                                 |
+Do not commit source datasets, generated vector data, API keys, or ingestion
+logs. See [docs/mogodb-ollama-config-windows.md](docs/mogodb-ollama-config-windows.md)
+and the project configuration template for environment-specific setup.
 
-<!--**Project Guide:** Prof. Harsh Pateliya -->
+## n8n workflows
 
-**Institution:** Department of Computer Science & Engineering, PIET, Parul University, Vadodara
+n8n is used for event-driven email automation:
 
-_Final Year B.Tech Project — Academic Year 2025–27_
+- Welcome email after registration.
+- Guardian notification when a crisis event is detected.
 
----
+The backend uses Docker service URLs such as
+`http://n8n:5678/webhook/crisis` from inside Compose. Configure the matching
+workflows in the n8n editor at <http://localhost:5678>.
 
-## 🔬 Research
+See [docs/n8n.md](docs/n8n.md) for workflow payloads and setup instructions.
 
-Research Paper is progress...
+## Team
 
----
+| Name | Role |
+| --- | --- |
+| **Aarya R. Thakar** | Originator, project lead, system architecture, AI pipeline, and research |
+| **Ansh B. Patel** | Frontend and backend development |
+| **Darshan B. Kyada** | Frontend and backend development |
+| **Elvis T. Fernandes** | Database |
 
-## ⚠️ Disclaimer
+**Institution:** Department of Computer Science & Engineering, PIET,
+Parul University, Vadodara
 
-<!-- ReassureAI is an **educational and informational tool only**.
+**Project:** Final Year B.Tech project, Academic Year 2025–27
 
-- It does **not** provide medical diagnosis
-- It does **not** replace licensed healthcare professionals
-- It does **not** prescribe treatments or medications
-- All responses should be verified with a qualified doctor
-
-If you are experiencing a mental health crisis, please contact:
-
-- **iCall:** 9152987821 (Mon–Sat, 8am–10pm)
-- **Vandrevala Foundation:** 1860-2662-345 (24/7)
-- **MANAS:** 14416 or 1-800-891-4416
--->
+## Disclaimer
 
 > [!WARNING]
-> ReassureAI is a student research project developed as a Final Year B.Tech 
-> project at Parul University. It is experimental and **not** medically approved, 
-> certified, or compliant with HIPAA, DPDP, or any healthcare regulatory framework.
+> ReassureAI is an experimental student research project. It is not medically
+> approved, certified, or compliant with HIPAA, DPDP, or any healthcare
+> regulatory framework.
 
-**This tool is for educational and informational purposes only.**
+ReassureAI:
 
-- Does not provide medical diagnosis
-- Does not replace licensed healthcare professionals  
-- Does not prescribe treatments or medications
-- AI responses may be incorrect, incomplete, or outdated
-- Not validated by any government body or medical institution
-- All responses should be verified with a qualified doctor
+- Does not provide medical diagnosis.
+- Does not replace a licensed healthcare professional.
+- Does not prescribe treatments or medications.
+- May produce incorrect, incomplete, or outdated information.
+- Has not been validated by a government body or medical institution.
+- Must not be used as an emergency service.
 
-> Use at your own risk and with full awareness of its limitations.
-> This project explores how AI *can* be applied to healthcare — 
-> it is a proof of concept, not a clinical tool.
+Do not upload sensitive personal health information unless you understand the
+risks of running this research software and have configured its storage and
+services appropriately. Verify health information with a qualified
+healthcare professional.
 
----
+If you or someone else may be in immediate danger, contact local emergency
+services. In India, the following resources may also be useful:
 
-**If you are experiencing a mental health crisis, please contact:**
-
-| Helpline | Number | Available |
-|---|---|---|
+| Helpline | Number | Availability |
+| --- | --- | --- |
 | iCall | 9152987821 | Mon–Sat, 8am–10pm |
 | Vandrevala Foundation | 1860-2662-345 | 24/7 |
-| MANAS | 14416 or 1800-891-4416 | 24/7 |
+| Tele-MANAS | 14416 or 1-800-891-4416 | 24/7 |
 
----
+## License
 
-<!-- © 2025 Aarya R. Thakar, Ansh B. Patel, Darshan B. Kyada, Elvis T. Fernandes -->
+Licensed under the [Apache License 2.0](LICENSE).
 
-## 📄 License
-
-Licensed under the **Apache License 2.0** — see [LICENSE](LICENSE) for full terms.
-
-© 2025 Aarya R. Thakar, Ansh B. Patel, Darshan B. Kyada, Elvis T. Fernandes
-
-This license is consistent with [AyurParam](https://huggingface.co/bharatgenai/AyurParam)
-(bharatgenai/AyurParam) which this project integrates, also licensed under Apache 2.0.
+Copyright © 2025 Aarya R. Thakar, Ansh B. Patel, Darshan B. Kyada, and Elvis
+T. Fernandes.
 
 ---
 
 <div align="center">
 
-<img width="704" height="384" alt="my-logo-for-project" src="https://github.com/user-attachments/assets/66b8c1e0-88a9-4867-9dbb-02a644cb060f" />
+<img width="704" height="384" alt="ReassureAI logo" src="https://github.com/user-attachments/assets/66b8c1e0-88a9-4867-9dbb-02a644cb060f" />
 
-
-_Built with ❤️ for 150 million Indians who deserve better healthcare access_
+_Built as a research project for better healthcare information access_
 
 </div>
