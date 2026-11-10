@@ -409,9 +409,9 @@ See [docs/n8n.md](docs/n8n.md) for workflow payloads and setup instructions.
 | Name | Role |
 | --- | --- |
 | [**Aarya R. Thakar**](https://github.com/Aaryam-7d6/) | Originator, project lead, system architecture, AI pipeline, and research |
-| [**Ansh B. Patel**](https://github.com/Ansh-Patel-123) | Frontend and backend development |
-| [**Darshan B. Kyada**](https://github.com/DARSHAN081104) | Frontend and backend development |
-| [**Elvis T. Fernandes**](https://github.com/Elvis2724) | Database |
+| [**Ansh B. Patel**](https://github.com/Ansh-Patel-123) | Frontend and backend development & research|
+| [**Darshan B. Kyada**](https://github.com/DARSHAN081104) | Frontend and backend development & research |
+| [**Elvis T. Fernandes**](https://github.com/Elvis2724) | Database & research |
 
 **Institution:** Department of Computer Science & Engineering, PIET,
 Parul University, Vadodara
